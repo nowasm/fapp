@@ -464,9 +464,19 @@ tvg::Text* makeText(const Node& n, BuildContext& ctx) {
     text->layout(n.width, 0);
     // Auto-width boxes hug their text; never wrap them (a substituted font
     // could exceed the stored width and break the layout). Ellipsis covers
-    // Figma's TRUNCATE resize mode and textTruncation: ENDING labels.
-    const bool ellipsis = ts.autoResize == "TRUNCATE" ||
-                          (ts.truncateEnding && ts.maxLines <= 1);
+    // Figma's TRUNCATE resize mode and textTruncation: ENDING labels — but
+    // ThorVG's ellipsis cuts ~3 advances early, so skip it when the whole
+    // string measurably fits the box.
+    // WIDTH_AND_HEIGHT boxes grow with their text, so the stored width is
+    // never a truncation constraint.
+    bool ellipsis = ts.autoResize == "TRUNCATE" ||
+                    (ts.truncateEnding && ts.maxLines <= 1 &&
+                     ts.autoResize != "WIDTH_AND_HEIGHT");
+    if (ellipsis && n.width > 0) {
+        int glyphs = 0;
+        const float w = measureAdvance(*text, n.characters, glyphs);
+        if (glyphs > 0 && w <= n.width * 1.02f) ellipsis = false;
+    }
     text->wrap(ellipsis                              ? tvg::TextWrap::Ellipsis
                : ts.autoResize == "WIDTH_AND_HEIGHT" ? tvg::TextWrap::None
                                                      : tvg::TextWrap::Word);
