@@ -28,8 +28,8 @@ extern int kLayersW;     // 260 * scale
 extern int kInspectorW;  // 280 * scale
 void initUiScale();      // call after InitWindow
 
-inline int fontS() { return static_cast<int>(12 * gUiScale); }
-inline int fontM() { return static_cast<int>(14 * gUiScale); }
+inline int fontS() { return static_cast<int>(13 * gUiScale); }
+inline int fontM() { return static_cast<int>(15 * gUiScale); }
 inline float ui(float v) { return v * gUiScale; }
 
 // ---- UI font (Segoe UI; switches to Microsoft YaHei when the document

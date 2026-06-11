@@ -61,7 +61,10 @@ void collectCodepoints(const std::string& s, std::unordered_set<int>& out, bool&
 }
 
 void loadUiFont(const std::vector<int>& codepoints, bool wantCjk) {
+    // Semibold for Latin (seguisb), bold YaHei for CJK — the UI reads better
+    // a touch heavier at these sizes.
     const char* candidates[] = {
+        wantCjk ? "C:/Windows/Fonts/msyhbd.ttc" : "C:/Windows/Fonts/seguisb.ttf",
         wantCjk ? "C:/Windows/Fonts/msyh.ttc" : "C:/Windows/Fonts/segoeui.ttf",
         wantCjk ? "C:/Windows/Fonts/simhei.ttf" : "C:/Windows/Fonts/arial.ttf",
         "C:/Windows/Fonts/segoeui.ttf",
