@@ -123,11 +123,14 @@ if(FIGMALIB_BACKEND_RAYLIB)
         apps/editor/editor_panels.cpp
         apps/editor/editor_inspector.cpp
         apps/editor/editor_dialogs.cpp
+        apps/editor/editor_mcp.cpp
+        apps/editor/editor_mcp_net.cpp
     )
-    target_include_directories(figmaedit PRIVATE "${raygui_SOURCE_DIR}/src")
+    target_include_directories(figmaedit PRIVATE
+        "${raygui_SOURCE_DIR}/src" third_party)
     target_link_libraries(figmaedit PRIVATE figmalib raylib)
     if(WIN32)
-        target_link_libraries(figmaedit PRIVATE comdlg32)  # native file dialogs
+        target_link_libraries(figmaedit PRIVATE comdlg32 ws2_32)  # dialogs + MCP socket
     endif()
     target_compile_definitions(figmaedit PRIVATE
         ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples/assets")

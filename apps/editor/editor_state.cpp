@@ -137,6 +137,18 @@ NodeProps NodeProps::capture(Node* n) {
     p.effects = n->effects;
     p.textStyle = n->textStyle;
     p.characters = n->characters;
+    p.name = n->name;
+    p.clipsContent = n->clipsContent;
+    p.rectangleCornerRadii = n->rectangleCornerRadii;
+    p.strokeDashes = n->strokeDashes;
+    p.textRuns = n->textRuns;
+    p.fillGeometry = n->fillGeometry;
+    p.constraintH = n->constraintH;
+    p.constraintV = n->constraintV;
+    p.autoLayout = n->autoLayout;
+    p.layoutGrow = n->layoutGrow;
+    p.layoutAlignStretch = n->layoutAlignStretch;
+    p.layoutAbsolute = n->layoutAbsolute;
     return p;
 }
 
@@ -154,6 +166,18 @@ void NodeProps::apply() const {
     node->effects = effects;
     node->textStyle = textStyle;
     node->characters = characters;
+    node->name = name;
+    node->clipsContent = clipsContent;
+    node->rectangleCornerRadii = rectangleCornerRadii;
+    node->strokeDashes = strokeDashes;
+    node->textRuns = textRuns;
+    node->fillGeometry = fillGeometry;
+    node->constraintH = constraintH;
+    node->constraintV = constraintV;
+    node->autoLayout = autoLayout;
+    node->layoutGrow = layoutGrow;
+    node->layoutAlignStretch = layoutAlignStretch;
+    node->layoutAbsolute = layoutAbsolute;
 }
 
 WorldRect worldBounds(const Node& n) {
@@ -293,7 +317,7 @@ void EditorState::deleteSelection() {
 }
 
 namespace {
-std::unique_ptr<Node> cloneNode(const Node& src, Node* parent) {
+std::unique_ptr<Node> cloneSubtree(const Node& src, Node* parent) {
     auto n = std::make_unique<Node>();
     Node* raw = n.get();
     // Copy all value members, then rebuild children with fresh parent links.
@@ -323,7 +347,7 @@ std::unique_ptr<Node> cloneNode(const Node& src, Node* parent) {
     raw->textStyle = src.textStyle;
     raw->textRuns = src.textRuns;
     raw->parent = parent;
-    for (const auto& c : src.children) raw->children.push_back(cloneNode(*c, raw));
+    for (const auto& c : src.children) raw->children.push_back(cloneSubtree(*c, raw));
     return n;
 }
 }  // namespace
@@ -334,7 +358,7 @@ void EditorState::duplicateSelection() {
     std::vector<Node*> fresh;
     for (Node* n : selection) {
         if (!n->parent) continue;
-        auto copy = cloneNode(*n, n->parent);
+        auto copy = cloneSubtree(*n, n->parent);
         copy->relativeTransform.m02 += 10;  // Figma offsets duplicates slightly
         copy->relativeTransform.m12 += 10;
         Node* raw = copy.get();
@@ -357,43 +381,46 @@ void EditorState::duplicateSelection() {
 
 namespace {
 
+// A reparent (MCP move_node) records two changes for the same node — a
+// removal then an insertion — so the detached unique_ptr may be held by the
+// sibling change rather than the one being replayed.
+std::unique_ptr<Node> takeDetached(std::vector<TreeChange>& changes, TreeChange& ch) {
+    if (ch.detached) return std::move(ch.detached);
+    for (auto& other : changes) {
+        if (other.node == ch.node && other.detached) return std::move(other.detached);
+    }
+    return nullptr;
+}
+
 void applyTreeUndo(std::vector<TreeChange>& changes, bool undoing) {
+    auto detach = [](TreeChange& ch) {
+        auto& siblings = ch.parent->children;
+        for (size_t i = 0; i < siblings.size(); ++i) {
+            if (siblings[i].get() == ch.node) {
+                ch.detached = std::move(siblings[i]);
+                siblings.erase(siblings.begin() + static_cast<long long>(i));
+                break;
+            }
+        }
+    };
+    auto reinsert = [&changes](TreeChange& ch) {
+        auto holder = takeDetached(changes, ch);
+        if (!holder) return;  // defensive: node lost (should not happen)
+        auto& siblings = ch.parent->children;
+        const size_t at = std::min(ch.index, siblings.size());
+        siblings.insert(siblings.begin() + static_cast<long long>(at), std::move(holder));
+        ch.node->parent = ch.parent;  // reparent moves need the link restored
+    };
     // Walk in reverse for undo so indices stay valid.
     if (undoing) {
         for (auto it = changes.rbegin(); it != changes.rend(); ++it) {
-            TreeChange& ch = *it;
-            const bool reinsert = !ch.isInsert;  // undo a removal → insert back
-            auto& siblings = ch.parent->children;
-            if (reinsert) {
-                const size_t at = std::min(ch.index, siblings.size());
-                siblings.insert(siblings.begin() + static_cast<long long>(at),
-                                std::move(ch.detached));
-            } else {  // undo an insertion → detach
-                for (size_t i = 0; i < siblings.size(); ++i) {
-                    if (siblings[i].get() == ch.node) {
-                        ch.detached = std::move(siblings[i]);
-                        siblings.erase(siblings.begin() + static_cast<long long>(i));
-                        break;
-                    }
-                }
-            }
+            if (it->isInsert) detach(*it);   // undo an insertion → detach
+            else reinsert(*it);              // undo a removal → insert back
         }
     } else {
         for (auto& ch : changes) {
-            auto& siblings = ch.parent->children;
-            if (ch.isInsert) {
-                const size_t at = std::min(ch.index, siblings.size());
-                siblings.insert(siblings.begin() + static_cast<long long>(at),
-                                std::move(ch.detached));
-            } else {
-                for (size_t i = 0; i < siblings.size(); ++i) {
-                    if (siblings[i].get() == ch.node) {
-                        ch.detached = std::move(siblings[i]);
-                        siblings.erase(siblings.begin() + static_cast<long long>(i));
-                        break;
-                    }
-                }
-            }
+            if (ch.isInsert) reinsert(ch);
+            else detach(ch);
         }
     }
 }

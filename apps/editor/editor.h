@@ -105,6 +105,20 @@ struct NodeProps {
     std::vector<figmalib::Effect> effects;
     figmalib::TextStyle textStyle;
     std::string characters;
+    // Fields below are only edited via MCP, but capturing them here keeps
+    // every AI edit undoable with the same machinery.
+    std::string name;
+    bool clipsContent = false;
+    std::optional<std::array<float, 4>> rectangleCornerRadii;
+    std::vector<float> strokeDashes;
+    std::vector<figmalib::TextRun> textRuns;
+    std::vector<figmalib::PathGeometry> fillGeometry;
+    figmalib::Constraint constraintH = figmalib::Constraint::Min;
+    figmalib::Constraint constraintV = figmalib::Constraint::Min;
+    figmalib::AutoLayout autoLayout;
+    float layoutGrow = 0;
+    bool layoutAlignStretch = false;
+    bool layoutAbsolute = false;
 
     static NodeProps capture(Node* n);
     void apply() const;

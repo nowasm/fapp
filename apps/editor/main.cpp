@@ -7,11 +7,15 @@
 
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <stdexcept>
+#include <vector>
 
 #include "editor.h"
+#include "editor_mcp.h"
 
+#include <nlohmann/json.hpp>
 #include <raygui.h>
 
 #ifndef ASSETS_DIR
@@ -157,11 +161,123 @@ static int selftest(const std::string& path) {
                "round-trip frame props");
     }
     std::remove(tmp.c_str());
+
+    // ---- MCP dispatch (headless, no sockets) ----
+    using nlohmann::json;
+    auto rpc = [&](const json& msg) {
+        const std::string out = mcpHandleMessageForTest(ed, msg.dump());
+        return out.empty() ? json() : json::parse(out);
+    };
+    auto call = [&](const char* tool, json args) {
+        return rpc({{"jsonrpc", "2.0"},
+                    {"id", 1},
+                    {"method", "tools/call"},
+                    {"params", {{"name", tool}, {"arguments", std::move(args)}}}});
+    };
+    auto callText = [&](const char* tool, json args) {
+        const json r = call(tool, std::move(args));
+        return json::parse(r["result"]["content"][0]["text"].get<std::string>());
+    };
+
+    json init = rpc({{"jsonrpc", "2.0"},
+                     {"id", 1},
+                     {"method", "initialize"},
+                     {"params",
+                      {{"protocolVersion", "2025-03-26"},
+                       {"capabilities", json::object()},
+                       {"clientInfo", {{"name", "selftest"}, {"version", "0"}}}}}});
+    expect(init["result"]["serverInfo"]["name"] == "figmaedit", "mcp initialize");
+    json tools = rpc({{"jsonrpc", "2.0"}, {"id", 2}, {"method", "tools/list"}});
+    expect(tools["result"]["tools"].is_array() && tools["result"]["tools"].size() >= 15,
+           "mcp tools/list");
+
+    json state = callText("get_editor_state", json::object());
+    expect(state.contains("pages"), "mcp get_editor_state");
+
+    json created = callText("create_node",
+                            {{"type", "rectangle"},
+                             {"x", 10},
+                             {"y", 20},
+                             {"width", 80},
+                             {"height", 40},
+                             {"fill", "#FF8800"},
+                             {"cornerRadius", 8},
+                             {"name", "mcp-rect"}});
+    const std::string newIdStr = created.value("id", "");
+    expect(!newIdStr.empty() && ed.file.document->findById(newIdStr) != nullptr,
+           "mcp create_node");
+    Node* created_node = ed.file.document->findById(newIdStr);
+    expect(created_node && created_node->cornerRadius == 8 &&
+               created_node->relativeTransform.m02 == 10,
+           "mcp create_node props");
+
+    json upd = call("update_nodes",
+                    {{"updates",
+                      json::array({{{"id", newIdStr}, {"x", 50}, {"fill", "#00FF00"}}})}});
+    expect(!upd["result"].value("isError", false) &&
+               created_node->relativeTransform.m02 == 50,
+           "mcp update_nodes");
+    ed.undo();
+    expect(created_node->relativeTransform.m02 == 10, "mcp update is undoable");
+
+    json shot = call("get_screenshot", {{"nodeId", newIdStr}, {"maxSize", 128}});
+    expect(shot["result"]["content"][0]["type"] == "image" &&
+               !shot["result"]["content"][0]["data"].get<std::string>().empty(),
+           "mcp get_screenshot");
+
+    json dup = callText("duplicate_node", {{"id", newIdStr}});
+    const std::string dupId = dup.value("id", "");
+    expect(!dupId.empty() && dupId != newIdStr &&
+               ed.file.document->findById(dupId) != nullptr,
+           "mcp duplicate_node");
+
+    // move the duplicate into the first frame, then undo (reparent round-trip)
+    json moved = call("move_node", {{"id", dupId}, {"parentId", frame->id}});
+    Node* dupNode = ed.file.document->findById(dupId);
+    const bool moveOk = !moved["result"].value("isError", false) && dupNode &&
+                        dupNode->parent == frame;
+    if (!moveOk)
+        std::printf("  move_node response: %s (frame id '%s')\n",
+                    moved.dump().c_str(), frame->id.c_str());
+    expect(moveOk, "mcp move_node");
+    ed.undo();
+    expect(dupNode->parent == page, "mcp move_node undo restores parent");
+
+    json del = call("delete_nodes", {{"ids", json::array({dupId, newIdStr})}});
+    expect(!del["result"].value("isError", false) &&
+               ed.file.document->findById(newIdStr) == nullptr,
+           "mcp delete_nodes");
+    ed.undo();
+    expect(ed.file.document->findById(newIdStr) != nullptr, "mcp delete undo");
+
+    json bad = call("update_nodes",
+                    {{"updates", json::array({{{"id", "no-such-node"}, {"x", 1}}})}});
+    expect(bad["result"].value("isError", false), "mcp bad id reports tool error");
+
     std::printf(failures ? "SELFTEST: %d failure(s)\n" : "SELFTEST: OK\n", failures);
     return failures;
 }
 
 int main(int argc, char** argv) {
+    // MCP flags can appear anywhere; strip them before positional parsing.
+    // Default: serve MCP on 127.0.0.1:9223 (FIGMAEDIT_MCP_PORT overrides).
+    int mcpPortWanted = 9223;
+    if (const char* env = std::getenv("FIGMAEDIT_MCP_PORT"); env && *env)
+        mcpPortWanted = std::atoi(env);
+    std::vector<char*> args;
+    args.push_back(argv[0]);
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--no-mcp") == 0) {
+            mcpPortWanted = 0;
+        } else if (std::strcmp(argv[i], "--mcp-port") == 0 && i + 1 < argc) {
+            mcpPortWanted = std::atoi(argv[++i]);
+        } else {
+            args.push_back(argv[i]);
+        }
+    }
+    argc = static_cast<int>(args.size());
+    argv = args.data();
+
     if (argc > 1 && std::string(argv[1]) == "--selftest") {
         const std::string file = argc > 2 ? argv[2] : ASSETS_DIR "/sample_ui.json";
         return selftest(file);
@@ -214,6 +330,21 @@ int main(int argc, char** argv) {
         ed.selection = {ed.page->children.front().get()};
     }
 
+    // MCP server: lets an AI client design directly in this editor session.
+    if (mcpPortWanted > 0) {
+        if (figmaedit::mcpStart(ed, mcpPortWanted)) {
+            std::fprintf(stderr, "[mcp] listening on http://127.0.0.1:%d/mcp\n",
+                         mcpPortWanted);
+            ed.setStatus("MCP on http://127.0.0.1:" + std::to_string(mcpPortWanted) +
+                             "/mcp",
+                         6);
+        } else {
+            std::fprintf(stderr, "[mcp] failed to bind port %d (already in use?)\n",
+                         mcpPortWanted);
+            ed.setStatus("MCP failed to bind port " + std::to_string(mcpPortWanted), 6);
+        }
+    }
+
     int frameCount = 0;
     while (!WindowShouldClose()) {
         if (!shotPath.empty()) {
@@ -246,6 +377,8 @@ int main(int argc, char** argv) {
             if (!path.empty()) openFile(ed, path);
         }
 
+        figmaedit::mcpPump(ed);  // run queued AI tool calls on the main thread
+
         if (ed.file.document && ed.page) updateCanvas(ed);
 
         BeginDrawing();
@@ -257,6 +390,7 @@ int main(int argc, char** argv) {
         EndDrawing();
     }
 
+    figmaedit::mcpStop();
     ed.invalidateCache();
     CloseWindow();
     return 0;
