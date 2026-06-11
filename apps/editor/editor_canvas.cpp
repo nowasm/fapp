@@ -72,9 +72,9 @@ void applyMove(EditorState& ed, float dwx, float dwy) {
         n->relativeTransform = before.transform;
         n->relativeTransform.m02 = std::round(before.transform.m02 + dx);
         n->relativeTransform.m12 = std::round(before.transform.m12 + dy);
+        ed.bumpNode(n);  // only this node's top-level frame re-rasterizes
     }
     ed.gestureChanged = true;
-    ed.markDocChanged();
 }
 
 void applyResize(EditorState& ed, float wx, float wy, bool uniform, bool centered) {
@@ -147,7 +147,7 @@ void applyResize(EditorState& ed, float wx, float wy, bool uniform, bool centere
         n->height = std::round(nh / (sy0 == 0 ? 1 : sy0));
     }
     ed.gestureChanged = true;
-    ed.markDocChanged();
+    ed.bumpNode(n);
 }
 
 // Handle hit zones of the single-selection bounds (screen space).
@@ -183,9 +183,9 @@ void nudgeSelection(EditorState& ed, float dx, float dy) {
     for (Node* n : ed.selection) {
         n->relativeTransform.m02 += dx;
         n->relativeTransform.m12 += dy;
+        ed.bumpNode(n);
     }
     ed.pushPropsUndo(std::move(before));
-    ed.markDocChanged();
 }
 
 }  // namespace
@@ -422,32 +422,6 @@ void drawCanvas(EditorState& ed) {
     const int vw = ed.viewportW(), vh = ed.viewportH();
     if (vw <= 0 || vh <= 0) return;
 
-    // ---- re-rasterize when needed ----
-    ed.renderer.setTarget(static_cast<uint32_t>(vw), static_cast<uint32_t>(vh));
-    const bool settleDue = !ed.viewSettled && GetTime() - ed.lastViewChange > 0.12;
-    if (ed.docDirty || settleDue || !ed.canvasTexValid) {
-        ed.renderer.setViewTransform(ed.cam.view());
-        if (ed.renderer.render() || !ed.canvasTexValid) {
-            if (!ed.canvasTexValid ||
-                ed.canvasTex.width != vw || ed.canvasTex.height != vh) {
-                if (ed.canvasTexValid) UnloadTexture(ed.canvasTex);
-                Image img{};
-                img.data = const_cast<uint32_t*>(ed.renderer.pixels());
-                img.width = vw;
-                img.height = vh;
-                img.mipmaps = 1;
-                img.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
-                ed.canvasTex = LoadTextureFromImage(img);
-                ed.canvasTexValid = ed.canvasTex.id != 0;
-            } else {
-                UpdateTexture(ed.canvasTex, ed.renderer.pixels());
-            }
-            ed.texCam = ed.cam;
-        }
-        ed.docDirty = false;
-        if (settleDue) ed.viewSettled = true;
-    }
-
     // ---- background ----
     ::Color bg{30, 30, 30, 255};  // Figma dark canvas
     if (ed.page && !ed.page->fills.empty()) {
@@ -459,20 +433,94 @@ void drawCanvas(EditorState& ed) {
 
     BeginScissorMode(vx, vy, vw, vh);
 
-    // ---- canvas texture (remapped if the view moved since the last raster) ----
-    if (ed.canvasTexValid) {
-        const float s = ed.cam.zoom / ed.texCam.zoom;
-        // World point of the texture's (0,0) → current screen position.
-        float w0x, w0y;
-        ed.texCam.screenToWorld(0, 0, w0x, w0y);
-        float sx, sy;
-        ed.cam.worldToScreen(w0x, w0y, sx, sy);
-        const Rectangle src{0, 0, static_cast<float>(ed.canvasTex.width),
-                            static_cast<float>(ed.canvasTex.height)};
-        const Rectangle dst{vx + sx, vy + sy, ed.canvasTex.width * s,
-                            ed.canvasTex.height * s};
-        DrawTexturePro(ed.canvasTex, src, dst, {0, 0}, 0, WHITE);
+    // ---- per-frame cached compositing ----
+    // Each page child rasterizes into its own texture once; panning just
+    // redraws those textures. A frame re-rasterizes only when its content
+    // version changed, or the zoom drifted >1.5x from its raster zoom (after
+    // the view settles). Raster work is budgeted per UI frame.
+    constexpr float kPadWorld = 48;     // room for drop shadows
+    constexpr float kMaxTexDim = 4096;  // per-frame texture cap
+    const double budgetEnd = GetTime() + 0.030;
+    const float zoom = ed.cam.zoom;
+
+    // visible world rect
+    float vwx0, vwy0, vwx1, vwy1;
+    ed.cam.screenToWorld(0, 0, vwx0, vwy0);
+    ed.cam.screenToWorld(static_cast<float>(vw), static_cast<float>(vh), vwx1, vwy1);
+
+    if (!ed.viewSettled && GetTime() - ed.lastViewChange > 0.1) ed.viewSettled = true;
+
+    for (auto& childPtr : ed.page->children) {  // children order = back-to-front
+        Node* child = childPtr.get();
+        if (!child->visible) continue;
+        WorldRect wr = worldBounds(*child);
+        wr.x0 -= kPadWorld;
+        wr.y0 -= kPadWorld;
+        wr.x1 += kPadWorld;
+        wr.y1 += kPadWorld;
+        if (wr.w() <= 0 || wr.h() <= 0) continue;
+        const bool visible = wr.x0 <= vwx1 && wr.x1 >= vwx0 && wr.y0 <= vwy1 && wr.y1 >= vwy0;
+        if (!visible) continue;
+
+        auto& entry = ed.frameCache[child];
+        entry.lastUsed = GetTime();
+        const uint64_t ver = ed.versionOf(child);
+        const bool contentStale = !entry.texValid || entry.version != ver;
+        const bool zoomStale =
+            entry.zoom > 0 && (zoom > entry.zoom * 1.5f || zoom < entry.zoom / 1.5f);
+        const bool wantRaster = contentStale || (zoomStale && ed.viewSettled);
+
+        if (wantRaster && (contentStale || GetTime() < budgetEnd)) {
+            if (!entry.renderer) {
+                entry.renderer = std::make_unique<figmalib::Renderer>();
+                for (const auto& dir : ed.fontDirs)
+                    entry.renderer->registerFontsFromDirectory(dir);
+                if (!ed.imageDir.empty()) entry.renderer->setImageDirectory(ed.imageDir);
+                entry.renderer->setFrame(child);
+            }
+            if (contentStale) entry.renderer->markDirty();
+
+            const float ez =
+                std::min(zoom, kMaxTexDim / std::max(wr.w(), wr.h()));
+            const int tw = std::max(1, static_cast<int>(std::ceil(wr.w() * ez)));
+            const int th = std::max(1, static_cast<int>(std::ceil(wr.h() * ez)));
+            Mat23 view;
+            view.m00 = view.m11 = ez;
+            view.m02 = -wr.x0 * ez;
+            view.m12 = -wr.y0 * ez;
+            entry.renderer->setTarget(static_cast<uint32_t>(tw), static_cast<uint32_t>(th));
+            entry.renderer->setViewTransform(view);
+            const double t0 = GetTime();
+            if (entry.renderer->render()) {
+                ed.lastRenderMs = static_cast<float>((GetTime() - t0) * 1000.0);
+                if (!entry.texValid || entry.tex.width != tw || entry.tex.height != th) {
+                    if (entry.texValid) UnloadTexture(entry.tex);
+                    Image img{};
+                    img.data = const_cast<uint32_t*>(entry.renderer->pixels());
+                    img.width = tw;
+                    img.height = th;
+                    img.mipmaps = 1;
+                    img.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+                    entry.tex = LoadTextureFromImage(img);
+                    entry.texValid = entry.tex.id != 0;
+                } else {
+                    UpdateTexture(entry.tex, entry.renderer->pixels());
+                }
+                entry.zoom = ez;
+                entry.version = ver;
+            }
+        }
+
+        if (entry.texValid) {
+            float sx, sy;
+            ed.cam.worldToScreen(wr.x0, wr.y0, sx, sy);
+            const Rectangle src{0, 0, static_cast<float>(entry.tex.width),
+                                static_cast<float>(entry.tex.height)};
+            const Rectangle dst{vx + sx, vy + sy, wr.w() * zoom, wr.h() * zoom};
+            DrawTexturePro(entry.tex, src, dst, {0, 0}, 0, WHITE);
+        }
     }
+    ed.docDirty = false;
 
     // ---- overlays ----
     auto drawNodeOutline = [&](const Node& n, ::Color color, float thickness) {

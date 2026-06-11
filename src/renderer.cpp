@@ -31,12 +31,17 @@ struct Renderer::Impl {
     std::vector<uint32_t> buffer;
     uint32_t width = 0, height = 0;
     Node* frame = nullptr;
-    bool dirty = true;
+    bool dirty = true;       // document/scene changed → rebuild the tvg scene
+    bool viewDirty = true;   // only the view transform changed → re-raster only
     bool targetValid = false;
     FontProvider fonts;
     std::string imageDir;
     Mat23 viewTransform;
     bool hasViewTransform = false;
+    // Persistent scene: rebuilding thousands of tvg objects (path parsing,
+    // text layout) dwarfs rasterization cost, so the scene survives view
+    // changes and is only rebuilt when the document changes.
+    tvg::Scene* rootScene = nullptr;  // owned by the canvas once added
 
     Mat23 contentTransform() const {
         if (hasViewTransform) return viewTransform;
@@ -74,7 +79,7 @@ bool Renderer::setTarget(uint32_t width, uint32_t height) {
     const auto res = impl_->canvas->target(impl_->buffer.data(), width, width, height,
                                            tvg::ColorSpace::ABGR8888S);
     impl_->targetValid = res == tvg::Result::Success;
-    impl_->dirty = true;
+    impl_->viewDirty = true;  // scene survives; only the raster target changed
     return impl_->targetValid;
 }
 
@@ -87,9 +92,18 @@ void Renderer::setFrame(Node* frame) {
 void Renderer::markDirty() { impl_->dirty = true; }
 
 void Renderer::setViewTransform(const Mat23& view) {
+    const Mat23& cur = impl_->viewTransform;
+    if (impl_->hasViewTransform && cur.m00 == view.m00 && cur.m01 == view.m01 &&
+        cur.m02 == view.m02 && cur.m10 == view.m10 && cur.m11 == view.m11 &&
+        cur.m12 == view.m12) {
+        return;  // unchanged
+    }
+    // Re-origin behavior differs between modes, so the scene must be rebuilt
+    // when first entering view mode; afterwards only the transform updates.
+    if (!impl_->hasViewTransform) impl_->dirty = true;
     impl_->viewTransform = view;
     impl_->hasViewTransform = true;
-    impl_->dirty = true;
+    impl_->viewDirty = true;
 }
 
 void Renderer::clearViewTransform() {
@@ -100,29 +114,35 @@ void Renderer::clearViewTransform() {
 
 bool Renderer::render() {
     auto& d = *impl_;
-    if (!d.dirty || !d.frame || !d.targetValid || !d.canvas) return false;
+    if ((!d.dirty && !d.viewDirty) || !d.frame || !d.targetValid || !d.canvas) return false;
 
-    d.canvas->remove();  // drop the previous scene entirely
+    if (!d.rootScene) {
+        d.rootScene = tvg::Scene::gen();
+        d.canvas->add(d.rootScene);
+    }
 
-    BuildContext ctx;
-    ctx.fonts = &d.fonts;
-    ctx.imageDir = d.imageDir;
+    if (d.dirty) {  // document changed → rebuild the scene graph
+        d.rootScene->remove();
+        BuildContext ctx;
+        ctx.fonts = &d.fonts;
+        ctx.imageDir = d.imageDir;
+        // In view-transform (editor) mode the frame keeps its canvas position
+        // so sibling frames of a page stay laid out; in fit mode it is
+        // re-origined.
+        const bool reorigin = !d.hasViewTransform;
+        if (auto* frameScene = buildNodeScene(*d.frame, Mat23::identity(), ctx, reorigin)) {
+            d.rootScene->add(frameScene);
+        }
+    }
 
     const Mat23 content = d.contentTransform();
-    auto* rootScene = tvg::Scene::gen();
-    rootScene->transform({content.m00, content.m01, content.m02, content.m10, content.m11,
-                          content.m12, 0, 0, 1});
-    // In view-transform (editor) mode the frame keeps its canvas position so
-    // sibling frames of a page stay laid out; in fit mode it is re-origined.
-    const bool reorigin = !d.hasViewTransform;
-    if (auto* frameScene = buildNodeScene(*d.frame, Mat23::identity(), ctx, reorigin)) {
-        rootScene->add(frameScene);
-    }
-    d.canvas->add(rootScene);
+    d.rootScene->transform({content.m00, content.m01, content.m02, content.m10, content.m11,
+                            content.m12, 0, 0, 1});
     d.canvas->update();
     d.canvas->draw(true /*clear*/);
     d.canvas->sync();
     d.dirty = false;
+    d.viewDirty = false;
     return true;
 }
 

@@ -128,15 +128,35 @@ struct EditorState {
     std::vector<UndoEntry> undoStack;
     std::vector<UndoEntry> redoStack;
 
-    // render cache
-    RenderTexture2D unused{};
-    Texture2D canvasTex{};
-    bool canvasTexValid = false;
-    Camera2D2 texCam;                 // camera the texture was rendered with
+    // ---- per-frame render cache ----
+    // Each top-level object of the page rasterizes into its own texture
+    // (with padding for shadows). Pan/zoom only composites textures on the
+    // GPU; a frame re-rasterizes when its content version changes or the
+    // zoom leaves the band it was rendered at.
+    struct FrameCacheEntry {
+        std::unique_ptr<figmalib::Renderer> renderer;  // persistent tvg scene
+        Texture2D tex{};
+        bool texValid = false;
+        float zoom = -1;        // raster zoom of the texture
+        uint64_t version = ~0ull;
+        double lastUsed = 0;
+    };
+    std::unordered_map<Node*, FrameCacheEntry> frameCache;
+    std::unordered_map<Node*, uint64_t> frameVersion;
+    std::string imageDir;                 // renderer config for cache entries
+    std::vector<std::string> fontDirs;
+
     double lastViewChange = 0;
     bool viewSettled = true;
-    bool docDirty = false;            // needs re-rasterize
+    bool docDirty = false;            // cache validity must be re-checked
     bool unsaved = false;
+    float lastRenderMs = 0;           // measured raster cost (debug)
+
+    uint64_t versionOf(Node* topChild);
+    void bumpNode(Node* n);           // invalidate the top-level frame containing n
+    void bumpAllFrames();
+    void invalidateCache();           // unload all textures (file/page switch)
+    void updateAbsoluteTransforms();  // page-space transforms for hit testing
 
     // ui
     std::unordered_set<Node*> expanded;  // layers tree

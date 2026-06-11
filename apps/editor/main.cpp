@@ -25,31 +25,31 @@ namespace {
 
 void registerConventionFonts(EditorState& ed, const std::string& inputPath) {
     std::error_code ec;
+    ed.fontDirs.clear();
     const fs::path sibling = fs::path(inputPath).parent_path() / "fonts";
-    if (fs::is_directory(sibling, ec)) {
-        ed.renderer.registerFontsFromDirectory(sibling.string());
-    }
+    if (fs::is_directory(sibling, ec)) ed.fontDirs.push_back(sibling.string());
     if (const char* env = std::getenv("FIGMALIB_FONTS_DIR"); env && *env) {
-        if (fs::is_directory(env, ec)) ed.renderer.registerFontsFromDirectory(env);
+        if (fs::is_directory(env, ec)) ed.fontDirs.push_back(env);
     }
+    for (const auto& dir : ed.fontDirs) ed.renderer.registerFontsFromDirectory(dir);
 }
 
 bool openFile(EditorState& ed, const std::string& path) {
     try {
         figmalib::LoadedFile loaded = figmalib::loadFigmaFile(path);
+        ed.invalidateCache();  // before the old document (and its nodes) dies
         ed.file = std::move(loaded);
         ed.filePath = path;
         ed.savePath = path + ".figmalib.json";
-        if (!ed.file.imageDirectory.empty()) {
-            ed.renderer.setImageDirectory(ed.file.imageDirectory);
-        }
+        ed.imageDir = ed.file.imageDirectory;
+        if (!ed.imageDir.empty()) ed.renderer.setImageDirectory(ed.imageDir);
         registerConventionFonts(ed, path);
         ed.undoStack.clear();
         ed.redoStack.clear();
         ed.expanded.clear();
         ed.unsaved = false;
-        ed.canvasTexValid = false;
         ed.selectPage(0);
+        ed.updateAbsoluteTransforms();
         ed.setStatus("Opened " + path);
         return true;
     } catch (const std::exception& e) {
@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
         EndDrawing();
     }
 
-    if (ed.canvasTexValid) UnloadTexture(ed.canvasTex);
+    ed.invalidateCache();
     CloseWindow();
     return 0;
 }

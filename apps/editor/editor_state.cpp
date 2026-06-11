@@ -92,6 +92,7 @@ void EditorState::selectPage(int index) {
     hovered = nullptr;
     renderer.setFrame(page);
     docDirty = true;
+    updateAbsoluteTransforms();
     zoomToFit();
 }
 
@@ -323,6 +324,49 @@ void EditorState::redo() {
 void EditorState::markDocChanged() {
     docDirty = true;
     renderer.markDirty();
+    bumpAllFrames();
+    updateAbsoluteTransforms();
+}
+
+uint64_t EditorState::versionOf(Node* topChild) {
+    auto it = frameVersion.find(topChild);
+    return it == frameVersion.end() ? 0 : it->second;
+}
+
+void EditorState::bumpNode(Node* n) {
+    Node* top = n;
+    while (top && top->parent && top->parent != page) top = top->parent;
+    if (top) ++frameVersion[top];
+    docDirty = true;
+    updateAbsoluteTransforms();
+}
+
+void EditorState::bumpAllFrames() {
+    if (!page) return;
+    for (auto& c : page->children) ++frameVersion[c.get()];
+}
+
+void EditorState::invalidateCache() {
+    for (auto& [node, entry] : frameCache) {
+        if (entry.texValid) UnloadTexture(entry.tex);
+    }
+    frameCache.clear();
+    frameVersion.clear();
+    docDirty = true;
+}
+
+namespace {
+void updateAbs(Node& n, const Mat23& parentAbs) {
+    n.absoluteTransform = parentAbs * n.relativeTransform;
+    for (auto& c : n.children) updateAbs(*c, n.absoluteTransform);
+}
+}  // namespace
+
+void EditorState::updateAbsoluteTransforms() {
+    if (!page) return;
+    // Page space is world space: the page itself sits at identity.
+    page->absoluteTransform = Mat23::identity();
+    for (auto& c : page->children) updateAbs(*c, Mat23::identity());
 }
 
 }  // namespace figmaedit
