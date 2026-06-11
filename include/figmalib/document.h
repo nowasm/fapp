@@ -246,6 +246,10 @@ struct NodeData {
     float runtimeOpacity = -1.0f;   // override; <0 → use authored opacity
     int runtimeVisible = -1;        // -1 inherit, 0 hidden, 1 visible
     float scrollX = 0, scrollY = 0;  // content offset of a scrolling frame, ≥0
+    // Text editing (FigmaUI::setEditable / focus): a TEXT node the user can
+    // type into. caretByte ≥ 0 → node has focus; the renderer draws the caret.
+    bool editable = false;
+    int caretByte = -1;  // UTF-8 byte offset into `characters`
 };
 
 struct Node : NodeData {

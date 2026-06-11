@@ -19,6 +19,7 @@ struct FigmaUI::Impl {
     Node* frame = nullptr;
     Node* hovered = nullptr;
     Node* pressed = nullptr;
+    Node* focused = nullptr;  // editable TEXT node owning the caret
     ResizeMode resizeMode = ResizeMode::Scale;
 
     // Touch-style drag scrolling: candidate picked at pointerDown, panning
@@ -153,6 +154,38 @@ struct FigmaUI::Impl {
         }
         return false;
     }
+
+    // ---- Text editing ----
+
+    void setFocus(Node* n) {
+        if (focused == n) return;
+        if (focused) focused->caretByte = -1;
+        focused = n;
+        if (focused) {
+            focused->caretByte = static_cast<int>(focused->characters.size());
+        }
+        renderer.markDirty();
+    }
+
+    // UTF-8 codepoint boundaries around the caret.
+    static size_t prevCp(const std::string& s, size_t i) {
+        if (i == 0) return 0;
+        --i;
+        while (i > 0 && (static_cast<unsigned char>(s[i]) & 0xC0) == 0x80) --i;
+        return i;
+    }
+    static size_t nextCp(const std::string& s, size_t i) {
+        if (i >= s.size()) return s.size();
+        ++i;
+        while (i < s.size() && (static_cast<unsigned char>(s[i]) & 0xC0) == 0x80) ++i;
+        return i;
+    }
+
+    void editChanged() {
+        if (focused) focused->textRuns.clear();  // runs index the old string
+        reflow();  // auto-height boxes follow the new content
+        renderer.markDirty();
+    }
 };
 
 FigmaUI::FigmaUI() : impl_(std::make_unique<Impl>()) {}
@@ -211,6 +244,7 @@ std::vector<std::string> FigmaUI::frameNames() const {
 bool FigmaUI::selectFrame(const std::string& name) {
     for (Node* f : impl_->doc->topLevelFrames()) {
         if (f->name == name || f->id == name) {
+            impl_->setFocus(nullptr);
             impl_->frame = f;
             impl_->renderer.setFrame(f);
             impl_->hovered = nullptr;
@@ -313,6 +347,18 @@ void FigmaUI::pointerUp(float x, float y) {
     impl_->dragScrollNode = nullptr;
 
     Node* hit = impl_->hitTestViewport(x, y);
+
+    // Focus follows the click: nearest editable text in the hit chain wins;
+    // clicking anywhere else (or outside the frame) blurs.
+    Node* toFocus = nullptr;
+    for (Node* n = hit; n; n = n->parent) {
+        if (n->editable && n->type == NodeType::Text) {
+            toFocus = n;
+            break;
+        }
+        if (n == impl_->frame) break;
+    }
+    impl_->setFocus(toFocus);
     if (hit && impl_->pressed) {
         // Click counts if press and release share the hit node or an ancestor.
         Node* target = nullptr;
@@ -362,6 +408,85 @@ bool FigmaUI::setScroll(const std::string& nodeName, float offsetX, float offset
 
 Node* FigmaUI::scrollableAt(float x, float y) {
     return impl_->scrollableAtViewport(x, y);
+}
+
+bool FigmaUI::setEditable(const std::string& nodeName, bool editable) {
+    Node* n = impl_->findMutable(nodeName);
+    if (!n || n->type != NodeType::Text) return false;
+    n->editable = editable;
+    if (!editable && impl_->focused == n) impl_->setFocus(nullptr);
+    return true;
+}
+
+bool FigmaUI::focusText(const std::string& nodeName) {
+    Node* n = impl_->findMutable(nodeName);
+    if (!n || n->type != NodeType::Text) return false;
+    impl_->setFocus(n);
+    return true;
+}
+
+void FigmaUI::blur() { impl_->setFocus(nullptr); }
+
+Node* FigmaUI::focusedNode() const { return impl_->focused; }
+
+void FigmaUI::textInput(const std::string& utf8) {
+    Node* n = impl_->focused;
+    if (!n || utf8.empty()) return;
+    // Keep printable text and newlines; hosts feed raw key events elsewhere.
+    std::string clean;
+    clean.reserve(utf8.size());
+    for (char c : utf8) {
+        if (c == '\r') continue;
+        if (static_cast<unsigned char>(c) < 0x20 && c != '\n') continue;
+        clean.push_back(c);
+    }
+    if (clean.empty()) return;
+    const size_t len = n->characters.size();
+    const size_t at = n->caretByte < 0
+                          ? len
+                          : std::min(static_cast<size_t>(n->caretByte), len);
+    n->characters.insert(at, clean);
+    n->caretByte = static_cast<int>(at + clean.size());
+    impl_->editChanged();
+}
+
+void FigmaUI::editKey(EditKey key) {
+    Node* n = impl_->focused;
+    if (!n) return;
+    std::string& s = n->characters;
+    size_t caret = n->caretByte < 0
+                       ? s.size()
+                       : std::min(static_cast<size_t>(n->caretByte), s.size());
+    switch (key) {
+    case EditKey::Left: caret = Impl::prevCp(s, caret); break;
+    case EditKey::Right: caret = Impl::nextCp(s, caret); break;
+    case EditKey::Home: {
+        const size_t nl = caret == 0 ? std::string::npos : s.rfind('\n', caret - 1);
+        caret = nl == std::string::npos ? 0 : nl + 1;
+        break;
+    }
+    case EditKey::End: {
+        const size_t nl = s.find('\n', caret);
+        caret = nl == std::string::npos ? s.size() : nl;
+        break;
+    }
+    case EditKey::Backspace:
+        if (caret > 0) {
+            const size_t b = Impl::prevCp(s, caret);
+            s.erase(b, caret - b);
+            caret = b;
+            impl_->editChanged();
+        }
+        break;
+    case EditKey::Delete:
+        if (caret < s.size()) {
+            s.erase(caret, Impl::nextCp(s, caret) - caret);
+            impl_->editChanged();
+        }
+        break;
+    }
+    n->caretByte = static_cast<int>(caret);
+    impl_->renderer.markDirty();
 }
 
 void FigmaUI::onClick(const std::string& nodeName, ClickHandler fn) {
@@ -459,6 +584,7 @@ bool FigmaUI::setVariant(const std::string& instanceName, const std::string& pro
     // Swap in clones of the target variant's children, then reflow them from
     // the component's authored size to this instance's authored size so the
     // new subtree behaves exactly like a parse-time instance.
+    impl_->setFocus(nullptr);  // the focused node may live in the old subtree
     inst->children.clear();
     for (const auto& c : target->children) inst->children.push_back(cloneNode(*c, inst));
     inst->componentId = target->id;

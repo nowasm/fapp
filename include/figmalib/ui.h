@@ -86,6 +86,21 @@ public:
     void onClick(const std::string& nodeName, ClickHandler fn);
     void onHover(const std::string& nodeName, HoverHandler fn);
 
+    // ---- Text editing ----
+    // A TEXT node marked editable receives focus when clicked (caret at the
+    // end); clicking anywhere else blurs. The focused node draws a caret and
+    // consumes textInput/editKey. IME note: committed composition strings
+    // arrive through the host's normal character events — feed them to
+    // textInput like any typed character.
+    enum class EditKey { Left, Right, Backspace, Delete, Home, End };
+
+    bool setEditable(const std::string& nodeName, bool editable = true);
+    bool focusText(const std::string& nodeName);  // programmatic focus
+    void blur();
+    Node* focusedNode() const;
+    void textInput(const std::string& utf8);  // insert at the caret
+    void editKey(EditKey key);
+
     // ---- Runtime mutation (marks dirty, returns false if node not found) ----
     bool setVisible(const std::string& nodeName, bool visible);
     bool setOpacity(const std::string& nodeName, float opacity);  // <0 resets to authored

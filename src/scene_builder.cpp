@@ -491,6 +491,12 @@ struct TextPiece {
     float width = 0;
     float ascent = 0, fontH = 0, natLineH = 0;
     bool space = false, newline = false;
+    // Source range in Node::characters plus the resolved font, so caret
+    // placement can re-measure a prefix of the token.
+    int srcStart = -1, srcEnd = -1;
+    std::string fontKey;
+    float fontPt = 0;          // tvg point size (px × 72/96)
+    float letterFactor = 1.0f;
 };
 
 // Result of tokenizing + measuring + greedily wrapping a text node. Shared
@@ -501,6 +507,7 @@ struct TextFlow {
     struct Line {
         std::vector<TextPiece*> ps;
         float width = 0;
+        int srcStart = -1, srcEnd = -1;  // source byte span (incl. trailing spaces)
     };
     std::vector<Line> lines;
     std::vector<float> lineHs;  // line-box heights (Figma line-box model)
@@ -574,7 +581,7 @@ bool buildTextFlow(const Node& n, float maxW, BuildContext& ctx, bool keepTexts,
                                                       run.style.fontWeight, run.style.italic);
         if (key.empty()) return bail();
 
-        auto makeToken = [&](const std::string& token, bool isSpace) -> bool {
+        auto makeToken = [&](const std::string& token, bool isSpace, size_t srcOff) -> bool {
             const std::string tokenKey =
                 keyForText(ctx, key, token, run.style.fontWeight, run.style.italic);
             auto* t = tvg::Text::gen();
@@ -604,6 +611,11 @@ bool buildTextFlow(const Node& n, float maxW, BuildContext& ctx, bool keepTexts,
             }
             p.width = width * letterFactor;
             p.space = isSpace;
+            p.srcStart = run.start + static_cast<int>(srcOff);
+            p.srcEnd = p.srcStart + static_cast<int>(token.size());
+            p.fontKey = tokenKey;
+            p.fontPt = run.style.fontSize * 72.0f / 96.0f;
+            p.letterFactor = letterFactor;
             if (isSpace) {
                 tvg::Paint::rel(t);  // spaces only contribute advance
             } else {
@@ -630,6 +642,8 @@ bool buildTextFlow(const Node& n, float maxW, BuildContext& ctx, bool keepTexts,
             if (c == '\n') {
                 Piece nl;
                 nl.newline = true;
+                nl.srcStart = run.start + static_cast<int>(i);
+                nl.srcEnd = nl.srcStart + 1;
                 pieces.push_back(nl);
                 ++i;
                 continue;
@@ -637,14 +651,14 @@ bool buildTextFlow(const Node& n, float maxW, BuildContext& ctx, bool keepTexts,
             if (c == ' ') {
                 size_t e = i;
                 while (e < s.size() && s[e] == ' ') ++e;
-                if (!makeToken(s.substr(i, e - i), true)) return bail();
+                if (!makeToken(s.substr(i, e - i), true, i)) return bail();
                 i = e;
                 continue;
             }
             const size_t len = std::min(cpLen(s, i), s.size() - i);
             const unsigned long cp = decode(s, i, len);
             if (cjk(cp)) {
-                if (!makeToken(s.substr(i, len), false)) return bail();
+                if (!makeToken(s.substr(i, len), false, i)) return bail();
                 i += len;
                 continue;
             }
@@ -655,7 +669,7 @@ bool buildTextFlow(const Node& n, float maxW, BuildContext& ctx, bool keepTexts,
                 if (cjk(decode(s, e, l))) break;
                 e += l;
             }
-            if (!makeToken(s.substr(i, e - i), false)) return bail();
+            if (!makeToken(s.substr(i, e - i), false, i)) return bail();
             i = e;
         }
     }
@@ -671,16 +685,25 @@ bool buildTextFlow(const Node& n, float maxW, BuildContext& ctx, bool keepTexts,
             ln.ps.pop_back();
         }
     };
+    // Source coverage per line (drives caret placement; includes pieces that
+    // don't render, like dropped or trailing spaces).
+    auto cover = [](Line& ln, const Piece& p) {
+        if (ln.srcStart < 0) ln.srcStart = p.srcStart;
+        ln.srcEnd = std::max(ln.srcEnd, p.srcEnd);
+    };
     bool wrapped = false;  // last break was a wrap (drop the leading spaces)
     for (auto& p : pieces) {
         Line* cur = &lines.back();
         if (p.newline) {
+            cover(*cur, p);  // caret right before the \n sits on this line
             lineEnd(*cur);
             lines.emplace_back();
+            lines.back().srcStart = lines.back().srcEnd = p.srcEnd;
             wrapped = false;
             continue;
         }
         if (p.space) {
+            cover(*cur, p);
             if (wrapped && cur->ps.empty()) continue;
             cur->ps.push_back(&p);
             cur->width += p.width;
@@ -692,6 +715,7 @@ bool buildTextFlow(const Node& n, float maxW, BuildContext& ctx, bool keepTexts,
             cur = &lines.back();
             wrapped = true;
         }
+        cover(*cur, p);
         cur->ps.push_back(&p);
         cur->width += p.width;
     }
@@ -1064,6 +1088,83 @@ tvg::Scene* buildBooleanApprox(Node& n) {
     return scene;
 }
 
+// First visible solid fill — used as the caret color so it matches the text.
+Color textInkColor(const Node& n) {
+    for (const auto& p : n.fills) {
+        if (p.visible && p.opacity > 0 && p.type == PaintType::Solid) {
+            Color c = p.color;
+            c.a *= p.opacity;
+            return c;
+        }
+    }
+    return {0, 0, 0, 1};
+}
+
+// Caret rectangle in node-local coordinates for a UTF-8 byte offset into
+// Node::characters (clamped). Uses the same flow as rendering, so the caret
+// lands exactly between the drawn glyphs.
+bool textCaretRect(const Node& n, int caretByte, BuildContext& ctx, float& outX,
+                   float& outY, float& outH) {
+    const TextStyle& base = n.textStyle;
+    const float fallbackH =
+        base.lineHeightPx > 0 ? base.lineHeightPx : base.fontSize * 1.2f;
+    auto alignedX = [&](float lineW) {
+        return base.alignH == TextStyle::AlignH::Center  ? (n.width - lineW) * 0.5f
+               : base.alignH == TextStyle::AlignH::Right ? n.width - lineW
+                                                         : 0.0f;
+    };
+
+    TextFlow flow;
+    const bool noWrap = base.autoResize == "WIDTH_AND_HEIGHT" || n.width <= 0;
+    if (n.characters.empty() ||
+        !buildTextFlow(n, noWrap ? 0 : n.width, ctx, false, flow)) {
+        // Empty box (or missing fonts): caret at the alignment origin.
+        outX = alignedX(0);
+        outY = base.alignV == TextStyle::AlignV::Center ? (n.height - fallbackH) * 0.5f
+               : base.alignV == TextStyle::AlignV::Bottom ? n.height - fallbackH
+                                                          : 0.0f;
+        outH = fallbackH;
+        return true;
+    }
+
+    float top = 0;
+    if (base.alignV == TextStyle::AlignV::Center) top = (n.height - flow.contentH) * 0.5f;
+    else if (base.alignV == TextStyle::AlignV::Bottom) top = n.height - flow.contentH;
+
+    const int caret = std::clamp(caretByte, 0, static_cast<int>(n.characters.size()));
+    for (size_t li = 0; li < flow.lines.size(); ++li) {
+        const auto& ln = flow.lines[li];
+        if (li + 1 < flow.lines.size() && caret > ln.srcEnd) {
+            top += flow.lineHs[li];
+            continue;
+        }
+        float x = alignedX(ln.width);
+        for (const TextPiece* p : ln.ps) {
+            if (caret >= p->srcEnd) {
+                x += p->width;
+                continue;
+            }
+            if (caret <= p->srcStart) break;
+            // Inside the token: prefix advance with the token's resolved font.
+            auto* t = tvg::Text::gen();
+            if (t->font(p->fontKey.c_str()) == tvg::Result::Success) {
+                t->size(p->fontPt);
+                int glyphs = 0;
+                const std::string prefix = n.characters.substr(
+                    p->srcStart, static_cast<size_t>(caret - p->srcStart));
+                x += measureAdvance(*t, prefix, glyphs) * p->letterFactor;
+            }
+            tvg::Paint::rel(t);
+            break;
+        }
+        outX = x;
+        outY = top;
+        outH = flow.lineHs[li];
+        return true;
+    }
+    return false;
+}
+
 }  // namespace
 
 bool measureTextNode(const Node& n, float maxWidth, BuildContext& ctx,
@@ -1101,6 +1202,17 @@ tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx
     if (node.type == NodeType::Text) {
         if (auto* rich = makeRichText(node, ctx)) scene->add(rich);
         else if (auto* text = makeText(node, ctx)) scene->add(text);
+        if (node.caretByte >= 0) {  // focused for editing: draw the caret
+            float cx = 0, cy = 0, ch = 0;
+            if (textCaretRect(node, node.caretByte, ctx, cx, cy, ch)) {
+                auto* caret = tvg::Shape::gen();
+                caret->appendRect(cx - 0.75f, cy + ch * 0.08f, 1.5f, ch * 0.84f, 0.75f,
+                                  0.75f);
+                const Color c = textInkColor(node);
+                caret->fill(channel(c.r), channel(c.g), channel(c.b), channel(c.a));
+                scene->add(caret);
+            }
+        }
     } else if (node.type == NodeType::BooleanOperation && node.fillGeometry.empty() &&
                !node.children.empty()) {
         // No precomputed outline: UNION approximation over the source shapes.

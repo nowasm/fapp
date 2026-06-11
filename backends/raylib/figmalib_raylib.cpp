@@ -65,6 +65,42 @@ void RaylibFigmaView::update() {
         ui_.scrollBy(mouse.x, mouse.y, -wheel.x * 48.0f, -wheel.y * 48.0f);
     }
 
+    // Text editing: while a node has focus, the keyboard belongs to it.
+    // GetCharPressed also delivers committed IME strings (WM_CHAR), so CJK
+    // input works without extra plumbing.
+    if (ui_.focusedNode()) {
+        using EK = FigmaUI::EditKey;
+        int cp;
+        while ((cp = GetCharPressed()) != 0) {
+            char buf[5] = {};
+            if (cp < 0x80) {
+                buf[0] = static_cast<char>(cp);
+            } else if (cp < 0x800) {
+                buf[0] = static_cast<char>(0xC0 | (cp >> 6));
+                buf[1] = static_cast<char>(0x80 | (cp & 0x3F));
+            } else if (cp < 0x10000) {
+                buf[0] = static_cast<char>(0xE0 | (cp >> 12));
+                buf[1] = static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+                buf[2] = static_cast<char>(0x80 | (cp & 0x3F));
+            } else {
+                buf[0] = static_cast<char>(0xF0 | (cp >> 18));
+                buf[1] = static_cast<char>(0x80 | ((cp >> 12) & 0x3F));
+                buf[2] = static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+                buf[3] = static_cast<char>(0x80 | (cp & 0x3F));
+            }
+            ui_.textInput(buf);
+        }
+        auto rep = [](int k) { return IsKeyPressed(k) || IsKeyPressedRepeat(k); };
+        if (rep(KEY_BACKSPACE)) ui_.editKey(EK::Backspace);
+        if (rep(KEY_DELETE)) ui_.editKey(EK::Delete);
+        if (rep(KEY_LEFT)) ui_.editKey(EK::Left);
+        if (rep(KEY_RIGHT)) ui_.editKey(EK::Right);
+        if (rep(KEY_HOME)) ui_.editKey(EK::Home);
+        if (rep(KEY_END)) ui_.editKey(EK::End);
+        if (rep(KEY_ENTER)) ui_.textInput("\n");
+        if (IsKeyPressed(KEY_ESCAPE)) ui_.blur();
+    }
+
     if (gpuActive_) {
         // ThorVG drives GL directly: flush raylib's pending batch first, then
         // restore the state rlgl assumes (it caches and won't re-apply).

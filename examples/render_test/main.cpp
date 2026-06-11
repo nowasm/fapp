@@ -227,6 +227,68 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Text editing: focus an editable node, type (incl. CJK), navigate, and
+    // delete; the caret must also show up in the pixels.
+    {
+        figmalib::Node* textNode = nullptr;
+        for (const auto& frameName : seen) {
+            if (!ui->selectFrame(frameName)) continue;
+            ui->currentFrame()->visit([&](figmalib::Node& n) {
+                if (!textNode && n.type == figmalib::NodeType::Text &&
+                    !n.characters.empty()) {
+                    textNode = &n;
+                }
+                return true;
+            });
+            if (textNode) break;
+        }
+        if (!textNode) {
+            std::printf("edit: no text node (skipped)\n");
+        } else {
+            const std::string savedChars = textNode->characters;
+            const std::string savedName = textNode->name;
+            textNode->name = "__edit_target__";
+            textNode->characters = "ab";
+            ui->setEditable("__edit_target__");
+            ui->render();
+            const uint32_t total = ui->pixelWidth() * ui->pixelHeight();
+            std::vector<uint32_t> before(ui->pixels(), ui->pixels() + total);
+
+            ui->focusText("__edit_target__");          // caret at end
+            ui->textInput("c你好");                     // ab|c你好
+            ui->editKey(figmalib::FigmaUI::EditKey::Backspace);  // drop 好
+            ui->editKey(figmalib::FigmaUI::EditKey::Left);       // skip 你
+            ui->editKey(figmalib::FigmaUI::EditKey::Left);       // skip c
+            ui->textInput("X");                         // ab X c你
+            bool ok = textNode->characters == "abXc\xe4\xbd\xa0";
+            if (!ok) {
+                std::printf("FAIL: edit ops produced \"%s\"\n",
+                            textNode->characters.c_str());
+                ++failures;
+            }
+            if (!ui->render()) {
+                std::printf("FAIL: edit render\n");
+                ++failures;
+            } else {
+                uint32_t diff = 0;
+                for (uint32_t i = 0; i < total; ++i) {
+                    if (ui->pixels()[i] != before[i]) ++diff;
+                }
+                std::printf("edit \"%s\": %u pixels changed (text + caret)\n",
+                            textNode->characters.c_str(), diff);
+                if (diff == 0) {
+                    std::printf("FAIL: editing changed no pixels\n");
+                    ++failures;
+                }
+            }
+            ui->blur();
+            textNode->characters = savedChars;
+            textNode->name = savedName;
+            textNode->textRuns.clear();
+            ui->markDirty();
+        }
+    }
+
     // Hit-test sanity on the sample UI: center of the start button.
     if (ui->selectFrame("MainMenu")) {
         ui->render();
