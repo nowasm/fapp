@@ -258,8 +258,14 @@ std::unique_ptr<Node> parseNode(const json& j, Node* parent) {
         }
     }
 
-    if (auto it = j.find("children"); it != j.end() && it->is_array()) {
-        for (const auto& c : *it) node->children.push_back(parseNode(c, node.get()));
+    // Boolean ops with combined geometry: the outline is the final visual;
+    // children would repaint the source shapes on top of it.
+    const bool booleanWithOutline =
+        node->type == NodeType::BooleanOperation && !node->fillGeometry.empty();
+    if (!booleanWithOutline) {
+        if (auto it = j.find("children"); it != j.end() && it->is_array()) {
+            for (const auto& c : *it) node->children.push_back(parseNode(c, node.get()));
+        }
     }
     return node;
 }

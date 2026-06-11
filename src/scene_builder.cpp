@@ -226,6 +226,19 @@ void pushStrokePaint(tvg::Scene& scene, const Paint& p, const Node& n) {
 
     if (n.strokeWeight <= 0) return;
 
+    // Open paths (no Z command anywhere) have no meaningful inside/outside —
+    // Figma strokes them centered regardless of strokeAlign, and the clip
+    // trick would cut the stroke along the chord-closed region.
+    bool openPath = !n.fillGeometry.empty();
+    for (const auto& geom : n.fillGeometry) {
+        if (geom.path.find('Z') != std::string::npos ||
+            geom.path.find('z') != std::string::npos) {
+            openPath = false;
+            break;
+        }
+    }
+    const StrokeAlign align = openPath ? StrokeAlign::Center : n.strokeAlign;
+
     // No outline geometry: stroke the node outline. ThorVG strokes are
     // centered, so emulate Figma's alignment: INSIDE = double width clipped
     // to the outline, OUTSIDE = double width with the outline masked away.
@@ -247,10 +260,10 @@ void pushStrokePaint(tvg::Scene& scene, const Paint& p, const Node& n) {
         } else {
             shape->strokeFill(makeGradient(p, n.width, n.height));
         }
-        if (n.strokeAlign == StrokeAlign::Inside) {
+        if (align == StrokeAlign::Inside) {
             shape->strokeWidth(n.strokeWeight * 2.0f);
             shape->clip(outlineShape());
-        } else if (n.strokeAlign == StrokeAlign::Outside) {
+        } else if (align == StrokeAlign::Outside) {
             shape->strokeWidth(n.strokeWeight * 2.0f);
             auto* mask = outlineShape();
             mask->fill(255, 255, 255, 255);
@@ -534,6 +547,69 @@ void applyEffects(tvg::Scene& scene, const Node& n) {
     }
 }
 
+// Boolean op without a precomputed outline: approximate with a UNION — draw
+// every descendant outline with the boolean node's own paints (the children
+// carry no fills of their own; Figma puts them on the boolean node). Painted
+// into one scene so group opacity composites without darkening overlaps.
+tvg::Scene* buildBooleanApprox(Node& n) {
+    auto* scene = tvg::Scene::gen();
+
+    const Paint* fill = nullptr;
+    for (const auto& p : n.fills) {
+        if (p.visible && p.opacity > 0 && p.type != PaintType::Image) {
+            fill = &p;
+            break;
+        }
+    }
+    const Paint* stroke = nullptr;
+    for (const auto& p : n.strokes) {
+        if (p.visible && p.opacity > 0 && p.type != PaintType::Image) {
+            stroke = &p;
+            break;
+        }
+    }
+    if (!fill && !stroke) return scene;
+
+    std::function<void(Node&, const Mat23&)> rec = [&](Node& d, const Mat23& acc) {
+        for (auto& childPtr : d.children) {
+            Node& c = *childPtr;
+            if (!c.effectivelyVisible()) continue;
+            const Mat23 m = acc * c.relativeTransform;
+            auto emit = [&](tvg::Shape* shape) {
+                shape->transform({m.m00, m.m01, m.m02, m.m10, m.m11, m.m12, 0, 0, 1});
+                if (fill) applyFill(*shape, *fill, n);
+                if (stroke && n.strokeWeight > 0) {
+                    applyStrokeStyle(*shape, n);
+                    shape->strokeFill(channel(stroke->color.r), channel(stroke->color.g),
+                                      channel(stroke->color.b),
+                                      static_cast<uint8_t>(channel(stroke->color.a) *
+                                                           stroke->opacity));
+                }
+                scene->add(shape);
+            };
+            if (!c.fillGeometry.empty()) {
+                for (const auto& geom : c.fillGeometry) {
+                    auto* shape = tvg::Shape::gen();
+                    if (!appendSvgPath(*shape, geom.path.c_str())) {
+                        tvg::Paint::rel(shape);
+                        continue;
+                    }
+                    shape->fillRule(geom.evenOdd ? tvg::FillRule::EvenOdd
+                                                 : tvg::FillRule::NonZero);
+                    emit(shape);
+                }
+            } else if (c.children.empty() && (c.width > 0 || c.height > 0)) {
+                auto* shape = tvg::Shape::gen();
+                appendPrimitive(*shape, c);
+                emit(shape);
+            }
+            rec(c, m);
+        }
+    };
+    rec(n, Mat23::identity());
+    return scene;
+}
+
 }  // namespace
 
 tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx,
@@ -548,16 +624,24 @@ tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx
     scene->transform(toTvg(local));
     scene->opacity(static_cast<uint8_t>(std::lround(node.effectiveOpacity() * 255)));
 
+    bool skipChildren = false;
     if (node.type == NodeType::Text) {
         if (auto* rich = makeRichText(node, ctx)) scene->add(rich);
         else if (auto* text = makeText(node, ctx)) scene->add(text);
+    } else if (node.type == NodeType::BooleanOperation && node.fillGeometry.empty() &&
+               !node.children.empty()) {
+        // No precomputed outline: UNION approximation over the source shapes.
+        scene->add(buildBooleanApprox(node));
+        skipChildren = true;
     } else {
         for (const auto& paint : node.fills) pushFillPaint(*scene, paint, node, ctx);
         for (const auto& paint : node.strokes) pushStrokePaint(*scene, paint, node);
     }
 
-    for (auto& child : node.children) {
-        if (auto* cs = buildNodeScene(*child, node.absoluteTransform, ctx)) scene->add(cs);
+    if (!skipChildren) {
+        for (auto& child : node.children) {
+            if (auto* cs = buildNodeScene(*child, node.absoluteTransform, ctx)) scene->add(cs);
+        }
     }
 
     if (node.clipsContent && node.width > 0 && node.height > 0) {

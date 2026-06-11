@@ -1158,7 +1158,12 @@ std::unique_ptr<Node> parseCanvasNode(const json& j, Node* parent, int depth) {
         node->fills.push_back(bg);
     }
 
-    if (j.contains("children") && j["children"].is_array()) {
+    // Boolean ops with a precomputed outline (vectorData/commands): the
+    // outline IS the final visual — parsing the source children too would
+    // paint them again on top of the combined shape.
+    const bool booleanWithOutline =
+        j.contains("booleanOperation") && !node->fillGeometry.empty();
+    if (!booleanWithOutline && j.contains("children") && j["children"].is_array()) {
         for (const json& c : j["children"]) {
             if (c.is_object()) node->children.push_back(parseCanvasNode(c, node.get(), depth + 1));
         }

@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <unordered_map>
 
@@ -127,28 +128,252 @@ void sectionHeader(float fx, float& y, const char* title) {
     y += ui(24);
 }
 
-// Editable integer field with deferred commit; id must be stable across frames.
-struct FieldState {
-    bool edit = false;
-    int val = 0;
+// ---- Figma-style numeric field ----------------------------------------------
+// Supports: click to edit (with math expressions: + - * / ^ parentheses),
+// Enter/Tab commit (Tab focuses the next field), Esc cancel, Up/Down step
+// (Shift = 10), drag-scrubbing on the whole field, "Mixed" display for
+// multi-selection.
+
+// Tiny recursive-descent expression evaluator.
+struct ExprParser {
+    const char* p;
+    bool ok = true;
+
+    double parse() {
+        const double v = expr();
+        skip();
+        if (*p != 0) ok = false;
+        return v;
+    }
+    void skip() {
+        while (*p == ' ') ++p;
+    }
+    double expr() {  // + -
+        double v = term();
+        for (;;) {
+            skip();
+            if (*p == '+') { ++p; v += term(); }
+            else if (*p == '-') { ++p; v -= term(); }
+            else return v;
+        }
+    }
+    double term() {  // * /
+        double v = power();
+        for (;;) {
+            skip();
+            if (*p == '*') { ++p; v *= power(); }
+            else if (*p == '/') {
+                ++p;
+                const double d = power();
+                if (d == 0) { ok = false; return 0; }
+                v /= d;
+            } else {
+                return v;
+            }
+        }
+    }
+    double power() {  // ^ (right associative)
+        const double base = unary();
+        skip();
+        if (*p == '^') {
+            ++p;
+            return std::pow(base, power());
+        }
+        return base;
+    }
+    double unary() {
+        skip();
+        if (*p == '-') { ++p; return -unary(); }
+        if (*p == '+') { ++p; return unary(); }
+        if (*p == '(') {
+            ++p;
+            const double v = expr();
+            skip();
+            if (*p == ')') ++p;
+            else ok = false;
+            return v;
+        }
+        char* end = nullptr;
+        const double v = std::strtod(p, &end);
+        if (end == p) { ok = false; return 0; }
+        p = end;
+        return v;
+    }
 };
-std::unordered_map<int, FieldState>& fieldStates() {
-    static std::unordered_map<int, FieldState> s;
+
+bool evalExpr(const char* s, float* out) {
+    ExprParser ep{s};
+    const double v = ep.parse();
+    if (!ep.ok || !std::isfinite(v)) return false;
+    *out = static_cast<float>(v);
+    return true;
+}
+
+// Shared focus/scrub state across all numeric fields.
+struct NumFieldGlobal {
+    int focusId = -1;        // field being text-edited
+    int pendingFocus = -1;   // Tab target
+    char buf[64] = {};
+    int scrubId = -1;        // field being scrubbed
+    bool scrubMoved = false;
+    float scrubStart = 0;    // value at scrub begin
+    float scrubAccum = 0;
+    bool armed = false;      // mouse down on field, deciding click vs scrub
+    int armedId = -1;
+    Vector2 armedPos{};
+};
+NumFieldGlobal& nf() {
+    static NumFieldGlobal s;
     return s;
 }
 
-bool intField(EditorState& ed, int id, Rectangle r, int current, int* out) {
-    FieldState& f = fieldStates()[id];
-    if (!f.edit) f.val = current;
+struct NumFieldOpts {
+    float step = 1.0f;
+    float minV = -1e9f;
+    float maxV = 1e9f;
+    bool mixed = false;      // multi-selection with differing values
+    int decimals = 0;
+};
+
+// Returns true on commit; *outValue receives the new value. `current` is the
+// node's live value (display + scrub baseline). beginScrub/endScrub bracket
+// undo capture; onScrub applies live values during the drag.
+template <typename BeginFn, typename ScrubFn, typename EndFn>
+bool numField(EditorState& ed, int id, Rectangle r, const char* label, float current,
+              float* outValue, const NumFieldOpts& opts, BeginFn&& beginScrub,
+              ScrubFn&& onScrub, EndFn&& endScrub) {
+    NumFieldGlobal& g = nf();
+    const Vector2 mouse = GetMousePosition();
+    const bool hover = CheckCollisionPointRec(mouse, r);
+    const bool editing = g.focusId == id;
     bool committed = false;
-    if (GuiValueBox(r, nullptr, &f.val, -1000000, 1000000, f.edit)) {
-        if (f.edit && f.val != current) {
-            *out = f.val;
-            committed = true;
-        }
-        f.edit = !f.edit;
+
+    // Tab handoff: a previous field requested focus on this one.
+    if (g.pendingFocus == id) {
+        g.pendingFocus = -1;
+        g.focusId = id;
+        std::snprintf(g.buf, sizeof(g.buf), "%.*f", opts.decimals, current);
     }
-    if (f.edit) ed.textEditActive = true;
+
+    // ---- visuals ----
+    const ::Color border = editing ? kThemeAccent
+                           : hover ? ::Color{90, 160, 230, 255}
+                                   : ::Color{58, 58, 58, 255};
+    DrawRectangleRounded(r, 0.25f, 4, kThemeField);
+    DrawRectangleRoundedLinesEx(r, 0.25f, 4, 1, border);
+    if (label && *label) {
+        uiText(label, r.x + ui(7), r.y + (r.height - fontS()) / 2, fontS(), kTextDim);
+    }
+    const float textX = r.x + (label && *label ? ui(24) : ui(8));
+
+    if (editing) {
+        ed.textEditActive = true;
+        // text input
+        int ch;
+        while ((ch = GetCharPressed()) != 0) {
+            const size_t len = std::strlen(g.buf);
+            if (ch >= 32 && ch < 127 && len + 1 < sizeof(g.buf)) {
+                g.buf[len] = static_cast<char>(ch);
+                g.buf[len + 1] = 0;
+            }
+        }
+        if ((IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE)) &&
+            g.buf[0] != 0) {
+            g.buf[std::strlen(g.buf) - 1] = 0;
+        }
+
+        const bool stepUp = IsKeyPressed(KEY_UP) || IsKeyPressedRepeat(KEY_UP);
+        const bool stepDown = IsKeyPressed(KEY_DOWN) || IsKeyPressedRepeat(KEY_DOWN);
+        if (stepUp || stepDown) {
+            const float mult = (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))
+                                   ? 10.0f
+                                   : 1.0f;
+            float v = current;
+            evalExpr(g.buf, &v);
+            v += (stepUp ? 1 : -1) * opts.step * mult;
+            v = std::max(opts.minV, std::min(opts.maxV, v));
+            std::snprintf(g.buf, sizeof(g.buf), "%.*f", opts.decimals, v);
+            *outValue = v;
+            committed = true;  // live-apply while stepping (undo handled by caller)
+        }
+
+        const bool tab = IsKeyPressed(KEY_TAB);
+        const bool enter = IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER);
+        const bool clickAway = IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !hover;
+        if (enter || tab || clickAway) {
+            float v;
+            if (evalExpr(g.buf, &v)) {
+                v = std::max(opts.minV, std::min(opts.maxV, v));
+                if (v != current) {
+                    *outValue = v;
+                    committed = true;
+                }
+            }
+            g.focusId = -1;
+            if (tab) g.pendingFocus = id + 1;  // fields are numbered in tab order
+        }
+        if (IsKeyPressed(KEY_ESCAPE)) g.focusId = -1;
+
+        // caret + text
+        uiText(g.buf, textX, r.y + (r.height - fontM()) / 2, fontM(), kTextCol);
+        if (std::fmod(GetTime(), 1.0) < 0.55) {
+            const float cw = uiMeasure(g.buf, fontM());
+            DrawRectangle(static_cast<int>(textX + cw + 1),
+                          static_cast<int>(r.y + ui(5)), static_cast<int>(ui(1.5f)),
+                          static_cast<int>(r.height - ui(10)), kThemeAccent);
+        }
+        return committed;
+    }
+
+    // ---- display ----
+    char disp[32];
+    if (opts.mixed) std::snprintf(disp, sizeof(disp), "Mixed");
+    else std::snprintf(disp, sizeof(disp), "%.*f", opts.decimals, current);
+    uiText(disp, textX, r.y + (r.height - fontM()) / 2, fontM(),
+           opts.mixed ? kTextDim : kTextCol);
+
+    // ---- click vs scrub ----
+    if (hover && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        g.armed = true;
+        g.armedId = id;
+        g.armedPos = mouse;
+    }
+    if (g.armed && g.armedId == id) {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            if (g.scrubId != id && std::fabs(mouse.x - g.armedPos.x) > 3) {
+                g.scrubId = id;  // crossed the drag threshold → scrub
+                g.scrubMoved = false;
+                g.scrubAccum = opts.mixed ? 0 : current;
+                beginScrub();
+            }
+        } else {
+            // released
+            if (g.scrubId == id) {
+                endScrub(g.scrubMoved);
+                g.scrubId = -1;
+            } else {
+                g.focusId = id;  // plain click → edit
+                if (opts.mixed) g.buf[0] = 0;
+                else std::snprintf(g.buf, sizeof(g.buf), "%.*f", opts.decimals, current);
+            }
+            g.armed = false;
+            g.armedId = -1;
+        }
+    }
+    if (g.scrubId == id && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        const float dx = GetMouseDelta().x;
+        if (dx != 0) {
+            const float mult = (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))
+                                   ? 10.0f
+                                   : 1.0f;
+            g.scrubAccum += dx * opts.step * mult * 0.5f;
+            const float v =
+                std::max(opts.minV, std::min(opts.maxV, std::round(g.scrubAccum)));
+            g.scrubMoved = true;
+            onScrub(v);
+        }
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_EW);
+    }
     return committed;
 }
 
@@ -183,12 +408,16 @@ void drawInspector(EditorState& ed) {
     static std::vector<NodeProps> pickerBefore;
     if (lastNode != n) {
         lastNode = n;
-        fieldStates().clear();
+        nf().focusId = -1;
+        nf().pendingFocus = -1;
+        nf().scrubId = -1;
+        nf().armed = false;
         hexStates().clear();
         pickerSection = pickerIndex = -1;
         pickerDragging = false;
         ed.inspectorScroll = 0;
     }
+    const int pendingAtStart = nf().pendingFocus;
 
     BeginScissorMode(px, kToolbarH, kInspectorW, sh - kToolbarH);
     float y = kToolbarH + ui(12) - ed.inspectorScroll;
@@ -211,67 +440,136 @@ void drawInspector(EditorState& ed) {
         y += bh2 + ui(12);
     }
 
-    if (!n) {
-        const char* msg = ed.selection.empty() ? "No selection" : "Multiple selection";
-        uiText(msg, fx, y, fontS(), kTextDim);
+    if (ed.selection.empty()) {
+        uiText("No selection", fx, y, fontS(), kTextDim);
         EndScissorMode();
         return;
     }
+    auto& sel = ed.selection;
 
-    uiText(n->name.c_str(), fx, y, fontM(), kTextCol);
-    y += ui(28);
-
-    // ---- position / size / radius / opacity ----
-    {
-        const WorldRect wr = worldBounds(*n);
-        const char* labels[4] = {"X", "Y", "W", "H"};
-        const int current[4] = {
-            static_cast<int>(std::lround(n->relativeTransform.m02)),
-            static_cast<int>(std::lround(n->relativeTransform.m12)),
-            static_cast<int>(std::lround(wr.w())),
-            static_cast<int>(std::lround(wr.h())),
-        };
-        for (int i = 0; i < 4; ++i) {
-            const float bx = fx + (i % 2) * ui(120);
-            const float byy = y + (i / 2) * ui(32);
-            uiText(labels[i], bx, byy + ui(6), fontS(), kTextDim);
-            int nv;
-            if (intField(ed, 100 + i, {bx + ui(20), byy, ui(88), ui(26)}, current[i], &nv)) {
-                const int which = i;
-                commitEdit(ed, n, [&](Node& node) {
-                    switch (which) {
-                    case 0: node.relativeTransform.m02 = static_cast<float>(nv); break;
-                    case 1: node.relativeTransform.m12 = static_cast<float>(nv); break;
-                    case 2:
-                        setNodeSize(node, static_cast<float>(nv), worldBounds(node).h());
-                        break;
-                    case 3:
-                        setNodeSize(node, worldBounds(node).w(), static_cast<float>(nv));
-                        break;
-                    }
-                });
+    // Multi-select aware property field: shows "Mixed" when values differ,
+    // edits/scrubs apply to every selected node, one undo entry per commit.
+    static std::vector<NodeProps> scrubBefore;
+    auto propField = [&](int id, Rectangle r, const char* label, auto getter, auto setter,
+                         NumFieldOpts opts) {
+        const float first = getter(*sel[0]);
+        bool mixed = false;
+        for (Node* m : sel) {
+            if (std::fabs(getter(*m) - first) > 0.01f) {
+                mixed = true;
+                break;
             }
         }
-        y += ui(64);
+        opts.mixed = mixed && sel.size() > 1;
+        auto applyAll = [&](float v) {
+            for (Node* m : sel) {
+                setter(*m, v);
+                ed.bumpNode(m);
+            }
+            ed.docDirty = true;
+        };
+        float out;
+        const bool committed = numField(
+            ed, id, r, label, first, &out, opts,
+            [&] {
+                scrubBefore.clear();
+                for (Node* m : sel) scrubBefore.push_back(NodeProps::capture(m));
+            },
+            applyAll,
+            [&](bool moved) {
+                if (moved && !scrubBefore.empty()) ed.pushPropsUndo(std::move(scrubBefore));
+                scrubBefore.clear();
+            });
+        if (committed) {
+            std::vector<NodeProps> before;
+            for (Node* m : sel) before.push_back(NodeProps::capture(m));
+            applyAll(out);
+            ed.pushPropsUndo(std::move(before));
+        }
+    };
 
-        uiText("R", fx, y + ui(6), fontS(), kTextDim);
-        int nv;
-        if (intField(ed, 110, {fx + ui(20), y, ui(88), ui(26)},
-                     static_cast<int>(std::lround(n->cornerRadius)), &nv)) {
-            commitEdit(ed, n, [&](Node& node) {
-                node.cornerRadius = std::max(0.0f, static_cast<float>(nv));
-                node.rectangleCornerRadii.reset();
-            });
-        }
-        uiText("Op%", fx + ui(120), y + ui(6), fontS(), kTextDim);
-        if (intField(ed, 111, {fx + ui(152), y, ui(56), ui(26)},
-                     static_cast<int>(std::lround(n->opacity * 100)), &nv)) {
-            commitEdit(ed, n, [&](Node& node) {
-                node.opacity = std::max(0, std::min(100, nv)) / 100.0f;
-            });
-        }
+    if (n) {
+        uiText(n->name.c_str(), fx, y, fontM(), kTextCol);
+    } else {
+        char msg[32];
+        std::snprintf(msg, sizeof(msg), "%zu selected", sel.size());
+        uiText(msg, fx, y, fontM(), kTextCol);
+    }
+    y += ui(28);
+
+    // ---- position / size (multi-select aware) ----
+    {
+        NumFieldOpts iOpts;
+        propField(100, {fx, y, ui(104), ui(26)}, "X",
+                  [](Node& m) { return m.relativeTransform.m02; },
+                  [](Node& m, float v) { m.relativeTransform.m02 = std::round(v); }, iOpts);
+        propField(101, {fx + ui(112), y, ui(104), ui(26)}, "Y",
+                  [](Node& m) { return m.relativeTransform.m12; },
+                  [](Node& m, float v) { m.relativeTransform.m12 = std::round(v); }, iOpts);
+        y += ui(32);
+        NumFieldOpts sizeOpts;
+        sizeOpts.minV = 1;
+        propField(102, {fx, y, ui(104), ui(26)}, "W",
+                  [](Node& m) { return worldBounds(m).w(); },
+                  [](Node& m, float v) { setNodeSize(m, std::round(v), worldBounds(m).h()); },
+                  sizeOpts);
+        propField(103, {fx + ui(112), y, ui(104), ui(26)}, "H",
+                  [](Node& m) { return worldBounds(m).h(); },
+                  [](Node& m, float v) { setNodeSize(m, worldBounds(m).w(), std::round(v)); },
+                  sizeOpts);
+        y += ui(32);
+        NumFieldOpts rOpts;
+        rOpts.minV = 0;
+        propField(104, {fx, y, ui(104), ui(26)}, "R", [](Node& m) { return m.cornerRadius; },
+                  [](Node& m, float v) {
+                      m.cornerRadius = std::max(0.0f, std::round(v));
+                      m.rectangleCornerRadii.reset();
+                  },
+                  rOpts);
+        NumFieldOpts opOpts;
+        opOpts.minV = 0;
+        opOpts.maxV = 100;
+        propField(105, {fx + ui(112), y, ui(104), ui(26)}, "O",
+                  [](Node& m) { return m.opacity * 100.0f; },
+                  [](Node& m, float v) {
+                      m.opacity = std::max(0.0f, std::min(100.0f, v)) / 100.0f;
+                  },
+                  opOpts);
         y += ui(38);
     }
+
+    if (!n) {  // multi-selection: paint/text sections need a single node
+        EndScissorMode();
+        const float contentBottomM = y + ed.inspectorScroll;
+        const float maxScrollM =
+            std::max(0.0f, contentBottomM - static_cast<float>(sh) + ui(20));
+        ed.inspectorScroll = std::min(ed.inspectorScroll, maxScrollM);
+        return;
+    }
+
+    // Single-node numeric field with scrub + expression support.
+    static std::vector<NodeProps> sfBefore;
+    auto simpleField = [&](int id, Rectangle r, const char* label, float current,
+                           NumFieldOpts opts, auto apply) {
+        auto applyOne = [&](float v) {
+            apply(v);
+            ed.bumpNode(n);
+            ed.docDirty = true;
+        };
+        float out;
+        const bool committed = numField(
+            ed, id, r, label, current, &out, opts,
+            [&] { sfBefore = {NodeProps::capture(n)}; }, applyOne,
+            [&](bool moved) {
+                if (moved && !sfBefore.empty()) ed.pushPropsUndo(std::move(sfBefore));
+                sfBefore.clear();
+            });
+        if (committed) {
+            std::vector<NodeProps> before{NodeProps::capture(n)};
+            applyOne(out);
+            ed.pushPropsUndo(std::move(before));
+        }
+    };
 
     // ---- Fill / Stroke lists ----
     auto paintSection = [&](const char* title, int sectionId) -> bool {
@@ -342,15 +640,14 @@ void drawInspector(EditorState& ed) {
             if (hx.edit) ed.textEditActive = true;
 
             // opacity %
-            int pct;
-            if (intField(ed, rowId + 1, {fx + ui(110), y, ui(52), ui(24)},
-                         static_cast<int>(std::lround(p.opacity * 100)), &pct)) {
-                const float op = std::max(0, std::min(100, pct)) / 100.0f;
-                commitEdit(ed, n, [&](Node& node) {
-                    auto& list = sectionId == 0 ? node.fills : node.strokes;
-                    if (i < list.size()) list[i].opacity = op;
-                });
-            }
+            NumFieldOpts pctOpts;
+            pctOpts.minV = 0;
+            pctOpts.maxV = 100;
+            simpleField(rowId + 1, {fx + ui(110), y, ui(52), ui(24)}, nullptr,
+                        std::lround(p.opacity * 100) * 1.0f, pctOpts, [&](float v) {
+                            auto& list = sectionId == 0 ? n->fills : n->strokes;
+                            if (i < list.size()) list[i].opacity = v / 100.0f;
+                        });
 
             // visibility / remove
             if (GuiLabelButton({fx + ui(168), y, ui(20), ui(24)}, p.visible ? "o" : "-")) {
@@ -409,12 +706,10 @@ void drawInspector(EditorState& ed) {
     // stroke weight + align
     if (!n->strokes.empty()) {
         uiText("Weight", fx, y + ui(6), fontS(), kTextDim);
-        int nv;
-        if (intField(ed, 300, {fx + ui(52), y, ui(52), ui(26)},
-                     static_cast<int>(std::lround(n->strokeWeight)), &nv)) {
-            commitEdit(ed, n,
-                       [&](Node& node) { node.strokeWeight = std::max(0, nv) * 1.0f; });
-        }
+        NumFieldOpts wOpts;
+        wOpts.minV = 0;
+        simpleField(300, {fx + ui(52), y, ui(52), ui(26)}, nullptr, n->strokeWeight, wOpts,
+                    [&](float v) { n->strokeWeight = std::max(0.0f, v); });
         int alignIdx = n->strokeAlign == figmalib::StrokeAlign::Inside   ? 0
                        : n->strokeAlign == figmalib::StrokeAlign::Center ? 1
                                                                          : 2;
@@ -434,13 +729,10 @@ void drawInspector(EditorState& ed) {
     if (n->type == figmalib::NodeType::Text) {
         sectionHeader(fx, y, "Text");
         uiText("Size", fx, y + ui(6), fontS(), kTextDim);
-        int nv;
-        if (intField(ed, 400, {fx + ui(36), y, ui(56), ui(26)},
-                     static_cast<int>(std::lround(n->textStyle.fontSize)), &nv)) {
-            commitEdit(ed, n, [&](Node& node) {
-                node.textStyle.fontSize = std::max(1, nv) * 1.0f;
-            });
-        }
+        NumFieldOpts tOpts;
+        tOpts.minV = 1;
+        simpleField(400, {fx + ui(36), y, ui(56), ui(26)}, nullptr, n->textStyle.fontSize,
+                    tOpts, [&](float v) { n->textStyle.fontSize = std::max(1.0f, v); });
         y += ui(32);
 
         using AH = figmalib::TextStyle::AlignH;
@@ -514,6 +806,11 @@ void drawInspector(EditorState& ed) {
     }
 
     EndScissorMode();
+
+    // Tab landed past the last field this frame → drop the dangling request.
+    if (nf().pendingFocus != -1 && nf().pendingFocus == pendingAtStart) {
+        nf().pendingFocus = -1;
+    }
 
     // clamp scroll to content height
     const float contentBottom = y + ed.inspectorScroll;
