@@ -869,10 +869,15 @@ void applyEffects(tvg::Scene& scene, const Node& n) {
     }
 }
 
-// Boolean op without a precomputed outline: approximate with a UNION — draw
-// every descendant outline with the boolean node's own paints (the children
-// carry no fills of their own; Figma puts them on the boolean node). Painted
-// into one scene so group opacity composites without darkening overlaps.
+// Boolean op without a precomputed outline: approximate with a UNION over
+// the children's PAINTED REGIONS, drawn with the boolean node's own paints
+// (Figma ignores the children's colors). A child's painted region is its
+// fill interior ∪ its stroke outline — stroke-only children (icon line art
+// like Figma's icon-16-pen) contribute a stroked outline, not their path
+// interior. Children carrying their own combined geometry (nested booleans
+// baked by Figma) are leaves: recursing into their inputs would repaint the
+// source shapes solid. Painted into one scene so group opacity composites
+// without darkening overlaps.
 tvg::Scene* buildBooleanApprox(Node& n) {
     auto* scene = tvg::Scene::gen();
 
@@ -892,13 +897,43 @@ tvg::Scene* buildBooleanApprox(Node& n) {
     }
     if (!fill && !stroke) return scene;
 
+    // Solid tint for child stroke outlines (gradient fills use the first stop).
+    Color fillTint{0, 0, 0, 1};
+    float fillTintOpacity = 1.0f;
+    if (fill) {
+        fillTint = fill->type == PaintType::Solid || fill->stops.empty()
+                       ? fill->color
+                       : fill->stops.front().color;
+        fillTintOpacity = fill->opacity;
+    }
+    const auto anyVisible = [](const std::vector<Paint>& paints) {
+        for (const auto& p : paints)
+            if (p.visible && p.opacity > 0) return true;
+        return false;
+    };
+
     std::function<void(Node&, const Mat23&)> rec = [&](Node& d, const Mat23& acc) {
         for (auto& childPtr : d.children) {
             Node& c = *childPtr;
             if (!c.effectivelyVisible()) continue;
             const Mat23 m = acc * c.relativeTransform;
-            auto emit = [&](tvg::Shape* shape) {
+            const bool childFill = anyVisible(c.fills);
+            const bool childStroke = c.strokeWeight > 0 && anyVisible(c.strokes);
+            // Interior also serves as the fallback for children without any
+            // paints of their own (REST trees often strip them).
+            const bool wantInterior = childFill || !childStroke;
+
+            auto buildPath = [&](tvg::Shape& shape, const PathGeometry& geom) {
+                if (!appendSvgPath(shape, geom.path.c_str())) return false;
+                shape.fillRule(geom.evenOdd ? tvg::FillRule::EvenOdd
+                                            : tvg::FillRule::NonZero);
+                return true;
+            };
+            auto place = [&](tvg::Shape* shape) {
                 shape->transform({m.m00, m.m01, m.m02, m.m10, m.m11, m.m12, 0, 0, 1});
+                scene->add(shape);
+            };
+            auto emitInterior = [&](tvg::Shape* shape) {
                 if (fill) applyFill(*shape, *fill, n);
                 if (stroke && n.strokeWeight > 0) {
                     applyStrokeStyle(*shape, n);
@@ -907,25 +942,62 @@ tvg::Scene* buildBooleanApprox(Node& n) {
                                       static_cast<uint8_t>(channel(stroke->color.a) *
                                                            stroke->opacity));
                 }
-                scene->add(shape);
+                place(shape);
             };
+            // Stroke outline region: the child's width/cap/join/dashes with
+            // the boolean's color. (INSIDE/OUTSIDE alignment approximated as
+            // CENTER — boolean inputs are almost always center-stroked.)
+            auto emitStrokeRegion = [&](tvg::Shape* shape) {
+                applyStrokeStyle(*shape, c);
+                shape->strokeFill(channel(fillTint.r), channel(fillTint.g),
+                                  channel(fillTint.b),
+                                  static_cast<uint8_t>(channel(fillTint.a) *
+                                                       fillTintOpacity));
+                place(shape);
+            };
+
+            bool leaf = false;
             if (!c.fillGeometry.empty()) {
                 for (const auto& geom : c.fillGeometry) {
-                    auto* shape = tvg::Shape::gen();
-                    if (!appendSvgPath(*shape, geom.path.c_str())) {
-                        tvg::Paint::rel(shape);
-                        continue;
+                    if (wantInterior) {
+                        auto* shape = tvg::Shape::gen();
+                        if (buildPath(*shape, geom)) emitInterior(shape);
+                        else tvg::Paint::rel(shape);
                     }
-                    shape->fillRule(geom.evenOdd ? tvg::FillRule::EvenOdd
-                                                 : tvg::FillRule::NonZero);
-                    emit(shape);
+                    if (childStroke && c.strokeGeometry.empty()) {
+                        auto* shape = tvg::Shape::gen();
+                        if (buildPath(*shape, geom)) emitStrokeRegion(shape);
+                        else tvg::Paint::rel(shape);
+                    }
                 }
+                leaf = true;
             } else if (c.children.empty() && (c.width > 0 || c.height > 0)) {
-                auto* shape = tvg::Shape::gen();
-                appendPrimitive(*shape, c);
-                emit(shape);
+                if (wantInterior) {
+                    auto* shape = tvg::Shape::gen();
+                    appendPrimitive(*shape, c);
+                    emitInterior(shape);
+                }
+                if (childStroke && c.strokeGeometry.empty()) {
+                    auto* shape = tvg::Shape::gen();
+                    appendPrimitive(*shape, c);
+                    emitStrokeRegion(shape);
+                }
+                leaf = true;
             }
-            rec(c, m);
+            // Baked stroke outlines (REST geometry=paths): exact region, fill it.
+            if (childStroke && !c.strokeGeometry.empty()) {
+                for (const auto& geom : c.strokeGeometry) {
+                    auto* shape = tvg::Shape::gen();
+                    if (buildPath(*shape, geom) && fill) {
+                        applyFill(*shape, *fill, n);
+                        place(shape);
+                    } else {
+                        tvg::Paint::rel(shape);
+                    }
+                }
+                leaf = true;
+            }
+            if (!leaf) rec(c, m);
         }
     };
     rec(n, Mat23::identity());
