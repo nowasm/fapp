@@ -1,4 +1,4 @@
-// Canvas interaction + rendering: Figma-faithful navigation, selection and
+﻿// Canvas interaction + rendering: Figma-faithful navigation, selection and
 // transform gestures, with the page rasterized by figmalib/ThorVG and
 // overlays (hover, selection, handles, marquee) drawn by raylib on top.
 
@@ -560,12 +560,12 @@ void drawCanvas(EditorState& ed) {
         }
         char label[64];
         std::snprintf(label, sizeof(label), "%g x %g", std::round(wr.w()), std::round(wr.h()));
-        const int tw = MeasureText(label, fontS());
+        const int tw = uiMeasure(label, fontS());
         const float lx = (x0 + x1) * 0.5f - tw * 0.5f;
         const float ly = y1 + ui(8);
         DrawRectangleRounded({lx - ui(6), ly - ui(3), tw + ui(12.0f), ui(18)}, 0.4f, 4,
                              kAccent);
-        DrawText(label, static_cast<int>(lx), static_cast<int>(ly), fontS(), WHITE);
+        uiText(label, static_cast<int>(lx), static_cast<int>(ly), fontS(), WHITE);
     }
 
     // debug readout (FIGMAEDIT_DEBUG=1)
@@ -583,7 +583,7 @@ void drawCanvas(EditorState& ed) {
                       "mouse vp(%.0f,%.0f) world(%.0f,%.0f) zoom=%.2f pan(%.0f,%.0f) hover=%s",
                       mx, my, wxd, wyd, ed.cam.zoom, ed.cam.panX, ed.cam.panY,
                       ed.hovered ? ed.hovered->name.c_str() : "-");
-        DrawText(info, vx + 10, vy + 10, fontS(), ::Color{255, 220, 0, 255});
+        uiText(info, vx + 10, vy + 10, fontS(), ::Color{255, 220, 0, 255});
     }
 
     // marquee

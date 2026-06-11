@@ -1,4 +1,4 @@
-// Toolbar, layers tree and inspector. raygui for widgets, hand-rolled rows
+﻿// Toolbar, layers tree and inspector. raygui for widgets, hand-rolled rows
 // for the layers tree (raygui has no tree view).
 
 #include <cmath>
@@ -140,20 +140,20 @@ void drawToolbar(EditorState& ed) {
     x += ui(32);
     const std::string pageLabel =
         (ed.page ? ed.page->name : "-") + (ed.unsaved ? " *" : "");
-    DrawText(pageLabel.c_str(), static_cast<int>(x), static_cast<int>(by + ui(7)), fontM(),
+    uiText(pageLabel.c_str(), static_cast<int>(x), static_cast<int>(by + ui(7)), fontM(),
              kTextCol);
-    x += static_cast<float>(MeasureText(pageLabel.c_str(), fontM())) + ui(10);
+    x += static_cast<float>(uiMeasure(pageLabel.c_str(), fontM())) + ui(10);
     if (GuiButton({x, by, ui(28), bh}, ">")) ed.selectPage(ed.pageIndex + 1);
     x += ui(44);
 
     char zoom[32];
     std::snprintf(zoom, sizeof(zoom), "%.0f%%", ed.cam.zoom * 100);
-    DrawText(zoom, static_cast<int>(x), static_cast<int>(by + ui(7)), fontM(), kTextDim);
+    uiText(zoom, static_cast<int>(x), static_cast<int>(by + ui(7)), fontM(), kTextDim);
 
     // status (right-aligned)
     if (GetTime() < ed.statusUntil && !ed.status.empty()) {
-        const int tw = MeasureText(ed.status.c_str(), fontS());
-        DrawText(ed.status.c_str(), static_cast<int>(w) - tw - kInspectorW - ui(16),
+        const int tw = uiMeasure(ed.status.c_str(), fontS());
+        uiText(ed.status.c_str(), static_cast<int>(w) - tw - kInspectorW - ui(16),
                  static_cast<int>(by + ui(8)), fontS(), kTextDim);
     }
 }
@@ -188,7 +188,7 @@ void drawLayerRows(LayerRowCtx& c, Node& n, int depth) {
         // expand arrow
         if (container) {
             const bool open = ed.expanded.count(&n) > 0;
-            DrawText(open ? "v" : ">", static_cast<int>(indent), ty, fontS(), kTextDim);
+            uiText(open ? "v" : ">", static_cast<int>(indent), ty, fontS(), kTextDim);
             if (hover && c.clicked && c.mx >= indent - ui(4) && c.mx <= indent + ui(12)) {
                 if (open) ed.expanded.erase(&n);
                 else ed.expanded.insert(&n);
@@ -196,13 +196,13 @@ void drawLayerRows(LayerRowCtx& c, Node& n, int depth) {
             }
         }
         // icon + name
-        DrawText(nodeIcon(n), static_cast<int>(indent + ui(16)), ty, fontS(), kTextDim);
+        uiText(nodeIcon(n), static_cast<int>(indent + ui(16)), ty, fontS(), kTextDim);
         const ::Color nameCol = n.visible ? kTextCol : kTextDim;
-        DrawText(n.name.c_str(), static_cast<int>(indent + ui(38)), ty, fontS(), nameCol);
+        uiText(n.name.c_str(), static_cast<int>(indent + ui(38)), ty, fontS(), nameCol);
 
         // visibility eye
         const float eyeX = kLayersW - ui(26.0f);
-        DrawText(n.visible ? "o" : "-", static_cast<int>(eyeX), ty, fontS(), kTextDim);
+        uiText(n.visible ? "o" : "-", static_cast<int>(eyeX), ty, fontS(), kTextDim);
         if (hover && c.clicked && c.mx >= eyeX - ui(6) && c.mx <= eyeX + ui(14)) {
             commitEdit(ed, &n, [](Node& node) { node.visible = !node.visible; });
             c.clicked = false;
@@ -282,7 +282,7 @@ void drawInspector(EditorState& ed) {
     ed.textEditActive = false;
     if (ed.selection.size() != 1) {
         const char* msg = ed.selection.empty() ? "No selection" : "Multiple selection";
-        DrawText(msg, px + static_cast<int>(ui(16)), kToolbarH + static_cast<int>(ui(18)),
+        uiText(msg, px + static_cast<int>(ui(16)), kToolbarH + static_cast<int>(ui(18)),
                  fontS(), kTextDim);
         return;
     }
@@ -290,7 +290,7 @@ void drawInspector(EditorState& ed) {
     float y = kToolbarH + ui(12.0f);
     const float fx = px + ui(14.0f);
 
-    DrawText(n->name.c_str(), static_cast<int>(fx), static_cast<int>(y), fontM(), kTextCol);
+    uiText(n->name.c_str(), static_cast<int>(fx), static_cast<int>(y), fontM(), kTextCol);
     y += ui(26);
 
     // ---- X / Y / W / H value boxes ----
@@ -316,7 +316,7 @@ void drawInspector(EditorState& ed) {
         const float bx = fx + (i % 2) * ui(124.0f);
         const float byy = y + (i / 2) * ui(34.0f);
         if (!editing[i]) values[i] = current[i];
-        DrawText(labels[i], static_cast<int>(bx), static_cast<int>(byy + ui(7)), fontS(),
+        uiText(labels[i], static_cast<int>(bx), static_cast<int>(byy + ui(7)), fontS(),
                  kTextDim);
         if (GuiValueBox({bx + ui(16), byy, ui(92), ui(26)}, nullptr, &values[i], -1000000,
                         1000000, editing[i])) {
@@ -343,7 +343,7 @@ void drawInspector(EditorState& ed) {
     static bool opacityDragging = false;
     static std::vector<NodeProps> opacityBefore;
     float opacityPct = n->opacity * 100.0f;
-    DrawText("Opacity", static_cast<int>(fx), static_cast<int>(y + ui(6)), fontS(),
+    uiText("Opacity", static_cast<int>(fx), static_cast<int>(y + ui(6)), fontS(),
              kTextDim);
     const Rectangle opRect{fx + ui(64), y, ui(150), ui(22)};
     GuiSlider(opRect, nullptr, TextFormat("%.0f%%", opacityPct), &opacityPct, 0, 100);
@@ -374,7 +374,7 @@ void drawInspector(EditorState& ed) {
         static std::vector<NodeProps> radiusBefore;
         float radius = n->cornerRadius;
         const float maxR = std::max(1.0f, std::min(n->width, n->height) * 0.5f);
-        DrawText("Radius", static_cast<int>(fx), static_cast<int>(y + ui(6)), fontS(),
+        uiText("Radius", static_cast<int>(fx), static_cast<int>(y + ui(6)), fontS(),
                  kTextDim);
         const Rectangle rRect{fx + ui(64), y, ui(150), ui(22)};
         GuiSlider(rRect, nullptr, TextFormat("%.0f", radius), &radius, 0, maxR);
@@ -410,7 +410,7 @@ void drawInspector(EditorState& ed) {
         }
     }
     if (solid) {
-        DrawText("Fill", static_cast<int>(fx), static_cast<int>(y), fontS(), kTextDim);
+        uiText("Fill", static_cast<int>(fx), static_cast<int>(y), fontS(), kTextDim);
         y += ui(18);
         static bool pickerDragging = false;
         static std::vector<NodeProps> pickerBefore;
@@ -443,7 +443,7 @@ void drawInspector(EditorState& ed) {
 
     // ---- text content ----
     if (n->type == figmalib::NodeType::Text) {
-        DrawText("Text", static_cast<int>(fx), static_cast<int>(y), fontS(), kTextDim);
+        uiText("Text", static_cast<int>(fx), static_cast<int>(y), fontS(), kTextDim);
         y += ui(18);
         static char buf[512] = {};
         static bool editText = false;

@@ -54,6 +54,10 @@ bool openFile(EditorState& ed, const std::string& path) {
         ed.unsaved = false;
         ed.selectPage(0);
         ed.updateAbsoluteTransforms();
+        // Rebuild the UI font with the document's codepoints (layer names may
+        // be CJK; the atlas only carries what is actually used).
+        rebuildUiFontFor(*ed.file.document);
+        GuiSetFont(gUiFont);
         ed.setStatus("Opened " + path);
         return true;
     } catch (const std::exception& e) {
@@ -167,6 +171,8 @@ int main(int argc, char** argv) {
     SetExitKey(0);  // Esc is a selection command, not quit
     SetTargetFPS(120);
     figmaedit::initUiScale();
+    figmaedit::initUiFont();
+    GuiSetFont(figmaedit::gUiFont);
     GuiSetStyle(DEFAULT, TEXT_SIZE, figmaedit::fontM());
     // Make the window comfortable on the current monitor.
     {

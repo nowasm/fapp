@@ -26,6 +26,91 @@ void initUiScale() {
     kInspectorW = static_cast<int>(280 * gUiScale);
 }
 
+// ---- UI font -----------------------------------------------------------------
+
+Font gUiFont{};
+static bool gUiFontLoaded = false;
+
+namespace {
+
+// Decode UTF-8, collecting unique codepoints.
+void collectCodepoints(const std::string& s, std::unordered_set<int>& out, bool& hasCjk) {
+    size_t i = 0;
+    while (i < s.size()) {
+        const unsigned char c = static_cast<unsigned char>(s[i]);
+        int cp = 0;
+        size_t len = 1;
+        if (c < 0x80) { cp = c; }
+        else if ((c >> 5) == 0x6 && i + 1 < s.size()) {
+            cp = ((c & 0x1F) << 6) | (s[i + 1] & 0x3F);
+            len = 2;
+        } else if ((c >> 4) == 0xE && i + 2 < s.size()) {
+            cp = ((c & 0x0F) << 12) | ((s[i + 1] & 0x3F) << 6) | (s[i + 2] & 0x3F);
+            len = 3;
+        } else if ((c >> 3) == 0x1E && i + 3 < s.size()) {
+            cp = ((c & 0x07) << 18) | ((s[i + 1] & 0x3F) << 12) | ((s[i + 2] & 0x3F) << 6) |
+                 (s[i + 3] & 0x3F);
+            len = 4;
+        }
+        if (cp >= 32) {
+            out.insert(cp);
+            if (cp >= 0x2E80) hasCjk = true;  // CJK radicals onward
+        }
+        i += len;
+    }
+}
+
+void loadUiFont(const std::vector<int>& codepoints, bool wantCjk) {
+    const char* candidates[] = {
+        wantCjk ? "C:/Windows/Fonts/msyh.ttc" : "C:/Windows/Fonts/segoeui.ttf",
+        wantCjk ? "C:/Windows/Fonts/simhei.ttf" : "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+    };
+    for (const char* path : candidates) {
+        Font f = LoadFontEx(path, fontM(), const_cast<int*>(codepoints.data()),
+                            static_cast<int>(codepoints.size()));
+        if (f.texture.id != 0 && f.glyphCount > 0) {
+            if (gUiFontLoaded) UnloadFont(gUiFont);
+            gUiFont = f;
+            gUiFontLoaded = true;
+            SetTextureFilter(gUiFont.texture, TEXTURE_FILTER_BILINEAR);
+            return;
+        }
+    }
+    if (!gUiFontLoaded) gUiFont = GetFontDefault();  // last resort
+}
+
+}  // namespace
+
+void initUiFont() {
+    std::vector<int> ascii;
+    for (int cp = 32; cp < 127; ++cp) ascii.push_back(cp);
+    loadUiFont(ascii, false);
+}
+
+void rebuildUiFontFor(const figmalib::Document& doc) {
+    std::unordered_set<int> cps;
+    for (int cp = 32; cp < 127; ++cp) cps.insert(cp);
+    bool hasCjk = false;
+    if (doc.root) {
+        const_cast<Node*>(doc.root.get())->visit([&](Node& n) {
+            collectCodepoints(n.name, cps, hasCjk);
+            collectCodepoints(n.characters, cps, hasCjk);
+            return cps.size() < 4096;  // atlas safety cap
+        });
+    }
+    std::vector<int> list(cps.begin(), cps.end());
+    loadUiFont(list, hasCjk);
+}
+
+void uiText(const char* text, float x, float y, int size, ::Color color) {
+    DrawTextEx(gUiFont, text, {x, y}, static_cast<float>(size), 0, color);
+}
+
+float uiMeasure(const char* text, int size) {
+    return MeasureTextEx(gUiFont, text, static_cast<float>(size), 0).x;
+}
+
 NodeProps NodeProps::capture(Node* n) {
     NodeProps p;
     p.node = n;

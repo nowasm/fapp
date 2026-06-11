@@ -32,6 +32,14 @@ inline int fontS() { return static_cast<int>(12 * gUiScale); }
 inline int fontM() { return static_cast<int>(14 * gUiScale); }
 inline float ui(float v) { return v * gUiScale; }
 
+// ---- UI font (Segoe UI; switches to Microsoft YaHei when the document
+// contains CJK names). Codepoints are collected per document. ----
+extern Font gUiFont;
+void initUiFont();                                  // ASCII, at startup
+void rebuildUiFontFor(const figmalib::Document& doc);
+void uiText(const char* text, float x, float y, int size, ::Color color);
+float uiMeasure(const char* text, int size);
+
 constexpr float kZoomMin = 0.02f;
 constexpr float kZoomMax = 64.0f;
 
