@@ -484,13 +484,43 @@ std::string keyForText(BuildContext& ctx, const std::string& key, const std::str
     return key;
 }
 
-// Multi-style rich text. Runs are tokenized into wrap-atomic pieces (words,
-// space gaps, individual CJK characters), greedily flowed into lines (an
-// explicit \n forces a break), and rendered as one tvg::Text per piece with
-// baselines aligned per line. Returns nullptr when a font is missing —
-// caller falls back to the uniform base-style path.
-tvg::Paint* makeRichText(const Node& n, BuildContext& ctx) {
-    if (n.textRuns.empty() || !ctx.fonts) return nullptr;
+// One wrap-atomic token of flowed text: a word, a run of spaces, a single
+// CJK character, or a forced newline.
+struct TextPiece {
+    tvg::Text* text = nullptr;  // null → spaces (advance only) or newline
+    float width = 0;
+    float ascent = 0, fontH = 0, natLineH = 0;
+    bool space = false, newline = false;
+};
+
+// Result of tokenizing + measuring + greedily wrapping a text node. Shared
+// by rendering (makeRichText) and pure measurement (measureTextNode), so the
+// box a layout pass computes always matches what gets drawn.
+struct TextFlow {
+    std::vector<TextPiece> pieces;
+    struct Line {
+        std::vector<TextPiece*> ps;
+        float width = 0;
+    };
+    std::vector<Line> lines;
+    std::vector<float> lineHs;  // line-box heights (Figma line-box model)
+    float contentH = 0;         // sum of the line boxes
+    float maxLineW = 0;         // widest line extent
+
+    void release() {
+        for (auto& p : pieces) tvg::Paint::rel(p.text);
+        pieces.clear();
+    }
+};
+
+// Tokenizes the node's text runs (or a synthetic run with the base style when
+// the node has none), measures every token, and flows them into lines wrapped
+// at maxW (<= 0 → never wrap). With keepTexts the non-space pieces carry
+// ready-to-place tvg::Text objects, otherwise only metrics survive. Returns
+// false when a needed font is missing.
+bool buildTextFlow(const Node& n, float maxW, BuildContext& ctx, bool keepTexts,
+                   TextFlow& flow) {
+    if (!ctx.fonts || n.characters.empty()) return false;
     const TextStyle& base = n.textStyle;
 
     // Node-level fill as the default run color.
@@ -503,16 +533,22 @@ tvg::Paint* makeRichText(const Node& n, BuildContext& ctx) {
         }
     }
 
-    struct Piece {
-        tvg::Text* text = nullptr;  // null → spaces (advance only) or newline
-        float width = 0;
-        float ascent = 0, fontH = 0, natLineH = 0;
-        bool space = false, newline = false;
-    };
-    std::vector<Piece> pieces;
-    auto bail = [&]() -> tvg::Paint* {
-        for (auto& p : pieces) tvg::Paint::rel(p.text);
-        return nullptr;
+    std::vector<TextRun> synth;
+    const std::vector<TextRun>* runs = &n.textRuns;
+    if (runs->empty()) {
+        TextRun r;
+        r.start = 0;
+        r.end = static_cast<int>(n.characters.size());
+        r.style = base;
+        synth.push_back(r);
+        runs = &synth;
+    }
+
+    using Piece = TextPiece;
+    auto& pieces = flow.pieces;
+    auto bail = [&]() -> bool {
+        flow.release();
+        return false;
     };
 
     // CJK and fullwidth ranges break per character.
@@ -530,7 +566,7 @@ tvg::Paint* makeRichText(const Node& n, BuildContext& ctx) {
     };
 
     // Tokenize each run and measure every token with its own styled Text.
-    for (const auto& run : n.textRuns) {
+    for (const auto& run : *runs) {
         const std::string s =
             n.characters.substr(run.start, static_cast<size_t>(run.end - run.start));
         if (s.empty()) continue;
@@ -575,10 +611,14 @@ tvg::Paint* makeRichText(const Node& n, BuildContext& ctx) {
                     tvg::Paint::rel(t);
                     return false;
                 }
-                const Color c = run.color ? *run.color : baseColor;
-                t->fill(channel(c.r), channel(c.g), channel(c.b));
-                t->opacity(channel(c.a));
-                p.text = t;
+                if (keepTexts) {
+                    const Color c = run.color ? *run.color : baseColor;
+                    t->fill(channel(c.r), channel(c.g), channel(c.b));
+                    t->opacity(channel(c.a));
+                    p.text = t;
+                } else {
+                    tvg::Paint::rel(t);  // measurement only needs the metrics
+                }
             }
             pieces.push_back(p);
             return true;
@@ -619,16 +659,12 @@ tvg::Paint* makeRichText(const Node& n, BuildContext& ctx) {
             i = e;
         }
     }
-    if (pieces.empty()) return nullptr;
+    if (pieces.empty()) return false;
 
-    // Greedy line flow. Auto-width boxes never wrap (they hug their text).
-    const bool noWrap = base.autoResize == "WIDTH_AND_HEIGHT" || n.width <= 0;
-    const float maxW = noWrap ? 0 : n.width;
-    struct Line {
-        std::vector<Piece*> ps;
-        float width = 0;
-    };
-    std::vector<Line> lines(1);
+    // Greedy line flow.
+    using Line = TextFlow::Line;
+    auto& lines = flow.lines;
+    lines.resize(1);
     auto lineEnd = [&](Line& ln) {  // drop trailing spaces from the extent
         while (!ln.ps.empty() && ln.ps.back()->space) {
             ln.width -= ln.ps.back()->width;
@@ -661,17 +697,41 @@ tvg::Paint* makeRichText(const Node& n, BuildContext& ctx) {
     }
     lineEnd(lines.back());
 
-    // Vertical layout: Figma's line-box model. With an explicit lineHeight
+    // Vertical extent: Figma's line-box model. With an explicit lineHeight
     // every line box has that height; otherwise each line uses the largest
     // natural line advance it contains.
-    std::vector<float> lineHs(lines.size());
-    float contentH = 0;
+    flow.lineHs.resize(lines.size());
     for (size_t li = 0; li < lines.size(); ++li) {
         float nat = base.fontSize * 1.2f;
         for (Piece* p : lines[li].ps) nat = std::fmax(nat, p->natLineH);
-        lineHs[li] = base.lineHeightPx > 0 ? base.lineHeightPx : nat;
-        contentH += lineHs[li];
+        flow.lineHs[li] = base.lineHeightPx > 0 ? base.lineHeightPx : nat;
+        flow.contentH += flow.lineHs[li];
+        flow.maxLineW = std::fmax(flow.maxLineW, lines[li].width);
     }
+    return true;
+}
+
+// Multi-style rich text. Runs are tokenized into wrap-atomic pieces (words,
+// space gaps, individual CJK characters), greedily flowed into lines (an
+// explicit \n forces a break), and rendered as one tvg::Text per piece with
+// baselines aligned per line. Returns nullptr when a font is missing —
+// caller falls back to the uniform base-style path.
+tvg::Paint* makeRichText(const Node& n, BuildContext& ctx) {
+    if (n.textRuns.empty() || !ctx.fonts) return nullptr;
+    const TextStyle& base = n.textStyle;
+
+    // Auto-width boxes never wrap (they hug their text).
+    const bool noWrap = base.autoResize == "WIDTH_AND_HEIGHT" || n.width <= 0;
+    TextFlow flow;
+    if (!buildTextFlow(n, noWrap ? 0 : n.width, ctx, true /*keepTexts*/, flow)) {
+        return nullptr;
+    }
+    auto& lines = flow.lines;
+    auto& lineHs = flow.lineHs;
+    const float contentH = flow.contentH;
+    using Piece = TextPiece;
+    using Line = TextFlow::Line;
+
     float top = 0;
     if (base.alignV == TextStyle::AlignV::Center) top = (n.height - contentH) * 0.5f;
     else if (base.alignV == TextStyle::AlignV::Bottom) top = n.height - contentH;
@@ -701,7 +761,7 @@ tvg::Paint* makeRichText(const Node& n, BuildContext& ctx) {
         top += lineHs[li];
     }
     // Release any pieces that never made it into the scene (trailing spaces).
-    for (auto& p : pieces) tvg::Paint::rel(p.text);
+    flow.release();
     return scene;
 }
 
@@ -1005,6 +1065,15 @@ tvg::Scene* buildBooleanApprox(Node& n) {
 }
 
 }  // namespace
+
+bool measureTextNode(const Node& n, float maxWidth, BuildContext& ctx,
+                     float& outWidth, float& outHeight) {
+    TextFlow flow;
+    if (!buildTextFlow(n, maxWidth, ctx, false /*keepTexts*/, flow)) return false;
+    outWidth = flow.maxLineW;
+    outHeight = flow.contentH;
+    return true;
+}
 
 tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx,
                            bool isRoot) {

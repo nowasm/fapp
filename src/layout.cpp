@@ -17,11 +17,34 @@
 #include "figmalib/layout.h"
 
 #include <algorithm>
+#include <optional>
+#include <utility>
 #include <vector>
 
 namespace figmalib {
 
 namespace {
+
+TextMeasurer g_textMeasurer;
+
+// Measured natural size of an auto-resize text node, or nullopt when the
+// node keeps its authored box (fixed size, no measurer, missing font).
+// HEIGHT boxes wrap at `width`; WIDTH_AND_HEIGHT boxes never wrap.
+std::optional<std::pair<float, float>> textNaturalSize(const Node& n, float width) {
+    if (n.type != NodeType::Text || !g_textMeasurer || n.characters.empty()) {
+        return std::nullopt;
+    }
+    const std::string& ar = n.textStyle.autoResize;
+    float w = 0, h = 0;
+    if (ar == "WIDTH_AND_HEIGHT") {
+        if (g_textMeasurer(n, 0, w, h)) return std::make_pair(w, h);
+    } else if (ar == "HEIGHT") {
+        if (width > 0 && g_textMeasurer(n, width, w, h)) {
+            return std::make_pair(width, h);
+        }
+    }
+    return std::nullopt;
+}
 
 bool inFlow(const Node& c) {
     return c.visible && !c.layoutAbsolute && c.type != NodeType::Slice;
@@ -42,7 +65,12 @@ float crossOf(const AutoLayout& al, const Size& s) {
 // axes recompute from children so deeper reflow propagates upward.
 Size measure(const Node& n) {
     const AutoLayout& al = n.autoLayout;
-    if (!al.enabled()) return {n.baseWidth, n.baseHeight};
+    if (!al.enabled()) {
+        if (const auto ts = textNaturalSize(n, n.baseWidth)) {
+            return {ts->first, ts->second};
+        }
+        return {n.baseWidth, n.baseHeight};
+    }
 
     float main = 0, cross = 0, anyCross = 0;
     int count = 0;
@@ -87,6 +115,13 @@ float clampAxis(float v, float lo, float hi) {
 void setSize(Node& n, float w, float h) {
     n.width = clampAxis(w, n.minWidth, n.maxWidth);
     n.height = clampAxis(h, n.minHeight, n.maxHeight);
+    // Auto-height text re-wraps at its assigned width: the box height follows
+    // the measured content (e.g. after setText or a stretch-driven re-wrap).
+    if (const auto ts = textNaturalSize(n, n.width)) {
+        if (n.textStyle.autoResize == "HEIGHT") {
+            n.height = clampAxis(ts->second, n.minHeight, n.maxHeight);
+        }
+    }
     layoutChildren(n);
 }
 
@@ -305,6 +340,8 @@ void resetLayout(Node& root) {
         return true;
     });
 }
+
+void setTextMeasurer(TextMeasurer fn) { g_textMeasurer = std::move(fn); }
 
 void layoutFrame(Node& frame, float width, float height) {
     if (width <= 0 || height <= 0) return;

@@ -57,6 +57,14 @@ public:
     // Maps frame-local coordinates to target pixels (scale-to-fit transform).
     Mat23 contentTransform() const;
 
+    // Measures a TEXT node with the renderer's fonts and the exact wrap pass
+    // used for drawing: wrapped at maxWidth (<= 0 → no wrapping). Outputs the
+    // widest line and total line-box height; false when fonts are missing.
+    // Each constructed Renderer also installs itself as the layout engine's
+    // text measurer (see layout.h setTextMeasurer).
+    bool measureText(const Node& node, float maxWidth, float& outWidth,
+                     float& outHeight);
+
     // Fonts: explicit registration wins over system lookup (Windows registry).
     void registerFont(const std::string& family, const std::string& ttfPath,
                       int weight = 400, bool italic = false);

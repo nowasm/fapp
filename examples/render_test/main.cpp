@@ -180,6 +180,53 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Text measurement drives layout: in Reflow mode an auto-height text node
+    // must grow when a longer string wraps to more lines.
+    {
+        figmalib::Node* textNode = nullptr;
+        for (const auto& frameName : seen) {
+            if (!ui->selectFrame(frameName)) continue;
+            ui->currentFrame()->visit([&](figmalib::Node& n) {
+                if (!textNode && n.type == figmalib::NodeType::Text && n.width > 40 &&
+                    !n.characters.empty()) {
+                    textNode = &n;
+                }
+                return true;
+            });
+            if (textNode) break;
+        }
+        if (!textNode) {
+            std::printf("text-measure: no text node (skipped)\n");
+        } else {
+            const std::string savedChars = textNode->characters;
+            const std::string savedResize = textNode->textStyle.autoResize;
+            textNode->textStyle.autoResize = "HEIGHT";
+            ui->setResizeMode(figmalib::FigmaUI::ResizeMode::Reflow);
+            ui->setViewport(900, 640);
+            ui->render();
+            const float before = textNode->height;
+            // Mutate the node directly — setText() resolves by name, which can
+            // collide with the frame itself (union.fig "Practice designs").
+            textNode->characters =
+                "The quick brown fox jumps over the lazy dog again and "
+                "again and again until the line is far too long to fit";
+            textNode->textRuns.clear();
+            ui->setViewport(899, 640);  // size change forces a reflow
+            ui->render();
+            const float after = textNode->height;
+            std::printf("text-measure %s: height %.1f -> %.1f\n",
+                        textNode->name.c_str(), before, after);
+            if (!(after > before + 1)) {
+                std::printf("FAIL: auto-height text did not grow\n");
+                ++failures;
+            }
+            textNode->characters = savedChars;
+            textNode->textStyle.autoResize = savedResize;
+            ui->setResizeMode(figmalib::FigmaUI::ResizeMode::Scale);
+            ui->setViewport(900, 640);
+        }
+    }
+
     // Hit-test sanity on the sample UI: center of the start button.
     if (ui->selectFrame("MainMenu")) {
         ui->render();

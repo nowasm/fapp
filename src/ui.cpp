@@ -392,6 +392,10 @@ bool FigmaUI::setText(const std::string& nodeName, const std::string& text) {
     Node* n = impl_->findMutable(nodeName);
     if (!n || n->type != NodeType::Text) return false;
     n->characters = text;
+    // Rich-text runs index the old string; rendering falls back to the base
+    // style, which is what a runtime-driven label wants.
+    n->textRuns.clear();
+    impl_->reflow();  // auto-height text can change the layout around it
     impl_->renderer.markDirty();
     return true;
 }

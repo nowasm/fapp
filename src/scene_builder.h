@@ -22,4 +22,10 @@ struct BuildContext {
 tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx,
                            bool isRoot = false);
 
+// Measures a TEXT node's content with the same tokenize/wrap pass the
+// renderer uses: wrapped at maxWidth (<= 0 → no wrapping). Outputs the widest
+// line and the total line-box height. Returns false when fonts are missing.
+bool measureTextNode(const Node& n, float maxWidth, BuildContext& ctx,
+                     float& outWidth, float& outHeight);
+
 }  // namespace figmalib

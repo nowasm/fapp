@@ -6,6 +6,7 @@
 
 #include <thorvg.h>
 
+#include "figmalib/layout.h"
 #include "font_provider.h"
 #include "scene_builder.h"
 
@@ -23,6 +24,9 @@ void engineRef() {
 void engineUnref() {
     if (g_engineRefs.fetch_sub(1) == 1) tvg::Initializer::term();
 }
+
+// Owner of the layout engine's global text measurer (last renderer wins).
+Renderer* g_measurerOwner = nullptr;
 
 }  // namespace
 
@@ -63,11 +67,27 @@ struct Renderer::Impl {
 Renderer::Renderer() : impl_(std::make_unique<Impl>()) {
     engineRef();
     impl_->canvas.reset(tvg::SwCanvas::gen());
+    g_measurerOwner = this;
+    setTextMeasurer([this](const Node& n, float maxW, float& w, float& h) {
+        return measureText(n, maxW, w, h);
+    });
 }
 
 Renderer::~Renderer() {
+    if (g_measurerOwner == this) {
+        g_measurerOwner = nullptr;
+        setTextMeasurer(nullptr);
+    }
     impl_->canvas.reset();
     engineUnref();
+}
+
+bool Renderer::measureText(const Node& node, float maxWidth, float& outWidth,
+                           float& outHeight) {
+    BuildContext ctx;
+    ctx.fonts = &impl_->fonts;
+    ctx.imageDir = impl_->imageDir;
+    return measureTextNode(node, maxWidth, ctx, outWidth, outHeight);
 }
 
 bool Renderer::setTarget(uint32_t width, uint32_t height) {
