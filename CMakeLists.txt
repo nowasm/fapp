@@ -36,6 +36,7 @@ add_library(figmalib STATIC
     src/parser.cpp
     src/canvas_parser.cpp
     src/fig_loader.cpp
+    src/serializer.cpp
     src/svg_path.cpp
     src/font_provider.cpp
     src/scene_builder.cpp
@@ -81,5 +82,24 @@ if(FIGMALIB_BUILD_EXAMPLES)
     add_executable(render_test examples/render_test/main.cpp)
     target_link_libraries(render_test PRIVATE figmalib)
     target_compile_definitions(render_test PRIVATE
+        ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples/assets")
+endif()
+
+# ---- editor app ----
+if(FIGMALIB_BACKEND_RAYLIB)
+    FetchContent_Declare(raygui
+        URL https://github.com/raysan5/raygui/archive/refs/tags/4.0.tar.gz
+    )
+    FetchContent_MakeAvailable(raygui)
+
+    add_executable(figmaedit
+        apps/editor/main.cpp
+        apps/editor/editor_state.cpp
+        apps/editor/editor_canvas.cpp
+        apps/editor/editor_panels.cpp
+    )
+    target_include_directories(figmaedit PRIVATE "${raygui_SOURCE_DIR}/src")
+    target_link_libraries(figmaedit PRIVATE figmalib raylib)
+    target_compile_definitions(figmaedit PRIVATE
         ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples/assets")
 endif()

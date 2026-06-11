@@ -35,8 +35,11 @@ struct Renderer::Impl {
     bool targetValid = false;
     FontProvider fonts;
     std::string imageDir;
+    Mat23 viewTransform;
+    bool hasViewTransform = false;
 
     Mat23 contentTransform() const {
+        if (hasViewTransform) return viewTransform;
         Mat23 m;
         if (!frame || frame->width <= 0 || frame->height <= 0 || width == 0 || height == 0) {
             return m;
@@ -83,6 +86,18 @@ void Renderer::setFrame(Node* frame) {
 
 void Renderer::markDirty() { impl_->dirty = true; }
 
+void Renderer::setViewTransform(const Mat23& view) {
+    impl_->viewTransform = view;
+    impl_->hasViewTransform = true;
+    impl_->dirty = true;
+}
+
+void Renderer::clearViewTransform() {
+    if (!impl_->hasViewTransform) return;
+    impl_->hasViewTransform = false;
+    impl_->dirty = true;
+}
+
 bool Renderer::render() {
     auto& d = *impl_;
     if (!d.dirty || !d.frame || !d.targetValid || !d.canvas) return false;
@@ -97,7 +112,10 @@ bool Renderer::render() {
     auto* rootScene = tvg::Scene::gen();
     rootScene->transform({content.m00, content.m01, content.m02, content.m10, content.m11,
                           content.m12, 0, 0, 1});
-    if (auto* frameScene = buildNodeScene(*d.frame, Mat23::identity(), ctx, true)) {
+    // In view-transform (editor) mode the frame keeps its canvas position so
+    // sibling frames of a page stay laid out; in fit mode it is re-origined.
+    const bool reorigin = !d.hasViewTransform;
+    if (auto* frameScene = buildNodeScene(*d.frame, Mat23::identity(), ctx, reorigin)) {
         rootScene->add(frameScene);
     }
     d.canvas->add(rootScene);

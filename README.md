@@ -25,11 +25,36 @@ ThorVG 场景图 ──SwCanvas──▶ RGBA8888 像素缓冲（直通 alpha）
 
 ```
 include/figmalib/   公共 API（document / parser / renderer / ui）
-src/                解析器、SVG path 解析、ThorVG 场景构建、字体、渲染器
+src/                解析器、SVG path 解析、ThorVG 场景构建、字体、渲染器、序列化
 backends/raylib/    raylib 后端（其他引擎后端的参考模板，~100 行）
+apps/editor/        figmaedit — Figma 风格的可视化编辑器（raylib + raygui）
 examples/           demo_raylib 演示程序 + 示例 Figma JSON
 third_party/        nlohmann/json 单头文件
 ```
+
+## figmaedit 编辑器
+
+```
+build\figmaedit.exe [design.fig | canvas.json | file.json]   # 或拖放文件到窗口
+build\figmaedit.exe --selftest [file]                        # 无窗口逻辑自测
+```
+
+操作对齐 Figma 原版：
+
+| 操作 | 快捷键 |
+|---|---|
+| 平移画布 | 空格+拖拽 / 中键拖拽 / 滚轮（Shift=横向） |
+| 缩放 | Ctrl+滚轮（以光标为中心）、Ctrl+= / Ctrl+-、Ctrl+0=100%、Shift+1=适应 |
+| 选择 | 单击顶层对象、Ctrl+单击深选、双击进入容器、Esc 返回、Shift+单击加减选、空白拖拽框选 |
+| 移动 | 拖拽（Shift 轴锁定）、方向键微移（Shift=10px） |
+| 缩放对象 | 四角/边手柄（Shift 等比、Alt 中心对称） |
+| 编辑 | Ctrl+D 复制、Delete 删除、Ctrl+Z / Ctrl+Shift+Z 撤销重做、Ctrl+S 保存 |
+| 工具 | V 移动、H 抓手 |
+
+左侧图层树（展开/可见性切换/点击选中），右侧检查器（X/Y/W/H、透明度、
+圆角、填充色、文本内容），顶部工具栏（工具、页面切换、缩放显示）。
+保存写出 `<原文件>.figmalib.json`（REST 格式，可直接被 figmalib 重新加载，
+不覆盖原 .fig）。HiDPI 缩放自动检测，可用 `FIGMAEDIT_SCALE` 环境变量覆盖。
 
 ## 构建（Windows / MSVC）
 

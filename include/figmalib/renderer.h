@@ -28,6 +28,14 @@ public:
     // ignored) and uniformly scaled to fit the target, centered (letterboxed).
     void setFrame(Node* frame);
 
+    // Editor mode: render with an explicit world→pixel view transform instead
+    // of the letterbox fit. The frame keeps its own canvas position, so a
+    // whole CANVAS page (with frames at their canvas coordinates) can be
+    // rendered and panned/zoomed freely. Call clearViewTransform() to return
+    // to fit mode.
+    void setViewTransform(const Mat23& view);
+    void clearViewTransform();
+
     // Re-rasterize if dirty. Returns true if the pixel buffer changed.
     bool render();
     void markDirty();

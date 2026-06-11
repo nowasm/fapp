@@ -36,4 +36,9 @@ struct LoadedFile {
 // the .fig file in "<name>.fig.export/" and reused while up to date.
 LoadedFile loadFigmaFile(const std::string& path);
 
+// Serialize a document to Figma-REST-style JSON that parseDocument() reads
+// back losslessly (figmalib's save format). Runtime overrides are not saved.
+std::string writeDocumentJson(const Document& doc);
+bool saveDocumentFile(const Document& doc, const std::string& path);
+
 }  // namespace figmalib
