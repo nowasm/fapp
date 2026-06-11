@@ -186,6 +186,9 @@ struct FigmaUI::Impl {
         reflow();  // auto-height boxes follow the new content
         renderer.markDirty();
     }
+
+    // Pristine item templates detached by bindList, keyed by the list node.
+    std::unordered_map<Node*, std::unique_ptr<Node>> listTemplates;
 };
 
 FigmaUI::FigmaUI() : impl_(std::make_unique<Impl>()) {}
@@ -495,6 +498,40 @@ void FigmaUI::onClick(const std::string& nodeName, ClickHandler fn) {
 
 void FigmaUI::onHover(const std::string& nodeName, HoverHandler fn) {
     impl_->hoverHandlers[nodeName].push_back(std::move(fn));
+}
+
+bool FigmaUI::bindList(const std::string& listName, size_t count,
+                       const ListBinder& bind) {
+    Node* list = impl_->findMutable(listName);
+    if (!list) return false;
+
+    // First bind detaches the template; later binds reuse the stored one.
+    auto it = impl_->listTemplates.find(list);
+    if (it == impl_->listTemplates.end()) {
+        std::unique_ptr<Node> tmpl;
+        for (auto& c : list->children) {
+            if (c->type != NodeType::Slice) {
+                tmpl = std::move(c);
+                break;
+            }
+        }
+        if (!tmpl) return false;
+        it = impl_->listTemplates.emplace(list, std::move(tmpl)).first;
+    }
+
+    impl_->setFocus(nullptr);  // the focused node may be a list item
+    impl_->hovered = nullptr;
+    impl_->pressed = nullptr;
+    list->children.clear();
+    for (size_t i = 0; i < count; ++i) {
+        list->children.push_back(cloneNode(*it->second, list));
+        if (bind) bind(*list->children.back(), i);
+    }
+
+    relayoutNode(*list);  // re-stack the clones, grow hug axes
+    impl_->reflow();      // Reflow mode: ancestors (incl. hug chains) follow
+    impl_->renderer.markDirty();
+    return true;
 }
 
 bool FigmaUI::setVisible(const std::string& nodeName, bool visible) {

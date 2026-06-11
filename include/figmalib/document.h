@@ -279,6 +279,10 @@ struct Node : NodeData {
 // Deep copy of a subtree; the copy's parent is set to `parent` (may be null).
 std::unique_ptr<Node> cloneNode(const Node& src, Node* parent);
 
+// Set a text node's characters at runtime. Clears stale rich-text runs (they
+// index the old string); rendering falls back to the node's base style.
+void setNodeText(Node& n, const std::string& text);
+
 struct Document {
     std::string name;
     std::unique_ptr<Node> root;  // DOCUMENT node; children are CANVAS pages

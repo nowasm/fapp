@@ -289,6 +289,70 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Data-driven list: clone an auto-layout container's template child per
+    // item, stamp each with text, and verify stacking + pixel changes.
+    {
+        figmalib::Node* list = nullptr;
+        for (const auto& frameName : seen) {
+            if (!ui->selectFrame(frameName)) continue;
+            ui->currentFrame()->visit([&](figmalib::Node& n) {
+                if (!list && n.autoLayout.enabled() && !n.children.empty() &&
+                    n.parent && n.width > 0) {
+                    // Need a text somewhere in the template to stamp.
+                    bool hasText = false;
+                    n.children.front()->visit([&](figmalib::Node& t) {
+                        if (t.type == figmalib::NodeType::Text) hasText = true;
+                        return !hasText;
+                    });
+                    if (hasText) list = &n;
+                }
+                return true;
+            });
+            if (list) break;
+        }
+        if (!list) {
+            std::printf("bindList: no auto-layout list candidate (skipped)\n");
+        } else {
+            const std::string savedName = list->name;
+            list->name = "__list__";
+            ui->render();
+            const uint32_t total = ui->pixelWidth() * ui->pixelHeight();
+            std::vector<uint32_t> before(ui->pixels(), ui->pixels() + total);
+
+            const bool ok = ui->bindList("__list__", 5, [](figmalib::Node& item, size_t i) {
+                bool done = false;
+                item.visit([&](figmalib::Node& t) {
+                    if (!done && t.type == figmalib::NodeType::Text) {
+                        figmalib::setNodeText(t, "Item " + std::to_string(i + 1));
+                        done = true;
+                    }
+                    return !done;
+                });
+            });
+            if (!ok || list->children.size() != 5) {
+                std::printf("FAIL: bindList -> %zu items\n", list->children.size());
+                ++failures;
+            } else {
+                const auto& a = *list->children[0];
+                const auto& b = *list->children[1];
+                const bool stacked = a.relativeTransform.m02 != b.relativeTransform.m02 ||
+                                     a.relativeTransform.m12 != b.relativeTransform.m12;
+                ui->render();
+                uint32_t diff = 0;
+                for (uint32_t i = 0; i < total; ++i) {
+                    if (ui->pixels()[i] != before[i]) ++diff;
+                }
+                std::printf("bindList %s: 5 items, stacked=%d, %u pixels changed\n",
+                            savedName.c_str(), stacked ? 1 : 0, diff);
+                if (!stacked || diff == 0) {
+                    std::printf("FAIL: bindList items not laid out / not drawn\n");
+                    ++failures;
+                }
+            }
+            list->name = savedName;
+        }
+    }
+
     // Hit-test sanity on the sample UI: center of the start button.
     if (ui->selectFrame("MainMenu")) {
         ui->render();

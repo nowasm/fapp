@@ -19,6 +19,12 @@ void resetLayout(Node& root);
 // Resize `frame` to width × height and reflow its subtree.
 void layoutFrame(Node& frame, float width, float height);
 
+// Re-run layout inside `node` at its current size, re-deriving hug axes from
+// the (possibly changed) children — for runtime child mutations like
+// FigmaUI::bindList. Ancestors are not updated; callers in Reflow mode
+// should reflow the frame instead.
+void relayoutNode(Node& node);
+
 // Text measurement hook: wraps the node's text at maxWidth (<= 0 → no wrap)
 // and reports the content extent. Installed by the Renderer (process-global;
 // the most recently constructed renderer owns it) so layoutFrame can size

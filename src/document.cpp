@@ -94,6 +94,11 @@ std::unique_ptr<Node> cloneNode(const Node& src, Node* parent) {
     return n;
 }
 
+void setNodeText(Node& n, const std::string& text) {
+    n.characters = text;
+    n.textRuns.clear();
+}
+
 void Document::captureBaseLayout() {
     if (!root) return;
     root->visit([](Node& n) {

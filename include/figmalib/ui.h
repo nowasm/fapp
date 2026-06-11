@@ -101,6 +101,17 @@ public:
     void textInput(const std::string& utf8);  // insert at the caret
     void editKey(EditKey key);
 
+    // ---- Data-driven lists ----
+    // Treats the named node's first child as the item template and fills the
+    // list with `count` clones of it; `bind` then stamps each clone with its
+    // data (find parts via item.findByName, write text with setNodeText).
+    // The pristine template is kept internally, so bindList can be called
+    // again whenever the data changes. The list node should be an
+    // auto-layout stack; inside a scrolling frame this yields a data-driven
+    // scrollable list.
+    using ListBinder = std::function<void(Node& item, size_t index)>;
+    bool bindList(const std::string& listName, size_t count, const ListBinder& bind);
+
     // ---- Runtime mutation (marks dirty, returns false if node not found) ----
     bool setVisible(const std::string& nodeName, bool visible);
     bool setOpacity(const std::string& nodeName, float opacity);  // <0 resets to authored

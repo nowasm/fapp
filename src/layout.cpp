@@ -343,6 +343,20 @@ void resetLayout(Node& root) {
 
 void setTextMeasurer(TextMeasurer fn) { g_textMeasurer = std::move(fn); }
 
+void relayoutNode(Node& n) {
+    const Size nat = measure(n);
+    float w = n.width, h = n.height;
+    const AutoLayout& al = n.autoLayout;
+    if (al.enabled()) {
+        const bool horiz = al.mode == AutoLayout::Mode::Horizontal;
+        if (al.primarySizing == AutoLayout::Sizing::Hug) (horiz ? w : h) = horiz ? nat.w : nat.h;
+        if (al.counterSizing == AutoLayout::Sizing::Hug) (horiz ? h : w) = horiz ? nat.h : nat.w;
+    }
+    n.width = clampAxis(w, n.minWidth, n.maxWidth);
+    n.height = clampAxis(h, n.minHeight, n.maxHeight);
+    layoutChildren(n);
+}
+
 void layoutFrame(Node& frame, float width, float height) {
     if (width <= 0 || height <= 0) return;
     if (frame.baseWidth <= 0 || frame.baseHeight <= 0) return;
