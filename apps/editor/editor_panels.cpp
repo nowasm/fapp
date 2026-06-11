@@ -13,14 +13,35 @@
 
 namespace figmaedit {
 
+void applyEditorTheme() {
+    auto pack = [](::Color c) { return ColorToInt(c); };
+    // Base look of every control (designed in Figma: dark fields, subtle
+    // borders, accent on press).
+    GuiSetStyle(DEFAULT, BACKGROUND_COLOR, pack(kThemePanel));
+    GuiSetStyle(DEFAULT, LINE_COLOR, pack(kThemeLine));
+    GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, pack(kThemeField));
+    GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, pack(::Color{58, 58, 58, 255}));
+    GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, pack(kThemeText));
+    GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, pack(::Color{51, 51, 51, 255}));
+    GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, pack(::Color{90, 160, 230, 255}));
+    GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, pack(::Color{255, 255, 255, 255}));
+    GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, pack(kThemeAccent));
+    GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, pack(kThemeAccent));
+    GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, pack(::Color{255, 255, 255, 255}));
+    GuiSetStyle(DEFAULT, BORDER_WIDTH, 1);
+    GuiSetStyle(BUTTON, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
+    GuiSetStyle(VALUEBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+    GuiSetStyle(TEXTBOX, TEXT_ALIGNMENT, TEXT_ALIGN_LEFT);
+}
+
 namespace {
 
-constexpr ::Color kPanelBg{43, 43, 43, 255};
-constexpr ::Color kPanelEdge{30, 30, 30, 255};
-constexpr ::Color kTextCol{220, 220, 220, 255};
-constexpr ::Color kTextDim{140, 140, 140, 255};
-constexpr ::Color kRowSel{13, 153, 255, 70};
-constexpr ::Color kRowHover{255, 255, 255, 14};
+constexpr ::Color kPanelBg = kThemePanel;
+constexpr ::Color kPanelEdge = kThemeEdge;
+constexpr ::Color kTextCol = kThemeText;
+constexpr ::Color kTextDim = kThemeDim;
+constexpr ::Color kRowSel = kThemeRowSel;
+constexpr ::Color kRowHover = kThemeRowHover;
 
 // One undoable property edit on a single node.
 template <typename Fn>
@@ -116,12 +137,19 @@ void drawToolbar(EditorState& ed) {
         }
     }
 
-    const ::Color activeTint{13, 153, 255, 255};
     auto toolButton = [&](const char* label, Tool t) {
         const bool active = ed.tool == t;
-        if (active)
-            DrawRectangleRounded({x - 2, by - 2, ui(60), bh + 4}, 0.3f, 4, activeTint);
+        if (active) {  // Figma-style: the active tool is a solid accent button
+            GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(kThemeAccent));
+            GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt(kThemeAccent));
+            GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(::Color{255, 255, 255, 255}));
+        }
         if (GuiButton({x, by, ui(56), bh}, label)) ed.tool = t;
+        if (active) {
+            GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(kThemeField));
+            GuiSetStyle(BUTTON, BORDER_COLOR_NORMAL, ColorToInt(::Color{58, 58, 58, 255}));
+            GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(kThemeText));
+        }
         x += ui(64);
     };
     toolButton("Move V", Tool::Move);

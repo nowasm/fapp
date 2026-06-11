@@ -15,11 +15,11 @@ namespace figmaedit {
 
 namespace {
 
-constexpr ::Color kPanelBg{43, 43, 43, 255};
-constexpr ::Color kPanelEdge{30, 30, 30, 255};
-constexpr ::Color kTextCol{220, 220, 220, 255};
-constexpr ::Color kTextDim{140, 140, 140, 255};
-constexpr ::Color kAccent{13, 153, 255, 255};
+constexpr ::Color kPanelBg = kThemePanel;
+constexpr ::Color kPanelEdge = kThemeEdge;
+constexpr ::Color kTextCol = kThemeText;
+constexpr ::Color kTextDim = kThemeDim;
+constexpr ::Color kAccent = kThemeAccent;
 
 template <typename Fn>
 void commitEdit(EditorState& ed, Node* n, Fn&& fn) {
@@ -121,7 +121,7 @@ void drawAlignGlyph(Rectangle r, int op) {
 
 void sectionHeader(float fx, float& y, const char* title) {
     DrawRectangle(static_cast<int>(fx - ui(6)), static_cast<int>(y),
-                  kInspectorW - static_cast<int>(ui(16)), 1, {60, 60, 60, 255});
+                  kInspectorW - static_cast<int>(ui(16)), 1, kThemeLine);
     y += ui(10);
     uiText(title, fx, y, fontS(), {235, 235, 235, 255});
     y += ui(24);

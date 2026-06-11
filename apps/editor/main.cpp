@@ -185,6 +185,7 @@ int main(int argc, char** argv) {
     SetTargetFPS(120);
     figmaedit::initUiScale();
     figmaedit::initUiFont();
+    figmaedit::applyEditorTheme();
     GuiSetFont(figmaedit::gUiFont);
     GuiSetStyle(DEFAULT, TEXT_SIZE, figmaedit::fontM());
     // Make the window comfortable on the current monitor.

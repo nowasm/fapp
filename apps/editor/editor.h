@@ -32,6 +32,21 @@ inline int fontS() { return static_cast<int>(13 * gUiScale); }
 inline int fontM() { return static_cast<int>(15 * gUiScale); }
 inline float ui(float v) { return v * gUiScale; }
 
+// ---- theme (designed in Figma: figmaedit UI Design) -------------------------
+inline constexpr ::Color kThemeCanvas{30, 30, 30, 255};     // #1E1E1E
+inline constexpr ::Color kThemePanel{44, 44, 44, 255};      // #2C2C2C
+inline constexpr ::Color kThemeField{36, 36, 36, 255};      // #242424 inputs
+inline constexpr ::Color kThemeEdge{17, 17, 17, 255};       // panel borders
+inline constexpr ::Color kThemeLine{64, 64, 64, 255};       // separators
+inline constexpr ::Color kThemeText{217, 217, 217, 255};    // primary text
+inline constexpr ::Color kThemeDim{128, 128, 128, 255};     // secondary text
+inline constexpr ::Color kThemeAccent{13, 153, 255, 255};   // #0D99FF
+inline constexpr ::Color kThemeRowSel{13, 153, 255, 45};    // selected row wash
+inline constexpr ::Color kThemeRowHover{255, 255, 255, 12};
+
+// Applies the dark theme to all raygui controls. Call once after InitWindow.
+void applyEditorTheme();
+
 // ---- UI font (Segoe UI; switches to Microsoft YaHei when the document
 // contains CJK names). Codepoints are collected per document. ----
 extern Font gUiFont;
