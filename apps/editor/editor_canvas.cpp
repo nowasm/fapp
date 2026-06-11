@@ -193,7 +193,8 @@ void nudgeSelection(EditorState& ed, float dx, float dy) {
 void updateCanvas(EditorState& ed) {
     const float mx = static_cast<float>(GetMouseX()) - ed.viewportX();
     const float my = static_cast<float>(GetMouseY()) - ed.viewportY();
-    const bool inViewport = mx >= 0 && my >= 0 && mx < ed.viewportW() && my < ed.viewportH();
+    const bool inViewport = mx >= 0 && my >= 0 && mx < ed.viewportW() &&
+                            my < ed.viewportH() && !ed.fileMenuOpen;
     float wx, wy;
     ed.cam.screenToWorld(mx, my, wx, wy);
 

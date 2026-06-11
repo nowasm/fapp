@@ -97,9 +97,13 @@ if(FIGMALIB_BACKEND_RAYLIB)
         apps/editor/editor_state.cpp
         apps/editor/editor_canvas.cpp
         apps/editor/editor_panels.cpp
+        apps/editor/editor_dialogs.cpp
     )
     target_include_directories(figmaedit PRIVATE "${raygui_SOURCE_DIR}/src")
     target_link_libraries(figmaedit PRIVATE figmalib raylib)
+    if(WIN32)
+        target_link_libraries(figmaedit PRIVATE comdlg32)  # native file dialogs
+    endif()
     target_compile_definitions(figmaedit PRIVATE
         ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples/assets")
 endif()

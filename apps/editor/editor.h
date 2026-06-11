@@ -164,6 +164,7 @@ struct EditorState {
     std::string status;
     double statusUntil = 0;
     bool textEditActive = false;      // an inspector textbox owns the keyboard
+    bool fileMenuOpen = false;        // File dropdown visible (blocks canvas clicks)
 
     int viewportX() const { return kLayersW; }
     int viewportY() const { return kToolbarH; }
@@ -211,5 +212,14 @@ void drawCanvas(EditorState& ed);
 void drawToolbar(EditorState& ed);
 void drawLayersPanel(EditorState& ed);
 void drawInspector(EditorState& ed);
+
+// native file dialogs (editor_dialogs.cpp); empty string = cancelled
+std::string showOpenFileDialog();
+std::string showSaveFileDialog(const std::string& suggested);
+
+// file operations (main.cpp)
+bool openFile(EditorState& ed, const std::string& path);
+void saveFile(EditorState& ed);
+void saveFileAs(EditorState& ed);
 
 }  // namespace figmaedit

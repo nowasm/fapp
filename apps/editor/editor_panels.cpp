@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <iterator>
 
 #include "editor.h"
 
@@ -70,6 +71,51 @@ void drawToolbar(EditorState& ed) {
     float x = ui(8);
     const float bh = ui(28), by = (kToolbarH - bh) / 2;
 
+    // ---- File menu ----
+    const Rectangle fileBtn{x, by, ui(52), bh};
+    if (GuiButton(fileBtn, "File")) ed.fileMenuOpen = !ed.fileMenuOpen;
+    x += ui(64);
+    if (ed.fileMenuOpen) {
+        struct Item {
+            const char* label;
+            int action;  // 1 open, 2 save, 3 save as
+        };
+        const Item items[] = {
+            {"Open...        Ctrl+O", 1},
+            {"Save           Ctrl+S", 2},
+            {"Save As...     Ctrl+Shift+S", 3},
+        };
+        const float mw = ui(230), ih = ui(30);
+        const Rectangle menuRect{fileBtn.x, static_cast<float>(kToolbarH),
+                                 mw, ih * static_cast<float>(std::size(items)) + ui(8)};
+        DrawRectangleRec(menuRect, kPanelBg);
+        DrawRectangleLinesEx(menuRect, 1, kPanelEdge);
+        float iy = menuRect.y + ui(4);
+        int action = 0;
+        for (const Item& item : items) {
+            if (GuiLabelButton({menuRect.x + ui(8), iy, mw - ui(16), ih}, item.label)) {
+                action = item.action;
+            }
+            iy += ih;
+        }
+        if (action != 0) {
+            ed.fileMenuOpen = false;
+            switch (action) {
+            case 1: {
+                const std::string path = showOpenFileDialog();
+                if (!path.empty()) openFile(ed, path);
+                break;
+            }
+            case 2: saveFile(ed); break;
+            case 3: saveFileAs(ed); break;
+            }
+        } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+                   !CheckCollisionPointRec(GetMousePosition(), menuRect) &&
+                   !CheckCollisionPointRec(GetMousePosition(), fileBtn)) {
+            ed.fileMenuOpen = false;  // click-away closes
+        }
+    }
+
     const ::Color activeTint{13, 153, 255, 255};
     auto toolButton = [&](const char* label, Tool t) {
         const bool active = ed.tool == t;
@@ -82,14 +128,7 @@ void drawToolbar(EditorState& ed) {
     toolButton("Hand H", Tool::Hand);
     x += ui(12);
 
-    if (GuiButton({x, by, ui(52), bh}, "Save")) {
-        if (figmalib::saveDocumentFile(*ed.file.document, ed.savePath)) {
-            ed.unsaved = false;
-            ed.setStatus("Saved " + ed.savePath);
-        } else {
-            ed.setStatus("Save FAILED: " + ed.savePath);
-        }
-    }
+    if (GuiButton({x, by, ui(52), bh}, "Save")) saveFile(ed);
     x += ui(60);
     if (GuiButton({x, by, ui(52), bh}, "Undo")) ed.undo();
     x += ui(60);

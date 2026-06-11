@@ -34,6 +34,10 @@ void registerConventionFonts(EditorState& ed, const std::string& inputPath) {
     for (const auto& dir : ed.fontDirs) ed.renderer.registerFontsFromDirectory(dir);
 }
 
+}  // namespace
+
+namespace figmaedit {
+
 bool openFile(EditorState& ed, const std::string& path) {
     try {
         figmalib::LoadedFile loaded = figmalib::loadFigmaFile(path);
@@ -59,7 +63,25 @@ bool openFile(EditorState& ed, const std::string& path) {
     }
 }
 
-}  // namespace
+void saveFile(EditorState& ed) {
+    if (!ed.file.document) return;
+    if (figmalib::saveDocumentFile(*ed.file.document, ed.savePath)) {
+        ed.unsaved = false;
+        ed.setStatus("Saved " + ed.savePath);
+    } else {
+        ed.setStatus("Save FAILED: " + ed.savePath, 5);
+    }
+}
+
+void saveFileAs(EditorState& ed) {
+    if (!ed.file.document) return;
+    const std::string path = showSaveFileDialog(ed.savePath);
+    if (path.empty()) return;
+    ed.savePath = path;
+    saveFile(ed);
+}
+
+}  // namespace figmaedit
 
 // Headless logic check: document mutations, undo/redo, tree ops, save
 // round-trip — everything below the mouse wiring. Run: figmaedit --selftest [file]
@@ -168,15 +190,15 @@ int main(int argc, char** argv) {
             if (dropped.count > 0) openFile(ed, dropped.paths[0]);
             UnloadDroppedFiles(dropped);
         }
-        // save
+        // file shortcuts
         const bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
-        if (ctrl && IsKeyPressed(KEY_S) && ed.file.document) {
-            if (figmalib::saveDocumentFile(*ed.file.document, ed.savePath)) {
-                ed.unsaved = false;
-                ed.setStatus("Saved " + ed.savePath);
-            } else {
-                ed.setStatus("Save FAILED: " + ed.savePath, 5);
-            }
+        const bool shift = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
+        if (ctrl && IsKeyPressed(KEY_S)) {
+            shift ? saveFileAs(ed) : saveFile(ed);
+        }
+        if (ctrl && IsKeyPressed(KEY_O)) {
+            const std::string path = showOpenFileDialog();
+            if (!path.empty()) openFile(ed, path);
         }
 
         if (ed.file.document && ed.page) updateCanvas(ed);
@@ -184,9 +206,9 @@ int main(int argc, char** argv) {
         BeginDrawing();
         ClearBackground(::Color{30, 30, 30, 255});
         if (ed.file.document && ed.page) drawCanvas(ed);
-        drawToolbar(ed);
         drawLayersPanel(ed);
         drawInspector(ed);
+        drawToolbar(ed);  // last: the File dropdown overlays the panels
         EndDrawing();
     }
 
