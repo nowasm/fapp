@@ -904,6 +904,12 @@ int weightFromName(const std::string& style, const std::string& postscript) {
 
 NodeType inferCanvasNodeType(const json& j, int depth) {
     const std::string explicitType = jstr(j, "type");
+    // .fig stores Figma GROUPs as FRAME + resizeToFit (the frame hugs its
+    // children). Groups never clip their content, so the distinction matters:
+    // stroked curves wider than the hug box would otherwise be shaved off
+    // (frameMaskDisabled defaults to clip-on for real frames).
+    if (explicitType == "FRAME" && jbool(j, "resizeToFit", false))
+        return NodeType::Group;
     if (!explicitType.empty()) {
         static const std::unordered_map<std::string, NodeType> map = {
             {"DOCUMENT", NodeType::Document},   {"CANVAS", NodeType::Canvas},
@@ -1028,7 +1034,9 @@ std::unique_ptr<Node> parseCanvasNode(const json& j, Node* parent, int depth) {
 
     // .fig clipping flag: `frameMaskDisabled == false` means clipping ON;
     // missing means "don't clip" (wrapper canvas/page nodes shouldn't clip).
-    if (j.contains("frameMaskDisabled") && j["frameMaskDisabled"].is_boolean()) {
+    // Groups (FRAME + resizeToFit) never clip regardless of the flag.
+    if (node->type != NodeType::Group && j.contains("frameMaskDisabled") &&
+        j["frameMaskDisabled"].is_boolean()) {
         node->clipsContent = !j["frameMaskDisabled"].get<bool>();
     }
 
