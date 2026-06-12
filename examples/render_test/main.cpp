@@ -420,6 +420,39 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Click-to-navigate consumes the event: nav items share names with their
+    // destination frames, so a click must not bubble past the navigation and
+    // fire the old frame's own handler (Discover page -> tap Trade ->
+    // Marketplace must stick, not bounce back to Discover).
+    {
+        const bool hasFrames = ui->selectFrame("Discover") &&
+                               ui->selectFrame("Marketplace") &&
+                               ui->selectFrame("Discover");
+        figmalib::Node* tradeItem =
+            hasFrames ? ui->currentFrame()->findByName("Trade") : nullptr;
+        if (!tradeItem) {
+            std::printf("nav-bubble: no Discover/Trade setup (skipped)\n");
+        } else {
+            ui->onClick("Trade", [&](figmalib::Node&) { ui->navigateTo("Marketplace"); });
+            ui->onClick("Discover", [&](figmalib::Node&) { ui->navigateTo("Discover"); });
+            ui->render();  // refresh absoluteTransform for the hit test
+            float cx, cy, vx, vy;
+            tradeItem->absoluteTransform.apply(tradeItem->width * 0.5f,
+                                               tradeItem->height * 0.5f, cx, cy);
+            ui->renderer().contentTransform().apply(cx, cy, vx, vy);
+            ui->pointerDown(vx, vy);
+            ui->pointerUp(vx, vy);
+            ui->update(10.0f);  // finish any transition
+            const std::string where =
+                ui->currentFrame() ? ui->currentFrame()->name : "(null)";
+            std::printf("nav-bubble: Discover + Trade click -> %s\n", where.c_str());
+            if (where != "Marketplace") {
+                std::printf("FAIL: navigation did not consume the click\n");
+                ++failures;
+            }
+        }
+    }
+
     // Hit-test sanity on the sample UI: center of the start button.
     if (ui->selectFrame("MainMenu")) {
         ui->render();

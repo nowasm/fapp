@@ -93,13 +93,20 @@ struct FigmaUI::Impl {
     // Fires handlers registered for the node or any of its ancestors.
     template <typename Map, typename Fn>
     void fireUp(Map& handlers, Node* node, Fn&& invoke) {
-        // A handler may navigate and swap `frame` mid-walk; capture the stop
-        // node up front or the loop runs past the old frame into the canvas
-        // and document nodes (whose names could match other handlers).
+        // Capture the stop node up front: a handler may navigate and swap
+        // `frame` mid-walk, and the loop must not run past the old frame.
         Node* stop = frame;
         for (Node* n = node; n; n = n->parent) {
             if (auto it = handlers.find(n->name); it != handlers.end()) {
-                for (auto& h : it->second) invoke(h, *n);
+                for (auto& h : it->second) {
+                    invoke(h, *n);
+                    // Navigation consumes the event: once a handler switched
+                    // frames, ancestors of the OLD page must not keep firing.
+                    // (Nav items commonly share names with their destination
+                    // frames — "Discover" the button bubbling up to
+                    // "Discover" the frame would navigate right back.)
+                    if (frame != stop) return;
+                }
             }
             if (n == stop) break;
         }
@@ -524,16 +531,17 @@ void FigmaUI::pointerUp(float x, float y) {
             impl_->fireUp(impl_->clickHandlers, target,
                           [](ClickHandler& h, Node& n) { h(n); });
         }
-        // Authored Figma prototype link anywhere in the chain: navigate.
-        // Click handlers above may already have navigated — stop at the frame
-        // the click happened in, not the current one.
-        for (Node* n = hit; n; n = n->parent) {
-            if (!n->transitionNodeId.empty()) {
-                navigateTo(n->transitionNodeId, Impl::fromAuthored(n->transitionType),
-                           n->transitionDuration > 0 ? n->transitionDuration : 0.3f);
-                break;
+        // Authored Figma prototype link anywhere in the chain — but only when
+        // no click handler already navigated (navigation consumes the click).
+        if (impl_->frame == frameAtClick) {
+            for (Node* n = hit; n; n = n->parent) {
+                if (!n->transitionNodeId.empty()) {
+                    navigateTo(n->transitionNodeId, Impl::fromAuthored(n->transitionType),
+                               n->transitionDuration > 0 ? n->transitionDuration : 0.3f);
+                    break;
+                }
+                if (n == frameAtClick) break;
             }
-            if (n == frameAtClick) break;
         }
     }
     impl_->pressed = nullptr;

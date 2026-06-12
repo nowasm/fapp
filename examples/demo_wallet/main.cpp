@@ -264,13 +264,32 @@ int main(int argc, char** argv) {
                 } else {
                     std::printf("Discover nav item not found\n");
                 }
-            } else if (frame > 240 && frame <= 330) {
-                if (frame % 10 == 0) {
+            } else if (frame == 280) {
+                // The reported bounce: on the Discover page, tap Trade.
+                figmalib::Node* item = nullptr;
+                if (auto* nav = ui->currentFrame()->findByName("Navigation Bar")) {
+                    item = nav->findByName("Trade");
+                }
+                if (item) {
+                    float cx, cy, vx, vy;
+                    item->absoluteTransform.apply(item->width * 0.5f,
+                                                  item->height * 0.5f, cx, cy);
+                    ui->renderer().contentTransform().apply(cx, cy, vx, vy);
+                    std::printf("clicking Trade nav item at (%.0f, %.0f) on %s\n", vx,
+                                vy, ui->currentFrame()->name.c_str());
+                    ui->pointerDown(vx, vy);
+                    ui->pointerUp(vx, vy);
+                } else {
+                    std::printf("Trade nav item not found on %s\n",
+                                ui->currentFrame()->name.c_str());
+                }
+            } else if (frame > 240 && frame <= 360) {
+                if (frame % 20 == 0) {
                     std::printf("frame %d: current=%s animating=%d\n", frame,
                                 ui->currentFrame()->name.c_str(),
                                 ui->animating() ? 1 : 0);
                 }
-                if (frame == 330) quit = true;
+                if (frame == 360) quit = true;
             }
         }
     }
