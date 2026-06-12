@@ -140,6 +140,34 @@ while (!WindowShouldClose()) {
 }
 ```
 
+### 脚本逻辑层（QuickJS）
+
+不写 C++ 也能做 app：**设计是 .fig，逻辑是 .js**。`figmalib_script` 把
+FigmaUI API 绑定进 QuickJS（quickjs-ng，CMake 自动拉取），`figmaplay`
+是通用播放器：
+
+```
+figmaplay wallet.fig wallet.js
+```
+
+```js
+// wallet.js — 完整 API 见 include/figmalib/script.h
+ui.setResizeMode("reflow");
+ui.selectFrame("Home");
+ui.bindList("portfolio-list", coins.length, (item, i) => {
+    item.find("Heading").child(0).text = coins[i].symbol;
+});
+ui.onClick("Card", (node) => {
+    if (node.parent.name !== "portfolio-list") return;
+    ui.navigateTo("Coin Info", "slideLeft", 0.28);
+});
+console.log("ready —", ui.frameNames().length, "frames");
+```
+
+`examples/demo_script/wallet.js` 用纯脚本复刻了 demo_wallet 的全部行为
+（数据绑定、导航、底部栏、可编辑文本、设计数据修补）。宿主只负责加载
+两个文件 + 帧循环（`host.update(dt)` 驱动 `ui.onUpdate` 与 JS 任务队列）。
+
 ### 获取 Figma 数据
 
 **方式一：本地 .fig 文件（推荐，离线）**

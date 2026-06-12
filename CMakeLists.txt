@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(FIGMALIB_BACKEND_RAYLIB "Build the raylib backend" ON)
 option(FIGMALIB_BUILD_EXAMPLES "Build example apps" ON)
+option(FIGMALIB_SCRIPTING "Build the QuickJS scripting host (figmalib_script)" ON)
 
 # ThorVG: prebuilt static library (meson: --default-library=static -Dstatic=true).
 # Prefer a CPU+GL build (engines=cpu,gl) when present — enables the zero-copy
@@ -76,6 +77,24 @@ if(WIN32)
     target_link_libraries(figmalib PRIVATE advapi32)  # font registry lookup
 endif()
 
+# ---- scripting host (QuickJS) ----
+# App logic becomes <design.fig> + <logic.js>: figmalib::ScriptHost binds the
+# FigmaUI API into a QuickJS context (see include/figmalib/script.h).
+if(FIGMALIB_SCRIPTING)
+    include(FetchContent)
+    set(BUILD_QJS_LIBC OFF CACHE BOOL "" FORCE)         # we bind our own API
+    set(QJS_BUILD_LIBC OFF CACHE BOOL "" FORCE)
+    set(QJS_BUILD_CLI_WITH_MIMALLOC OFF CACHE BOOL "" FORCE)
+    set(QJS_DISABLE_PARSER OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(quickjs
+        URL https://github.com/quickjs-ng/quickjs/archive/refs/tags/v0.15.1.tar.gz
+    )
+    FetchContent_MakeAvailable(quickjs)
+
+    add_library(figmalib_script STATIC src/script_host.cpp)
+    target_link_libraries(figmalib_script PUBLIC figmalib qjs)
+endif()
+
 # ---- raylib backend ----
 if(FIGMALIB_BACKEND_RAYLIB)
     include(FetchContent)
@@ -100,6 +119,14 @@ if(FIGMALIB_BUILD_EXAMPLES AND FIGMALIB_BACKEND_RAYLIB)
 
     add_executable(demo_wallet examples/demo_wallet/main.cpp)
     target_link_libraries(demo_wallet PRIVATE figmalib_raylib)
+
+    # Generic script player: figmaplay <design.fig> <logic.js>
+    if(FIGMALIB_SCRIPTING)
+        add_executable(figmaplay examples/demo_script/main.cpp)
+        target_link_libraries(figmaplay PRIVATE figmalib_raylib figmalib_script)
+        target_compile_definitions(figmaplay PRIVATE
+            EXAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples")
+    endif()
 endif()
 
 if(FIGMALIB_BUILD_EXAMPLES)
