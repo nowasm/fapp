@@ -24,11 +24,15 @@ ThorVG 场景图 ──SwCanvas──▶ RGBA8888 像素缓冲（直通 alpha）
 ## 目录结构
 
 ```
-include/figmalib/   公共 API（document / parser / renderer / ui）
-src/                解析器、SVG path 解析、ThorVG 场景构建、字体、渲染器、序列化
-backends/raylib/    raylib 后端（其他引擎后端的参考模板，~100 行）
-apps/editor/        figmaedit — Figma 风格的可视化编辑器（raylib + raygui）
-examples/           demo_raylib 演示程序 + 示例 Figma JSON
+include/figmalib/   公共 API（document / parser / renderer / ui / script）
+src/                解析器、SVG path 解析、ThorVG 场景构建、字体、渲染器、脚本宿主
+backends/raylib/    raylib 后端（其他引擎后端的参考模板，~200 行）
+apps/editor/        figmaedit — Figma 风格的可视化编辑器（raylib + raygui + MCP）
+apps/figmaplay/     figmaplay — 通用脚本播放器（app = .fig + .js，热重载）
+examples/           demo_raylib / demo_wallet 演示程序、示例脚本与设计文件
+  assets/           测试/演示用的 Figma JSON 与 .fig
+  scripts/          figmaplay 示例脚本（wallet.js）
+tests/              render_test（离屏渲染自检）、layout_test（布局数学自测）
 third_party/        nlohmann/json 单头文件
 ```
 
@@ -164,7 +168,7 @@ ui.onClick("Card", (node) => {
 console.log("ready —", ui.frameNames().length, "frames");
 ```
 
-`examples/demo_script/wallet.js` 用纯脚本复刻了 demo_wallet 的全部行为
+`examples/scripts/wallet.js` 用纯脚本复刻了 demo_wallet 的全部行为
 （数据绑定、导航、底部栏、可编辑文本、设计数据修补）。宿主只负责加载
 两个文件 + 帧循环（`host.update(dt)` 驱动 `ui.onUpdate` 与 JS 任务队列）。
 

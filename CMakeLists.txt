@@ -122,24 +122,25 @@ if(FIGMALIB_BUILD_EXAMPLES AND FIGMALIB_BACKEND_RAYLIB)
 
     add_executable(demo_wallet examples/demo_wallet/main.cpp)
     target_link_libraries(demo_wallet PRIVATE figmalib_raylib)
-
-    # Generic script player: figmaplay <design.fig> <logic.js>
-    if(FIGMALIB_SCRIPTING)
-        add_executable(figmaplay examples/demo_script/main.cpp)
-        target_link_libraries(figmaplay PRIVATE figmalib_raylib figmalib_script)
-        target_compile_definitions(figmaplay PRIVATE
-            EXAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples")
-    endif()
 endif()
 
+# ---- tests ----
 if(FIGMALIB_BUILD_EXAMPLES)
-    add_executable(render_test examples/render_test/main.cpp)
+    add_executable(render_test tests/render_test/main.cpp)
     target_link_libraries(render_test PRIVATE figmalib)
     target_compile_definitions(render_test PRIVATE
         ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples/assets")
 
-    add_executable(layout_test examples/layout_test/main.cpp)
+    add_executable(layout_test tests/layout_test/main.cpp)
     target_link_libraries(layout_test PRIVATE figmalib)
+endif()
+
+# ---- figmaplay: the generic script player (an app = .fig + .js) ----
+if(FIGMALIB_SCRIPTING AND FIGMALIB_BACKEND_RAYLIB)
+    add_executable(figmaplay apps/figmaplay/main.cpp)
+    target_link_libraries(figmaplay PRIVATE figmalib_raylib figmalib_script)
+    target_compile_definitions(figmaplay PRIVATE
+        EXAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples")
 endif()
 
 # ---- editor app ----

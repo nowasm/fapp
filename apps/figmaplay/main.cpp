@@ -4,7 +4,7 @@
 //
 // All behavior lives in the script (see figmalib/script.h for the JS API);
 // this host only loads the two files and runs the frame loop. With no
-// arguments it plays the wallet demo (examples/demo_script/wallet.js).
+// arguments it plays the wallet demo (examples/scripts/wallet.js).
 // The script hot-reloads: save the .js and the running app rebuilds its
 // script world in place (design/document state stays).
 // --selfdrive defines globalThis.SELFDRIVE for the script (which drives its
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
             }
         }
     }
-    if (script.empty()) script = std::string(EXAMPLES_DIR) + "/demo_script/wallet.js";
+    if (script.empty()) script = std::string(EXAMPLES_DIR) + "/scripts/wallet.js";
     if (design.empty()) {
         std::printf("usage: figmaplay [design.fig] [logic.js] [--selfdrive prefix]\n");
         return 1;
