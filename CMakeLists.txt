@@ -16,6 +16,12 @@ set(THORVG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../thorvg/inc" CACHE PATH
     "Directory containing thorvg.h")
 if(EMSCRIPTEN)
     set(_thorvg_default "${CMAKE_CURRENT_SOURCE_DIR}/../thorvg/build_wasm/src/libthorvg-1.a")
+elseif(ANDROID)
+    if(ANDROID_ABI STREQUAL "x86_64")
+        set(_thorvg_default "${CMAKE_CURRENT_SOURCE_DIR}/../thorvg/build_android_x64/src/libthorvg-1.a")
+    else()
+        set(_thorvg_default "${CMAKE_CURRENT_SOURCE_DIR}/../thorvg/build_android_arm64/src/libthorvg-1.a")
+    endif()
 elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../thorvg/build_static_gl/src/libthorvg-1.a")
     set(_thorvg_default "${CMAKE_CURRENT_SOURCE_DIR}/../thorvg/build_static_gl/src/libthorvg-1.a")
 else()
@@ -40,6 +46,19 @@ endif()
 if(EMSCRIPTEN)
     add_compile_options(-fwasm-exceptions)
     add_link_options(-fwasm-exceptions)
+endif()
+
+# Android: everything links into one shared library (the NativeActivity
+# loads libfigmaplay.so), so every static archive must be PIC.
+if(ANDROID)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
+# Desktop-only pieces: tests, demos, the editor, .fig conversion.
+if(EMSCRIPTEN OR ANDROID)
+    set(FIGMALIB_DESKTOP OFF)
+else()
+    set(FIGMALIB_DESKTOP ON)
 endif()
 
 # ---- core library ----
@@ -69,7 +88,7 @@ target_compile_definitions(figmalib PRIVATE
 # loading falls back to the fig2json CLI.
 set(FIGMALIB_FIG2JSON_LIB "${CMAKE_CURRENT_SOURCE_DIR}/../fig2json/target/release/fig2json.lib"
     CACHE FILEPATH "Path to the fig2json static library (empty/missing → CLI fallback)")
-if(EXISTS "${FIGMALIB_FIG2JSON_LIB}" AND NOT EMSCRIPTEN)
+if(EXISTS "${FIGMALIB_FIG2JSON_LIB}" AND WIN32)  # a Windows static lib
     target_compile_definitions(figmalib PRIVATE FIGMALIB_HAVE_FIG2JSON_LIB)
     target_link_libraries(figmalib PUBLIC "${FIGMALIB_FIG2JSON_LIB}")
     if(WIN32)
@@ -116,6 +135,8 @@ if(FIGMALIB_BACKEND_RAYLIB)
     set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
     if(EMSCRIPTEN)
         set(PLATFORM "Web" CACHE STRING "" FORCE)  # raylib: GLFW shim + WebGL
+    elseif(ANDROID)
+        set(PLATFORM "Android" CACHE STRING "" FORCE)  # NativeActivity + EGL/GLES2
     endif()
     FetchContent_Declare(raylib
         URL https://github.com/raysan5/raylib/archive/refs/tags/5.5.tar.gz
@@ -128,7 +149,7 @@ if(FIGMALIB_BACKEND_RAYLIB)
 endif()
 
 # ---- examples ----
-if(FIGMALIB_BUILD_EXAMPLES AND FIGMALIB_BACKEND_RAYLIB AND NOT EMSCRIPTEN)
+if(FIGMALIB_BUILD_EXAMPLES AND FIGMALIB_BACKEND_RAYLIB AND FIGMALIB_DESKTOP)
     add_executable(demo_raylib examples/demo_raylib/main.cpp)
     target_link_libraries(demo_raylib PRIVATE figmalib_raylib)
     target_compile_definitions(demo_raylib PRIVATE
@@ -139,7 +160,7 @@ if(FIGMALIB_BUILD_EXAMPLES AND FIGMALIB_BACKEND_RAYLIB AND NOT EMSCRIPTEN)
 endif()
 
 # ---- tests ----
-if(FIGMALIB_BUILD_EXAMPLES AND NOT EMSCRIPTEN)
+if(FIGMALIB_BUILD_EXAMPLES AND FIGMALIB_DESKTOP)
     add_executable(render_test tests/render_test/main.cpp)
     target_link_libraries(render_test PRIVATE figmalib)
     target_compile_definitions(render_test PRIVATE
@@ -151,7 +172,17 @@ endif()
 
 # ---- figmaplay: the generic script player (an app = .fig + .js) ----
 if(FIGMALIB_SCRIPTING AND FIGMALIB_BACKEND_RAYLIB)
-    add_executable(figmaplay apps/figmaplay/main.cpp)
+    if(ANDROID)
+        # The NativeActivity loads libfigmaplay.so; keep the glue's entry
+        # point alive (raylib only sets that flag in its own scope).
+        add_library(figmaplay SHARED apps/figmaplay/main.cpp)
+        target_include_directories(figmaplay PRIVATE
+            "${ANDROID_NDK}/sources/android/native_app_glue")
+        target_link_options(figmaplay PRIVATE "SHELL:-u ANativeActivity_onCreate")
+        target_link_libraries(figmaplay PRIVATE android log)
+    else()
+        add_executable(figmaplay apps/figmaplay/main.cpp)
+    endif()
     target_link_libraries(figmaplay PRIVATE figmalib_raylib figmalib_script)
     target_compile_definitions(figmaplay PRIVATE
         EXAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples")
@@ -176,7 +207,7 @@ if(FIGMALIB_SCRIPTING AND FIGMALIB_BACKEND_RAYLIB)
 endif()
 
 # ---- editor app ----
-if(FIGMALIB_BACKEND_RAYLIB AND NOT EMSCRIPTEN)
+if(FIGMALIB_BACKEND_RAYLIB AND FIGMALIB_DESKTOP)
     FetchContent_Declare(raygui
         URL https://github.com/raysan5/raygui/archive/refs/tags/4.0.tar.gz
     )

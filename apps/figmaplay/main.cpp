@@ -36,6 +36,52 @@
 #include <emscripten/emscripten.h>
 #endif
 
+#ifdef __ANDROID__
+#include <fstream>
+
+#include <android/asset_manager.h>
+#include <android_native_app_glue.h>
+extern "C" struct android_app* GetAndroidApp(void);  // provided by raylib
+
+namespace {
+// APK assets are not files: extract everything listed in assets/manifest.txt
+// (written by tools/build_android.ps1 — AAssetDir cannot list subdirs) into
+// internal storage so the library's plain-file IO works. Skips files that a
+// previous run already extracted. Returns the extraction root.
+std::string extractAssets() {
+    android_app* app = GetAndroidApp();
+    AAssetManager* am = app->activity->assetManager;
+    const std::string base = app->activity->internalDataPath;
+    AAsset* man = AAssetManager_open(am, "manifest.txt", AASSET_MODE_BUFFER);
+    if (!man) return base;
+    std::string list(static_cast<const char*>(AAsset_getBuffer(man)),
+                     static_cast<size_t>(AAsset_getLength(man)));
+    AAsset_close(man);
+    size_t pos = 0;
+    while (pos < list.size()) {
+        size_t nl = list.find('\n', pos);
+        if (nl == std::string::npos) nl = list.size();
+        std::string rel = list.substr(pos, nl - pos);
+        pos = nl + 1;
+        while (!rel.empty() && (rel.back() == '\r' || rel.back() == ' ')) rel.pop_back();
+        if (rel.empty()) continue;
+        const std::string dst = base + "/" + rel;
+        std::error_code ec;
+        std::filesystem::create_directories(std::filesystem::path(dst).parent_path(), ec);
+        if (std::filesystem::exists(dst, ec)) continue;
+        AAsset* a = AAssetManager_open(am, rel.c_str(), AASSET_MODE_STREAMING);
+        if (!a) continue;
+        std::ofstream out(dst, std::ios::binary);
+        char buf[65536];
+        int n;
+        while ((n = AAsset_read(a, buf, sizeof buf)) > 0) out.write(buf, n);
+        AAsset_close(a);
+    }
+    return base;
+}
+}  // namespace
+#endif
+
 namespace {
 
 struct Player {
@@ -126,10 +172,10 @@ int main(int argc, char** argv) {
         else if (arg.size() > 3 && arg.compare(arg.size() - 3, 3, ".js") == 0) p->script = arg;
         else p->design = arg;
     }
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__)
     if (p->design.empty()) p->design = "/assets/wallet/canvas.json";
     if (p->script.empty()) p->script = "/scripts/wallet.js";
-#else
+#elif !defined(__ANDROID__)
     if (p->design.empty()) {
         for (const char* cand : {"wallet.fig", "../wallet.fig",
                                  "D:/work_open/fig2psd/test/figma/wallet.fig"}) {
@@ -141,21 +187,30 @@ int main(int argc, char** argv) {
         }
     }
     if (p->script.empty()) p->script = std::string(EXAMPLES_DIR) + "/scripts/wallet.js";
-#endif
     if (p->design.empty()) {
         std::printf("usage: figmaplay [design.fig] [logic.js] [--selfdrive prefix] "
                     "[--shot out.png] [--frames N]\n");
         return 1;
     }
+#endif
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
     InitWindow(420, 900, "figmaplay — design.fig + logic.js");
 
+#ifdef __ANDROID__
+    // The window is up → the activity (and its asset manager) is live.
+    const std::string assetBase = extractAssets();
+    if (p->design.empty()) p->design = assetBase + "/assets/wallet/canvas.json";
+    if (p->script.empty()) p->script = assetBase + "/scripts/wallet.js";
+#endif
+
     p->ui = figmalib::FigmaUI::fromFile(p->design);
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__)
     // No system fonts in the browser: the design's font files ship in the
     // preloaded FS.
     p->ui->renderer().registerFontsFromDirectory("/fonts");
+#elif defined(__ANDROID__)
+    p->ui->renderer().registerFontsFromDirectory(assetBase + "/fonts");
 #endif
     if (!p->loadScript()) {
         CloseWindow();

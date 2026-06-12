@@ -1,0 +1,13 @@
+# Meson cross file: Android x86_64 (NDK r27, API 28) — emulator testing.
+[binaries]
+c       = 'D:/devlib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/windows-x86_64/bin/x86_64-linux-android28-clang.cmd'
+cpp     = 'D:/devlib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/windows-x86_64/bin/x86_64-linux-android28-clang++.cmd'
+ar      = 'D:/devlib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ar.exe'
+ranlib  = 'D:/devlib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ranlib.exe'
+strip   = 'D:/devlib/android/sdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-strip.exe'
+
+[host_machine]
+system = 'android'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'

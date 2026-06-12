@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- No-Java app: the NativeActivity loads libfigmaplay.so directly.
+     Packaged by tools/build_android.ps1 (aapt + zipalign + apksigner). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.figmalib.play"
+    android:versionCode="1"
+    android:versionName="1.0">
+  <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="34"/>
+  <application android:label="figmaplay"
+               android:hasCode="false"
+               android:extractNativeLibs="true">
+    <activity android:name="android.app.NativeActivity"
+              android:exported="true"
+              android:configChanges="orientation|keyboardHidden|screenSize">
+      <meta-data android:name="android.app.lib_name" android:value="figmaplay"/>
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>

@@ -261,6 +261,21 @@ canvas.json + images 打包进虚拟文件系统（.fig 转换是原生步骤）
 `examples/assets/fonts`（浏览器没有系统字体，wallet 用的 Titillium Web/Poppins
 已内置）。限制：web 上 fetch 暂为 stub，热重载/`--shot` 仅桌面有效。
 
+## Android 构建（无 gradle）
+
+NativeActivity（`hasCode=false`）直接加载 libfigmaplay.so，aapt 手工打包：
+
+```
+tools\build_thorvg_android.cmd    # ThorVG arm64-v8a + x86_64 静态库
+powershell tools\build_android.ps1  # NDK 双 ABI 编译 → build_android\figmaplay.apk
+adb install -r build_android\figmaplay.apk
+adb shell am start -n com.figmalib.play/android.app.NativeActivity
+```
+
+SDK/NDK 取自 `D:\devlib\android\sdk`（NDK 27.2，API 28+）。APK 内 assets 不是
+文件，启动时按打包生成的 manifest.txt 解压到内部存储再走普通文件 IO；设计/脚本/
+字体与 Web 版同源。触摸即指针（raylib 映射），滚动/惯性/转场/编辑全部可用。
+
 ## GPU 渲染
 
 引擎后端可以让 ThorVG 的 GL 引擎直接渲染进自己的 FBO（零 CPU 像素拷贝）：
