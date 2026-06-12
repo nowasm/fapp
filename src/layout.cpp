@@ -157,6 +157,20 @@ void applyConstraints(const Node& parent, Node& c) {
     case Constraint::Scale: y *= sy; h *= sy; break;
     }
 
+    // Hug auto-layout containers size themselves from content even under a
+    // plain (constraint) parent — runtime child changes (bindList) must be
+    // able to grow the box.
+    if (c.autoLayout.enabled()) {
+        const Size nat = measure(c);
+        const bool horiz = c.autoLayout.mode == AutoLayout::Mode::Horizontal;
+        if (c.autoLayout.primarySizing == AutoLayout::Sizing::Hug) {
+            (horiz ? w : h) = horiz ? nat.w : nat.h;
+        }
+        if (c.autoLayout.counterSizing == AutoLayout::Sizing::Hug) {
+            (horiz ? h : w) = horiz ? nat.h : nat.w;
+        }
+    }
+
     place(c, x, y);
     setSize(c, w, h);
 }

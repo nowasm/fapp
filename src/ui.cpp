@@ -182,7 +182,9 @@ struct FigmaUI::Impl {
     }
 
     void editChanged() {
-        if (focused) focused->textRuns.clear();  // runs index the old string
+        // Re-run the text through setNodeText so the runs match the new
+        // string (and keep the per-token font fallback for CJK input).
+        if (focused) setNodeText(*focused, focused->characters);
         reflow();  // auto-height boxes follow the new content
         renderer.markDirty();
     }
@@ -647,6 +649,12 @@ bool FigmaUI::bindList(const std::string& listName, size_t count,
     impl_->setFocus(nullptr);  // the focused node may be a list item
     impl_->hovered = nullptr;
     impl_->pressed = nullptr;
+    // A data-driven list grows with its data: hug the main axis and pack from
+    // the start (a fixed CENTER stack would overlap its surroundings).
+    if (list->autoLayout.enabled()) {
+        list->autoLayout.primarySizing = AutoLayout::Sizing::Hug;
+        list->autoLayout.primaryAlign = AutoLayout::Align::Min;
+    }
     list->children.clear();
     for (size_t i = 0; i < count; ++i) {
         list->children.push_back(cloneNode(*it->second, list));
@@ -678,10 +686,7 @@ bool FigmaUI::setOpacity(const std::string& nodeName, float opacity) {
 bool FigmaUI::setText(const std::string& nodeName, const std::string& text) {
     Node* n = impl_->findMutable(nodeName);
     if (!n || n->type != NodeType::Text) return false;
-    n->characters = text;
-    // Rich-text runs index the old string; rendering falls back to the base
-    // style, which is what a runtime-driven label wants.
-    n->textRuns.clear();
+    setNodeText(*n, text);
     impl_->reflow();  // auto-height text can change the layout around it
     impl_->renderer.markDirty();
     return true;

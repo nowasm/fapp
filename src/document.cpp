@@ -96,7 +96,18 @@ std::unique_ptr<Node> cloneNode(const Node& src, Node* parent) {
 
 void setNodeText(Node& n, const std::string& text) {
     n.characters = text;
+    // Replace stale rich-text runs (they index the old string) with a single
+    // base-style run over the new text. Keeping a run (rather than none)
+    // routes rendering through the per-token path, whose font fallback works
+    // glyph-by-glyph — mixed Latin/CJK runtime strings need that.
     n.textRuns.clear();
+    if (!text.empty()) {
+        TextRun run;
+        run.start = 0;
+        run.end = static_cast<int>(text.size());
+        run.style = n.textStyle;
+        n.textRuns.push_back(run);
+    }
 }
 
 void Document::captureBaseLayout() {

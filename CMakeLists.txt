@@ -97,6 +97,9 @@ if(FIGMALIB_BUILD_EXAMPLES AND FIGMALIB_BACKEND_RAYLIB)
     target_link_libraries(demo_raylib PRIVATE figmalib_raylib)
     target_compile_definitions(demo_raylib PRIVATE
         ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples/assets")
+
+    add_executable(demo_wallet examples/demo_wallet/main.cpp)
+    target_link_libraries(demo_wallet PRIVATE figmalib_raylib)
 endif()
 
 if(FIGMALIB_BUILD_EXAMPLES)
