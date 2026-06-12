@@ -20,6 +20,10 @@
 #include <winhttp.h>
 #endif
 
+#include <map>
+
+#include <nlohmann/json.hpp>
+
 #include "figmalib/document.h"
 #include "figmalib/ui.h"
 
@@ -210,7 +214,34 @@ struct ScriptHost::Impl {
     };
     std::unordered_map<uint64_t, PendingFetch> pendingFetch;
 
+    // localStorage: in-memory map, write-through to a JSON file when a
+    // storage path is set (std::map keeps the file diff-stable).
+    std::string storagePath;
+    std::map<std::string, std::string> storage;
+    bool storageLoaded = false;
+
     explicit Impl(FigmaUI& u) : ui(u) {}
+
+    void loadStorage() {
+        if (storageLoaded) return;
+        storageLoaded = true;
+        if (storagePath.empty()) return;
+        std::ifstream f(storagePath, std::ios::binary);
+        if (!f) return;
+        const auto j = nlohmann::json::parse(f, nullptr, false /*no throw*/);
+        if (!j.is_object()) return;
+        for (const auto& [k, v] : j.items()) {
+            if (v.is_string()) storage[k] = v.get<std::string>();
+        }
+    }
+
+    void saveStorage() {
+        if (storagePath.empty()) return;
+        nlohmann::json j = nlohmann::json::object();
+        for (const auto& [k, v] : storage) j[k] = v;
+        std::ofstream f(storagePath, std::ios::binary | std::ios::trunc);
+        if (f) f << j.dump(2);
+    }
 
     void fireDueTimers() {
         std::vector<JSValue> fire;
@@ -687,6 +718,36 @@ JSValue ui_tap(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
     return JS_NewBool(ctx, true);
 }
 
+// localStorage (magic: 0 getItem, 1 setItem, 2 removeItem, 3 clear).
+JSValue js_storage(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv, int magic) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    im->loadStorage();
+    std::string key;
+    if (magic <= 2 && (argc < 1 || !argName(ctx, argv[0], key))) return JS_EXCEPTION;
+    switch (magic) {
+    case 0: {  // getItem -> string | null
+        const auto it = im->storage.find(key);
+        return it == im->storage.end() ? JS_NULL : JS_NewString(ctx, it->second.c_str());
+    }
+    case 1: {  // setItem
+        std::string value;
+        if (argc < 2 || !argName(ctx, argv[1], value)) return JS_EXCEPTION;
+        im->storage[key] = value;
+        im->saveStorage();
+        return JS_UNDEFINED;
+    }
+    case 2:  // removeItem
+        if (im->storage.erase(key) > 0) im->saveStorage();
+        return JS_UNDEFINED;
+    default:  // clear
+        if (!im->storage.empty()) {
+            im->storage.clear();
+            im->saveStorage();
+        }
+        return JS_UNDEFINED;
+    }
+}
+
 // setTimeout / setInterval (magic: 0 = once, 1 = repeat) -> timer id.
 JSValue js_setTimer(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv, int magic) {
     auto* im = ScriptHost::Impl::from(ctx);
@@ -843,6 +904,21 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
                                            JS_CFUNC_generic_magic, 0));
     JS_SetPropertyStr(ctx, global, "__fetch",
                       JS_NewCFunction(ctx, js_fetchNative, "__fetch", 4));
+
+    JSValue storageObj = JS_NewObject(ctx);
+    JS_SetPropertyStr(ctx, storageObj, "getItem",
+                      JS_NewCFunctionMagic(ctx, js_storage, "getItem", 1,
+                                           JS_CFUNC_generic_magic, 0));
+    JS_SetPropertyStr(ctx, storageObj, "setItem",
+                      JS_NewCFunctionMagic(ctx, js_storage, "setItem", 2,
+                                           JS_CFUNC_generic_magic, 1));
+    JS_SetPropertyStr(ctx, storageObj, "removeItem",
+                      JS_NewCFunctionMagic(ctx, js_storage, "removeItem", 1,
+                                           JS_CFUNC_generic_magic, 2));
+    JS_SetPropertyStr(ctx, storageObj, "clear",
+                      JS_NewCFunctionMagic(ctx, js_storage, "clear", 0,
+                                           JS_CFUNC_generic_magic, 3));
+    JS_SetPropertyStr(ctx, global, "localStorage", storageObj);
     JS_FreeValue(ctx, global);
 
     // fetch(url, opts) on top of __fetch: flatten headers, wrap the response.
@@ -877,6 +953,12 @@ ScriptHost::~ScriptHost() {
     JS_FreeRuntime(d.rt);
     // In-flight fetch threads keep the queue alive via shared_ptr and finish
     // harmlessly; their results are never drained.
+}
+
+void ScriptHost::setStoragePath(const std::string& path) {
+    impl_->storagePath = path;
+    impl_->storageLoaded = false;  // re-read from the new location on next access
+    impl_->storage.clear();
 }
 
 bool ScriptHost::eval(const std::string& source, const std::string& filename) {

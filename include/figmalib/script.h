@@ -33,6 +33,9 @@
 //     (driven by update(dt) — they tick in app time, pausing with the host)
 //   fetch(url, {method, headers, body}?) -> Promise<{status, ok, text(), json()}>
 //     (background thread; the promise settles on the next update(dt))
+//   localStorage.getItem/setItem/removeItem/clear — string key/value store
+//     persisted as JSON at the host-provided path (see setStoragePath);
+//     without a path it works in memory only
 
 #include <memory>
 #include <string>
@@ -52,6 +55,10 @@ public:
     // Run a script file / source string. JS errors print to stderr -> false.
     bool runFile(const std::string& path);
     bool eval(const std::string& source, const std::string& filename = "<eval>");
+
+    // Where localStorage persists (a small JSON file, created on first
+    // setItem). Set it before runFile; figmaplay uses "<script>.storage.json".
+    void setStoragePath(const std::string& path);
 
     // Call once per host frame: fires ui.onUpdate handlers and drains the
     // JS job queue (promise reactions).

@@ -92,6 +92,7 @@ if(FIGMALIB_SCRIPTING)
     FetchContent_MakeAvailable(quickjs)
 
     add_library(figmalib_script STATIC src/script_host.cpp)
+    target_include_directories(figmalib_script PRIVATE third_party)  # nlohmann
     target_link_libraries(figmalib_script PUBLIC figmalib qjs)
     if(WIN32)
         target_link_libraries(figmalib_script PRIVATE winhttp)  # fetch()

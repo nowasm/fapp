@@ -1,16 +1,23 @@
 // figmaplay: the generic script player — an app is <design.fig> + <logic.js>.
 //
 //   figmaplay [design.fig] [logic.js] [--selfdrive prefix]
+//             [--shot out.png] [--frames N]
 //
 // All behavior lives in the script (see figmalib/script.h for the JS API);
 // this host only loads the two files and runs the frame loop. With no
 // arguments it plays the wallet demo (examples/scripts/wallet.js).
 // The script hot-reloads: save the .js and the running app rebuilds its
-// script world in place (design/document state stays).
-// --selfdrive defines globalThis.SELFDRIVE for the script (which drives its
-// own tour, e.g. tapping into a coin) and saves <prefix>_home/nav.png.
+// script world in place (design/document state stays). localStorage persists
+// next to the script as <script>.storage.json.
+// Verification exits (for AI / CI loops):
+//   --shot out.png [--frames N]  render N frames (default 30), save a
+//                                screenshot, quit. The script can stage state
+//                                first (globalThis.SHOT is defined).
+//   --selfdrive prefix           the script drives its own tour (SELFDRIVE is
+//                                defined); saves <prefix>_home/nav.png.
 
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -22,11 +29,14 @@
 #include <figmalib_raylib.h>
 
 int main(int argc, char** argv) {
-    std::string design, script;
+    std::string design, script, shotPath;
     const char* drivePrefix = nullptr;
+    int shotFrames = 30;
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
         if (arg == "--selfdrive" && i + 1 < argc) drivePrefix = argv[++i];
+        else if (arg == "--shot" && i + 1 < argc) shotPath = argv[++i];
+        else if (arg == "--frames" && i + 1 < argc) shotFrames = std::atoi(argv[++i]);
         else if (arg.size() > 3 && arg.compare(arg.size() - 3, 3, ".js") == 0) script = arg;
         else design = arg;
     }
@@ -42,7 +52,8 @@ int main(int argc, char** argv) {
     }
     if (script.empty()) script = std::string(EXAMPLES_DIR) + "/scripts/wallet.js";
     if (design.empty()) {
-        std::printf("usage: figmaplay [design.fig] [logic.js] [--selfdrive prefix]\n");
+        std::printf("usage: figmaplay [design.fig] [logic.js] [--selfdrive prefix] "
+                    "[--shot out.png] [--frames N]\n");
         return 1;
     }
 
@@ -54,7 +65,9 @@ int main(int argc, char** argv) {
     const auto loadScript = [&] {
         ui->clearHandlers();  // the script re-registers everything it needs
         host = std::make_unique<figmalib::ScriptHost>(*ui);
+        host->setStoragePath(script + ".storage.json");
         if (drivePrefix) host->eval("globalThis.SELFDRIVE = true;", "<selfdrive>");
+        if (!shotPath.empty()) host->eval("globalThis.SHOT = true;", "<shot>");
         const bool ok = host->runFile(script);
         ui->markDirty();
         return ok;
@@ -95,7 +108,13 @@ int main(int argc, char** argv) {
         view.draw();
         EndDrawing();
 
-        if (drivePrefix) {
+        if (!shotPath.empty()) {
+            if (++frame >= shotFrames) {
+                TakeScreenshot(shotPath.c_str());
+                std::printf("[figmaplay] screenshot -> %s\n", shotPath.c_str());
+                break;
+            }
+        } else if (drivePrefix) {
             ++frame;
             if (frame == 30) {
                 TakeScreenshot((std::string(drivePrefix) + "_home.png").c_str());
