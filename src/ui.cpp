@@ -93,11 +93,15 @@ struct FigmaUI::Impl {
     // Fires handlers registered for the node or any of its ancestors.
     template <typename Map, typename Fn>
     void fireUp(Map& handlers, Node* node, Fn&& invoke) {
+        // A handler may navigate and swap `frame` mid-walk; capture the stop
+        // node up front or the loop runs past the old frame into the canvas
+        // and document nodes (whose names could match other handlers).
+        Node* stop = frame;
         for (Node* n = node; n; n = n->parent) {
             if (auto it = handlers.find(n->name); it != handlers.end()) {
                 for (auto& h : it->second) invoke(h, *n);
             }
-            if (n == frame) break;
+            if (n == stop) break;
         }
     }
 
@@ -484,6 +488,7 @@ void FigmaUI::pointerUp(float x, float y) {
     impl_->dragScrollNode = nullptr;
 
     Node* hit = impl_->hitTestViewport(x, y);
+    Node* frameAtClick = impl_->frame;  // handlers may navigate mid-dispatch
 
     // Focus follows the click: nearest editable text in the hit chain wins;
     // clicking anywhere else (or outside the frame) blurs.
@@ -520,13 +525,15 @@ void FigmaUI::pointerUp(float x, float y) {
                           [](ClickHandler& h, Node& n) { h(n); });
         }
         // Authored Figma prototype link anywhere in the chain: navigate.
+        // Click handlers above may already have navigated — stop at the frame
+        // the click happened in, not the current one.
         for (Node* n = hit; n; n = n->parent) {
             if (!n->transitionNodeId.empty()) {
                 navigateTo(n->transitionNodeId, Impl::fromAuthored(n->transitionType),
                            n->transitionDuration > 0 ? n->transitionDuration : 0.3f);
                 break;
             }
-            if (n == impl_->frame) break;
+            if (n == frameAtClick) break;
         }
     }
     impl_->pressed = nullptr;

@@ -77,7 +77,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
+    // No FLAG_WINDOW_HIGHDPI: on Windows raylib scales mouse input by 1/dpi
+    // for that flag without scaling the framebuffer, so every click lands at
+    // 2/3 of the pointer position (hitting the wrong element).
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
     InitWindow(420, 900, "wallet — a Figma file running as an app");
 
     auto ui = figmalib::FigmaUI::fromFile(input);
@@ -138,10 +141,20 @@ int main(int argc, char** argv) {
     });
 
     // ---- behavior: bottom navigation ----
-    ui->onClick("Discover", [&](figmalib::Node&) { ui->navigateTo("Discover"); });
-    ui->onClick("Trade", [&](figmalib::Node&) { ui->navigateTo("Marketplace"); });
-    ui->onClick("Account", [&](figmalib::Node&) { ui->navigateTo("Profile"); });
+    ui->onClick("Discover", [&](figmalib::Node&) {
+        std::printf("[nav] Discover clicked\n");
+        ui->navigateTo("Discover");
+    });
+    ui->onClick("Trade", [&](figmalib::Node&) {
+        std::printf("[nav] Trade clicked\n");
+        ui->navigateTo("Marketplace");
+    });
+    ui->onClick("Account", [&](figmalib::Node&) {
+        std::printf("[nav] Account clicked\n");
+        ui->navigateTo("Profile");
+    });
     ui->onClick("Wallet", [&](figmalib::Node&) {  // center button = home
+        std::printf("[nav] Wallet clicked\n");
         while (ui->canGoBack()) ui->navigateBack(0.0f);
         ui->navigateTo("Home", figmalib::FigmaUI::Transition::Dissolve, 0.2f);
     });
@@ -158,10 +171,17 @@ int main(int argc, char** argv) {
     int frame = 0;
     bool quit = false;
 
+    figmalib::Node* lastFrameNode = ui->currentFrame();
     while (!WindowShouldClose() && !quit) {
+        if (ui->currentFrame() != lastFrameNode) {
+            std::printf("[frame] -> %s\n", ui->currentFrame()->name.c_str());
+            std::fflush(stdout);
+            lastFrameNode = ui->currentFrame();
+        }
         // Back: Backspace (when not typing) or right mouse button.
         if ((IsKeyPressed(KEY_BACKSPACE) && !ui->focusedNode()) ||
             IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+            std::printf("[nav] back (key/right-click)\n");
             ui->navigateBack();
         }
 
@@ -225,7 +245,32 @@ int main(int argc, char** argv) {
                                 home->scrollY, home->maxScrollY(), home->height);
                 }
                 shot("tall");
-                quit = true;
+                SetWindowSize(420, 900);
+            } else if (frame == 240) {
+                // Reproduce the nav-bounce report: click the Discover nav item.
+                figmalib::Node* item = nullptr;
+                if (auto* nav = ui->currentFrame()->findByName("Navigation Bar")) {
+                    item = nav->findByName("Discover");
+                }
+                if (item) {
+                    float cx, cy;
+                    item->absoluteTransform.apply(item->width * 0.5f,
+                                                  item->height * 0.5f, cx, cy);
+                    float vx, vy;
+                    ui->renderer().contentTransform().apply(cx, cy, vx, vy);
+                    std::printf("clicking Discover nav item at (%.0f, %.0f)\n", vx, vy);
+                    ui->pointerDown(vx, vy);
+                    ui->pointerUp(vx, vy);
+                } else {
+                    std::printf("Discover nav item not found\n");
+                }
+            } else if (frame > 240 && frame <= 330) {
+                if (frame % 10 == 0) {
+                    std::printf("frame %d: current=%s animating=%d\n", frame,
+                                ui->currentFrame()->name.c_str(),
+                                ui->animating() ? 1 : 0);
+                }
+                if (frame == 330) quit = true;
             }
         }
     }
