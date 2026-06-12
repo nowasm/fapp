@@ -251,6 +251,9 @@ struct NodeData {
     Mat23 absoluteTransform;        // computed during scene build
     float runtimeOpacity = -1.0f;   // override; <0 → use authored opacity
     int runtimeVisible = -1;        // -1 inherit, 0 hidden, 1 visible
+    // Excluded from the page raster only (transition chrome is drawn as a
+    // separate static overlay); hit-testing still sees the node.
+    bool renderSuppressed = false;
     float scrollX = 0, scrollY = 0;  // content offset of a scrolling frame, ≥0
     // Text editing (FigmaUI::setEditable / focus): a TEXT node the user can
     // type into. caretByte ≥ 0 → node has focus; the renderer draws the caret.

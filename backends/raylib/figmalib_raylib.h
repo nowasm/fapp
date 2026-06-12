@@ -58,6 +58,10 @@ private:
     RenderTexture2D rtPrev_{};
     bool prevValid_ = false;
     uint32_t seenTransId_ = 0;
+    // Static shared-chrome overlay (straight alpha) drawn on top of the
+    // sliding pages; uploaded once per transition from the FigmaUI raster.
+    Texture2D chromeTex_{};
+    float chromeY_ = 0;
 };
 
 }  // namespace figmalib

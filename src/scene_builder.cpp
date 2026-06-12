@@ -1301,7 +1301,7 @@ bool textSelectionRects(const Node& n, int a, int b, BuildContext& ctx,
 
 tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx,
                            bool isRoot) {
-    if (!node.effectivelyVisible()) return nullptr;
+    if (!node.effectivelyVisible() || node.renderSuppressed) return nullptr;
     if (node.type == NodeType::Slice) return nullptr;
 
     Mat23 local = isRoot ? Mat23::identity() : node.relativeTransform;

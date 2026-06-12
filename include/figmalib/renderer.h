@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "document.h"
 
@@ -47,6 +48,15 @@ public:
     // Re-rasterize if dirty. Returns true if the pixel buffer changed.
     bool render();
     void markDirty();
+
+    // Rasterizes just `nodes` (children of the current frame, at their frame
+    // positions) into an RGBA8888 straight-alpha buffer with a transparent
+    // background, covering the viewport-space rows [yTopPx, height()).
+    // Always renders on the CPU regardless of the active engine — the result
+    // is meant to be uploaded as a texture (transition chrome overlay).
+    bool renderOverlay(const std::vector<Node*>& nodes, float yTopPx,
+                       std::vector<uint32_t>& out, uint32_t& outWidth,
+                       uint32_t& outHeight);
 
     // Scroll offsets changed but nothing else did: render() then only
     // retargets the scrolled sub-scenes' transforms (and the cached

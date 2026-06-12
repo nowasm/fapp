@@ -63,13 +63,29 @@ public:
     Transition transitionType() const;
     float transitionProgress() const;  // eased, [0,1)
 
-    // Persistent bottom chrome (native tab-bar semantics): viewport-space Y
-    // of the top edge of bottom-anchored scrollFixed top-level elements that
-    // exist in BOTH frames with identical name and geometry. The backend
-    // draws the band [y, height) statically from the incoming texture while
-    // the pages slide above it. Returns the full height when idle or when
-    // the frames share no such chrome (e.g. navigating into a detail page —
-    // then the whole page slides, which is the native behavior too).
+    // Persistent bottom chrome (native tab-bar semantics): bottom-anchored
+    // scrollFixed top-level elements that exist in BOTH frames with identical
+    // name and geometry stay put while the pages slide. During such a
+    // transition the chrome is excluded from both page rasters and handed to
+    // the backend as a separate straight-alpha image to draw statically on
+    // top — so anything overhanging the bar (round center buttons) and the
+    // page pixels visible around it composite correctly:
+    //   - On a new transitionId, call renderTransitionSnapshot() BEFORE
+    //     snapshotting the current texture: it re-rasterizes the OUTGOING
+    //     frame without the chrome into the current target (false → no
+    //     shared chrome, snapshot as-is).
+    //   - transitionChromePixels() is the overlay image (width × height,
+    //     RGBA8888 straight alpha) to draw at viewport row `y` on top of the
+    //     sliding pages; the pointer stays valid for the whole transition.
+    //     nullptr → composite without an overlay.
+    bool renderTransitionSnapshot();
+    const uint32_t* transitionChromePixels(uint32_t& width, uint32_t& height,
+                                           float& y) const;
+
+    // Viewport-space Y of the top edge of the shared bottom chrome (band
+    // fallback / app queries). Returns the full height when idle or when the
+    // frames share no such chrome (e.g. navigating into a detail page — then
+    // the whole page slides, which is the native behavior too).
     float transitionStaticBottomY() const;
 
     // ---- Render ----

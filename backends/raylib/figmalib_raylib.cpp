@@ -18,6 +18,8 @@ void RaylibFigmaView::dropPrev() {
     if (rtPrev_.id != 0) UnloadRenderTexture(rtPrev_);
     rtPrev_ = {};
     prevValid_ = false;
+    if (chromeTex_.id != 0) UnloadTexture(chromeTex_);
+    chromeTex_ = {};
 }
 
 bool RaylibFigmaView::setGpu(bool enabled) {
@@ -121,12 +123,20 @@ void RaylibFigmaView::update() {
     // A navigation just started: the live texture still shows the outgoing
     // frame, so swap it into the snapshot slot. The incoming frame then
     // rasterizes ONCE into a fresh target and draw() composites the two
-    // textures per tick — no per-tick vector re-raster.
+    // textures per tick — no per-tick vector re-raster. With shared bottom
+    // chrome the outgoing frame first re-rasterizes WITHOUT the chrome (it is
+    // drawn as a separate static overlay, see chromeTex_).
     if (ui_.transitionId() != seenTransId_) {
         seenTransId_ = ui_.transitionId();
+        if (chromeTex_.id != 0) {
+            UnloadTexture(chromeTex_);
+            chromeTex_ = {};
+        }
         if (!ui_.animating()) {
             prevValid_ = false;  // hard cut — never composite a stale snapshot
         } else if (gpuActive_) {
+            rlDrawRenderBatchActive();      // ThorVG GL renders the snapshot
+            ui_.renderTransitionSnapshot();  // outgoing, chrome-free, into rt_
             std::swap(rt_, rtPrev_);
             prevValid_ = rtPrev_.id != 0;
             if (rt_.id == 0) {
@@ -137,8 +147,25 @@ void RaylibFigmaView::update() {
                          ui_.setViewportGL(static_cast<int32_t>(rt_.id),
                                            ui_.pixelWidth(), ui_.pixelHeight());
         } else {
+            if (ui_.renderTransitionSnapshot() && textureValid_) {
+                UpdateTexture(texture_, ui_.pixels());  // chrome-free outgoing
+            }
             std::swap(texture_, prevTexture_);
             std::swap(textureValid_, prevValid_);
+        }
+        if (ui_.animating()) {
+            uint32_t cw = 0, ch = 0;
+            float cy = 0;
+            if (const uint32_t* px = ui_.transitionChromePixels(cw, ch, cy)) {
+                Image img{};
+                img.data = const_cast<uint32_t*>(px);
+                img.width = static_cast<int>(cw);
+                img.height = static_cast<int>(ch);
+                img.mipmaps = 1;
+                img.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
+                chromeTex_ = LoadTextureFromImage(img);
+                chromeY_ = cy;
+            }
         }
     }
 
@@ -192,6 +219,11 @@ void RaylibFigmaView::draw(int x, int y, ::Color tint) const {
 
     if (!ui_.animating() || !prevValid_) {
         DrawTextureRec(cur, srcBand(cur, 0, h), {fx, fy}, tint);
+        // No snapshot to composite, but the page raster is chrome-free while
+        // a shared-chrome transition runs — keep the bar visible.
+        if (ui_.animating() && chromeTex_.id != 0) {
+            DrawTextureV(chromeTex_, {fx, fy + chromeY_}, tint);
+        }
         return;
     }
 
@@ -212,10 +244,21 @@ void RaylibFigmaView::draw(int x, int y, ::Color tint) const {
         break;
     }
 
-    // Shared bottom chrome (tab bar in both frames) stays put: the pages
-    // slide cropped above the band, the band renders statically on top from
-    // the incoming texture (its tab highlight switches immediately — native
-    // behavior).
+    // Shared bottom chrome (tab bar in both frames) stays put while the
+    // pages slide. The page textures were rasterized WITHOUT the chrome, so
+    // they slide full-height and the chrome overlay (straight alpha, drawn
+    // from the incoming frame — its tab highlight switches immediately,
+    // native behavior) composites statically on top. Anything overhanging
+    // the bar and the moving page pixels around it stay correct.
+    if (chromeTex_.id != 0) {
+        DrawTextureRec(prev, srcBand(prev, 0, h), {fx + outX, fy + outY}, tint);
+        DrawTextureRec(cur, srcBand(cur, 0, h), {fx + inX, fy + inY}, inTint);
+        DrawTextureV(chromeTex_, {fx, fy + chromeY_}, tint);
+        return;
+    }
+
+    // Fallback (overlay raster unavailable): pages slide cropped above the
+    // band, the band renders statically from the incoming texture.
     const float bandY = std::min(ui_.transitionStaticBottomY(), h);
     DrawTextureRec(prev, srcBand(prev, 0, bandY), {fx + outX, fy + outY}, tint);
     DrawTextureRec(cur, srcBand(cur, 0, bandY), {fx + inX, fy + inY}, inTint);

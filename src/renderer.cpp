@@ -270,6 +270,48 @@ bool Renderer::render() {
     return true;
 }
 
+bool Renderer::renderOverlay(const std::vector<Node*>& nodes, float yTopPx,
+                             std::vector<uint32_t>& out, uint32_t& outWidth,
+                             uint32_t& outHeight) {
+    auto& d = *impl_;
+    if (nodes.empty() || d.width == 0 || d.height == 0) return false;
+    const auto top = static_cast<uint32_t>(
+        std::clamp(std::floor(yTopPx), 0.0f, static_cast<float>(d.height)));
+    const uint32_t h = d.height - top;
+    if (h == 0) return false;
+
+    std::unique_ptr<tvg::Canvas> canvas(tvg::SwCanvas::gen());
+    if (!canvas) return false;
+    out.assign(static_cast<size_t>(d.width) * h, 0);
+    if (static_cast<tvg::SwCanvas*>(canvas.get())
+            ->target(out.data(), d.width, d.width, h, tvg::ColorSpace::ABGR8888S) !=
+        tvg::Result::Success) {
+        return false;
+    }
+
+    auto* root = tvg::Scene::gen();
+    canvas->add(root);
+    BuildContext ctx;
+    ctx.fonts = &d.fonts;
+    ctx.imageDir = d.imageDir;
+    std::vector<ScrollBinding> bindings;  // throwaway: the overlay never scrolls
+    ctx.scrollBindings = &bindings;
+    for (Node* n : nodes) {
+        // Not isRoot: keep each node's frame position. The absoluteTransform
+        // side effect matches the main scene (the frame renders at origin).
+        if (auto* s = buildNodeScene(*n, Mat23::identity(), ctx)) root->add(s);
+    }
+    const Mat23 m = d.contentTransform();
+    root->transform({m.m00, m.m01, m.m02, m.m10, m.m11,
+                     m.m12 - static_cast<float>(top), 0, 0, 1});
+    canvas->update();
+    if (canvas->draw(true) != tvg::Result::Success) return false;
+    canvas->sync();
+    outWidth = d.width;
+    outHeight = h;
+    return true;
+}
+
 const uint32_t* Renderer::pixels() const {
     return impl_->buffer.empty() ? nullptr : impl_->buffer.data();
 }

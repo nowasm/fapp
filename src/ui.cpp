@@ -364,6 +364,23 @@ struct FigmaUI::Impl {
     uint32_t transId = 0;     // bumped per navigation → backend snapshots
     float transBandTop = -1;  // frame-local top of shared bottom chrome; <0 none
 
+    // Shared-chrome overlay: the matched chrome subtrees of BOTH frames are
+    // suppressed in the page rasters for the duration of the transition and
+    // drawn by the backend as one static straight-alpha layer on top.
+    std::vector<Node*> chromeNodes;      // suppressed (incoming + outgoing)
+    std::vector<uint32_t> chromePixels;  // overlay raster (incoming chrome)
+    uint32_t chromeW = 0, chromeH = 0;
+    float chromeTopPx = 0;          // viewport-space top row of the overlay
+    bool snapshotPending = false;   // chrome-free outgoing re-render owed
+
+    void clearChromeOverlay() {
+        for (Node* n : chromeNodes) n->renderSuppressed = false;
+        if (!chromeNodes.empty()) renderer.markDirty();
+        chromeNodes.clear();
+        chromeW = chromeH = 0;
+        snapshotPending = false;
+    }
+
     Node* findFrame(const std::string& nameOrId) {
         for (Node* f : doc->topLevelFrames()) {
             if (f->name == nameOrId || f->id == nameOrId) return f;
@@ -395,6 +412,7 @@ struct FigmaUI::Impl {
 
     void startTransition(Node* from, FigmaUI::Transition t, float duration) {
         ++transId;  // even a cut (no animation) invalidates a backend snapshot
+        clearChromeOverlay();  // an interrupted transition keeps no suppression
         if (t == FigmaUI::Transition::None || duration <= 0 || !from || from == frame) {
             transFrom = nullptr;
             return;
@@ -404,14 +422,72 @@ struct FigmaUI::Impl {
         transElapsed = 0;
         transDuration = duration;
         transProgress = 0;
-        findStaticBottomChrome(from);
+        std::vector<Node*> incomingChrome;
+        findStaticBottomChrome(from, incomingChrome);
+        if (transBandTop < 0) return;
+        // Rasterize the overlay BEFORE suppressing (the builder skips
+        // suppressed nodes), then hide the chrome from both page rasters.
+        float x = 0;
+        chromeTopPx = 0;
+        renderer.contentTransform().apply(0, transBandTop, x, chromeTopPx);
+        // 2px of anti-aliasing headroom: a shape whose geometric top lands
+        // exactly on the band line still feathers a row above it. The extra
+        // overlay rows are transparent, so the sliding pages show through.
+        chromeTopPx = std::clamp(std::floor(chromeTopPx) - 2.0f, 0.0f,
+                                 static_cast<float>(renderer.height()));
+        if (renderer.renderOverlay(incomingChrome, chromeTopPx, chromePixels,
+                                   chromeW, chromeH)) {
+            for (Node* n : chromeNodes) n->renderSuppressed = true;
+            snapshotPending = true;
+        } else {
+            // Overlay raster failed → the backend falls back to the static
+            // band (transitionStaticBottomY) over unmodified page textures.
+            clearChromeOverlay();
+        }
+    }
+
+    // How far a node's own style paints above its layout rect: outside and
+    // center strokes, drop shadows and layer blurs all bleed upward.
+    static float paintBleedTop(const Node& n) {
+        float bleed = 0;
+        for (const auto& s : n.strokes) {
+            if (!s.visible) continue;
+            if (n.strokeAlign == StrokeAlign::Outside) bleed = n.strokeWeight;
+            if (n.strokeAlign == StrokeAlign::Center) bleed = n.strokeWeight * 0.5f;
+            break;
+        }
+        for (const auto& e : n.effects) {
+            if (!e.visible) continue;
+            if (e.type == Effect::Type::DropShadow) {
+                bleed = std::max(bleed, e.radius + e.spread - e.offsetY);
+            } else if (e.type == Effect::Type::LayerBlur) {
+                bleed = std::max(bleed, e.radius);
+            }
+        }
+        return bleed;
+    }
+
+    // Visual top of `n` in frame space (`y` = n's own top): non-clipping
+    // containers let children overflow upward (e.g. a round action button
+    // poking above the tab bar), and the static band must cover the full
+    // painted extent or the overhang gets sliced at the band line.
+    static float visualTop(const Node& n, float y) {
+        float top = y - paintBleedTop(n);
+        if (n.clipsContent) return top;
+        for (const auto& ch : n.children) {
+            if (!ch->effectivelyVisible()) continue;
+            top = std::min(top, visualTop(*ch, y + ch->relativeTransform.m12));
+        }
+        return top;
     }
 
     // Native tab-bar semantics: bottom-anchored scrollFixed top-level
-    // elements present in both frames with the same name and geometry form a
-    // band that stays put while the pages slide. Full-frame fixed overlays
-    // (status bars span from y=0) are excluded via the lower-half test.
-    void findStaticBottomChrome(Node* from) {
+    // elements present in both frames with the same name and geometry stay
+    // put while the pages slide. Fills chromeNodes with the matched subtrees
+    // of both frames (to suppress) and outIncoming with the current frame's
+    // copies (the overlay raster). Full-frame fixed overlays (status bars
+    // span from y=0) are excluded via the lower-half test.
+    void findStaticBottomChrome(Node* from, std::vector<Node*>& outIncoming) {
         transBandTop = -1;
         if (!frame || !from) return;
         for (const auto& c : frame->children) {
@@ -433,7 +509,14 @@ struct FigmaUI::Impl {
                 std::abs(o->height - c->height) > 1.5f) {
                 continue;
             }
-            transBandTop = transBandTop < 0 ? cy : std::min(transBandTop, cy);
+            // Band at the painted top edge of both copies — the bar's frame
+            // top would slice off anything overhanging it.
+            const float top = std::min(visualTop(*c, cy),
+                                       visualTop(*o, o->relativeTransform.m12));
+            transBandTop = transBandTop < 0 ? top : std::min(transBandTop, top);
+            chromeNodes.push_back(c.get());
+            chromeNodes.push_back(o);
+            outIncoming.push_back(c.get());
         }
     }
 
@@ -513,6 +596,7 @@ bool FigmaUI::selectFrame(const std::string& name) {
     Node* f = impl_->findFrame(name);
     if (!f) return false;
     impl_->transFrom = nullptr;
+    impl_->clearChromeOverlay();
     ++impl_->transId;  // hard switch: a backend snapshot of the old frame is stale
     impl_->navStack.clear();  // hard switch resets navigation history
     impl_->switchToFrame(f);
@@ -556,6 +640,7 @@ void FigmaUI::update(float dtSeconds) {
     float p = impl_->transDuration > 0 ? impl_->transElapsed / impl_->transDuration : 1.0f;
     if (p >= 1.0f) {
         impl_->transFrom = nullptr;
+        impl_->clearChromeOverlay();  // restore the chrome into the page raster
         return;
     }
     // Ease in-out (cubic) for a Figma-like feel. No re-raster happens here:
@@ -573,6 +658,31 @@ FigmaUI::Transition FigmaUI::transitionType() const {
 
 float FigmaUI::transitionProgress() const {
     return impl_->transFrom ? impl_->transProgress : 1.0f;
+}
+
+bool FigmaUI::renderTransitionSnapshot() {
+    auto& d = *impl_;
+    if (!d.snapshotPending || !d.transFrom || !d.frame) return false;
+    d.snapshotPending = false;
+    // Re-rasterize the outgoing frame into the current target; its chrome is
+    // already suppressed. The incoming frame re-rasters on the next render().
+    Node* incoming = d.frame;
+    d.renderer.setFrame(d.transFrom);
+    d.renderer.markDirty();
+    const bool ok = d.renderer.render();
+    d.renderer.setFrame(incoming);
+    d.renderer.markDirty();
+    return ok;
+}
+
+const uint32_t* FigmaUI::transitionChromePixels(uint32_t& width, uint32_t& height,
+                                                float& y) const {
+    const auto& d = *impl_;
+    if (!d.transFrom || d.chromeW == 0 || d.chromeH == 0) return nullptr;
+    width = d.chromeW;
+    height = d.chromeH;
+    y = d.chromeTopPx;
+    return d.chromePixels.data();
 }
 
 float FigmaUI::transitionStaticBottomY() const {
