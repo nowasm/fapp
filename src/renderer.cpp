@@ -133,6 +133,13 @@ bool Renderer::measureText(const Node& node, float maxWidth, float& outWidth,
     return measureTextNode(node, maxWidth, ctx, outWidth, outHeight);
 }
 
+int Renderer::textByteAtPoint(const Node& node, float x, float y) {
+    BuildContext ctx;
+    ctx.fonts = &impl_->fonts;
+    ctx.imageDir = impl_->imageDir;
+    return textByteFromPoint(node, ctx, x, y);
+}
+
 bool Renderer::setTarget(uint32_t width, uint32_t height) {
     if (width == 0 || height == 0) return false;
     if (impl_->gpu) {  // switch back to CPU: the scene dies with the canvas

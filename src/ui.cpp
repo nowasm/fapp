@@ -30,6 +30,9 @@ struct FigmaUI::Impl {
     float dragAccumX = 0, dragAccumY = 0;
     float lastPointerX = 0, lastPointerY = 0;
     static constexpr float kDragScrollThreshold = 6.0f;  // viewport px
+    // Pressing inside the focused text starts caret placement / drag-select
+    // (and takes the gesture away from drag scrolling).
+    bool selectingText = false;
 
     // Smooth scrolling. Wheel deltas ease toward a target offset; releasing a
     // drag keeps its velocity as a decaying fling. Advanced by update(dt);
@@ -285,12 +288,42 @@ struct FigmaUI::Impl {
 
     void setFocus(Node* n) {
         if (focused == n) return;
-        if (focused) focused->caretByte = -1;
+        if (focused) {
+            focused->caretByte = -1;
+            focused->selAnchorByte = -1;
+        }
         focused = n;
         if (focused) {
             focused->caretByte = static_cast<int>(focused->characters.size());
+            focused->selAnchorByte = -1;
         }
         renderer.markDirty();
+    }
+
+    // Viewport point → caret byte in the node (via the cached absolute
+    // transform, so it stays valid under scrolling). -1 when unmappable.
+    int caretByteAtViewport(Node& n, float x, float y) {
+        const auto invC = renderer.contentTransform().inverted();
+        const auto invA = n.absoluteTransform.inverted();
+        if (!invC || !invA) return -1;
+        float fx, fy, lx, ly;
+        invC->apply(x, y, fx, fy);
+        invA->apply(fx, fy, lx, ly);
+        return renderer.textByteAtPoint(n, lx, ly);
+    }
+
+    // Active selection range of the focused node, or false when collapsed.
+    bool selectionRange(size_t& lo, size_t& hi) const {
+        if (!focused || focused->selAnchorByte < 0 || focused->caretByte < 0 ||
+            focused->selAnchorByte == focused->caretByte) {
+            return false;
+        }
+        const size_t len = focused->characters.size();
+        lo = std::min(static_cast<size_t>(std::min(focused->selAnchorByte,
+                                                   focused->caretByte)), len);
+        hi = std::min(static_cast<size_t>(std::max(focused->selAnchorByte,
+                                                   focused->caretByte)), len);
+        return hi > lo;
     }
 
     // UTF-8 codepoint boundaries around the caret.
@@ -542,6 +575,17 @@ uint32_t FigmaUI::pixelHeight() const { return impl_->renderer.height(); }
 void FigmaUI::markDirty() { impl_->renderer.markDirty(); }
 
 void FigmaUI::pointerMove(float x, float y) {
+    if (impl_->selectingText && impl_->focused) {
+        // Drag-select: the caret follows the pointer, the anchor stays put.
+        const int b = impl_->caretByteAtViewport(*impl_->focused, x, y);
+        if (b >= 0 && b != impl_->focused->caretByte) {
+            impl_->focused->caretByte = b;
+            impl_->renderer.markDirty();
+        }
+        impl_->lastPointerX = x;
+        impl_->lastPointerY = y;
+        return;  // no hover churn / scrolling while selecting
+    }
     if (impl_->pressed && impl_->dragScrollNode) {
         const float dx = x - impl_->lastPointerX, dy = y - impl_->lastPointerY;
         impl_->lastPointerX = x;
@@ -586,7 +630,28 @@ void FigmaUI::pointerMove(float x, float y) {
 
 void FigmaUI::pointerDown(float x, float y) {
     impl_->pressed = impl_->hitTestViewport(x, y);
-    impl_->dragScrollNode = impl_->scrollableAtViewport(x, y);
+
+    // Pressing inside the already-focused text: place the caret there and arm
+    // drag-selection; the gesture belongs to the text, not to scrolling.
+    impl_->selectingText = false;
+    if (impl_->focused) {
+        for (Node* n = impl_->pressed; n; n = n->parent) {
+            if (n == impl_->focused) {
+                const int b = impl_->caretByteAtViewport(*impl_->focused, x, y);
+                if (b >= 0) {
+                    impl_->focused->caretByte = b;
+                    impl_->focused->selAnchorByte = b;
+                    impl_->selectingText = true;
+                    impl_->renderer.markDirty();
+                }
+                break;
+            }
+            if (n == impl_->frame) break;
+        }
+    }
+
+    impl_->dragScrollNode =
+        impl_->selectingText ? nullptr : impl_->scrollableAtViewport(x, y);
     impl_->dragScrolling = false;
     impl_->dragAccumX = impl_->dragAccumY = 0;
     impl_->lastPointerX = x;
@@ -595,6 +660,14 @@ void FigmaUI::pointerDown(float x, float y) {
 }
 
 void FigmaUI::pointerUp(float x, float y) {
+    if (impl_->selectingText) {
+        impl_->selectingText = false;
+        Node* f = impl_->focused;
+        if (f && f->selAnchorByte == f->caretByte) f->selAnchorByte = -1;  // plain click
+        impl_->pressed = nullptr;  // editing gesture, not a click
+        impl_->dragScrollNode = nullptr;
+        return;
+    }
     if (impl_->dragScrolling) {
         // The gesture was a pan, not a click. Fast release → fling.
         Node* n = impl_->dragConsumer ? impl_->dragConsumer : impl_->dragScrollNode;
@@ -629,6 +702,14 @@ void FigmaUI::pointerUp(float x, float y) {
         if (n == impl_->frame) break;
     }
     impl_->setFocus(toFocus);
+    if (toFocus) {  // caret lands where the click was, not at the end
+        const int b = impl_->caretByteAtViewport(*toFocus, x, y);
+        if (b >= 0) {
+            toFocus->caretByte = b;
+            toFocus->selAnchorByte = -1;
+            impl_->renderer.markDirty();
+        }
+    }
     if (hit && impl_->pressed) {
         // Click counts if press and release share the hit node or an ancestor.
         Node* target = nullptr;
@@ -724,10 +805,16 @@ void FigmaUI::textInput(const std::string& utf8) {
         clean.push_back(c);
     }
     if (clean.empty()) return;
-    const size_t len = n->characters.size();
-    const size_t at = n->caretByte < 0
-                          ? len
-                          : std::min(static_cast<size_t>(n->caretByte), len);
+    size_t at;
+    size_t lo, hi;
+    if (impl_->selectionRange(lo, hi)) {  // typing replaces the selection
+        n->characters.erase(lo, hi - lo);
+        at = lo;
+    } else {
+        const size_t len = n->characters.size();
+        at = n->caretByte < 0 ? len : std::min(static_cast<size_t>(n->caretByte), len);
+    }
+    n->selAnchorByte = -1;
     n->characters.insert(at, clean);
     n->caretByte = static_cast<int>(at + clean.size());
     impl_->editChanged();
@@ -740,9 +827,11 @@ void FigmaUI::editKey(EditKey key) {
     size_t caret = n->caretByte < 0
                        ? s.size()
                        : std::min(static_cast<size_t>(n->caretByte), s.size());
+    size_t lo, hi;
+    const bool hasSel = impl_->selectionRange(lo, hi);
     switch (key) {
-    case EditKey::Left: caret = Impl::prevCp(s, caret); break;
-    case EditKey::Right: caret = Impl::nextCp(s, caret); break;
+    case EditKey::Left: caret = hasSel ? lo : Impl::prevCp(s, caret); break;
+    case EditKey::Right: caret = hasSel ? hi : Impl::nextCp(s, caret); break;
     case EditKey::Home: {
         const size_t nl = caret == 0 ? std::string::npos : s.rfind('\n', caret - 1);
         caret = nl == std::string::npos ? 0 : nl + 1;
@@ -754,7 +843,12 @@ void FigmaUI::editKey(EditKey key) {
         break;
     }
     case EditKey::Backspace:
-        if (caret > 0) {
+        if (hasSel) {
+            s.erase(lo, hi - lo);
+            caret = lo;
+            n->selAnchorByte = -1;
+            impl_->editChanged();
+        } else if (caret > 0) {
             const size_t b = Impl::prevCp(s, caret);
             s.erase(b, caret - b);
             caret = b;
@@ -762,12 +856,18 @@ void FigmaUI::editKey(EditKey key) {
         }
         break;
     case EditKey::Delete:
-        if (caret < s.size()) {
+        if (hasSel) {
+            s.erase(lo, hi - lo);
+            caret = lo;
+            n->selAnchorByte = -1;
+            impl_->editChanged();
+        } else if (caret < s.size()) {
             s.erase(caret, Impl::nextCp(s, caret) - caret);
             impl_->editChanged();
         }
         break;
     }
+    n->selAnchorByte = -1;  // any edit key collapses the selection
     n->caretByte = static_cast<int>(caret);
     impl_->renderer.markDirty();
 }

@@ -256,6 +256,9 @@ struct NodeData {
     // type into. caretByte ≥ 0 → node has focus; the renderer draws the caret.
     bool editable = false;
     int caretByte = -1;  // UTF-8 byte offset into `characters`
+    // Selection anchor (set on press, caret follows the drag); together with
+    // caretByte it spans the highlighted range. -1 → no selection.
+    int selAnchorByte = -1;
 };
 
 struct Node : NodeData {

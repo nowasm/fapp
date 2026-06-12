@@ -63,6 +63,12 @@ public:
     // Maps frame-local coordinates to target pixels (scale-to-fit transform).
     Mat23 contentTransform() const;
 
+    // Nearest caret position (UTF-8 byte offset) for a point in the TEXT
+    // node's local coordinates, using the exact flow used for drawing.
+    // Click-to-place-caret and drag-selection build on this. -1 when fonts
+    // are missing.
+    int textByteAtPoint(const Node& node, float x, float y);
+
     // Measures a TEXT node with the renderer's fonts and the exact wrap pass
     // used for drawing: wrapped at maxWidth (<= 0 → no wrapping). Outputs the
     // widest line and total line-box height; false when fonts are missing.

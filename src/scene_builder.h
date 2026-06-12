@@ -1,6 +1,7 @@
 #pragma once
 // Builds a ThorVG scene graph from a figmalib node tree.
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -40,5 +41,16 @@ tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx
 // line and the total line-box height. Returns false when fonts are missing.
 bool measureTextNode(const Node& n, float maxWidth, BuildContext& ctx,
                      float& outWidth, float& outHeight);
+
+// Nearest caret position (UTF-8 byte offset into Node::characters) for a
+// node-local point, using the same flow as rendering. Clicks left/right of a
+// line clamp to its ends; y clamps to the first/last line. -1 when fonts are
+// missing; 0 for empty text.
+int textByteFromPoint(const Node& n, BuildContext& ctx, float x, float y);
+
+// Node-local {x, y, w, h} rectangles covering the byte range [a, b) — one per
+// flowed line touched. Used for the selection highlight. False when empty.
+bool textSelectionRects(const Node& n, int a, int b, BuildContext& ctx,
+                        std::vector<std::array<float, 4>>& outRects);
 
 }  // namespace figmalib

@@ -1100,6 +1100,53 @@ Color textInkColor(const Node& n) {
     return {0, 0, 0, 1};
 }
 
+// Next UTF-8 code-point boundary at or after i+1.
+size_t nextCpBoundary(const std::string& s, size_t i) {
+    if (i >= s.size()) return s.size();
+    ++i;
+    while (i < s.size() && (static_cast<unsigned char>(s[i]) & 0xC0) == 0x80) ++i;
+    return i;
+}
+
+// X position on a flowed line for a byte offset (clamped to the line span),
+// starting from the line's aligned origin `startX`.
+float lineCaretX(const Node& n, const TextFlow::Line& ln, float startX, int byte) {
+    float x = startX;
+    for (const TextPiece* p : ln.ps) {
+        if (byte >= p->srcEnd) {
+            x += p->width;
+            continue;
+        }
+        if (byte <= p->srcStart) break;
+        // Inside the token: prefix advance with the token's resolved font.
+        auto* t = tvg::Text::gen();
+        if (t->font(p->fontKey.c_str()) == tvg::Result::Success) {
+            t->size(p->fontPt);
+            int glyphs = 0;
+            const std::string prefix = n.characters.substr(
+                p->srcStart, static_cast<size_t>(byte - p->srcStart));
+            x += measureAdvance(*t, prefix, glyphs) * p->letterFactor;
+        }
+        tvg::Paint::rel(t);
+        break;
+    }
+    return x;
+}
+
+float alignedLineX(const Node& n, float lineW) {
+    const TextStyle& base = n.textStyle;
+    return base.alignH == TextStyle::AlignH::Center  ? (n.width - lineW) * 0.5f
+           : base.alignH == TextStyle::AlignH::Right ? n.width - lineW
+                                                     : 0.0f;
+}
+
+float alignedTop(const Node& n, float contentH) {
+    const TextStyle& base = n.textStyle;
+    if (base.alignV == TextStyle::AlignV::Center) return (n.height - contentH) * 0.5f;
+    if (base.alignV == TextStyle::AlignV::Bottom) return n.height - contentH;
+    return 0;
+}
+
 // Caret rectangle in node-local coordinates for a UTF-8 byte offset into
 // Node::characters (clamped). Uses the same flow as rendering, so the caret
 // lands exactly between the drawn glyphs.
@@ -1108,29 +1155,19 @@ bool textCaretRect(const Node& n, int caretByte, BuildContext& ctx, float& outX,
     const TextStyle& base = n.textStyle;
     const float fallbackH =
         base.lineHeightPx > 0 ? base.lineHeightPx : base.fontSize * 1.2f;
-    auto alignedX = [&](float lineW) {
-        return base.alignH == TextStyle::AlignH::Center  ? (n.width - lineW) * 0.5f
-               : base.alignH == TextStyle::AlignH::Right ? n.width - lineW
-                                                         : 0.0f;
-    };
 
     TextFlow flow;
     const bool noWrap = base.autoResize == "WIDTH_AND_HEIGHT" || n.width <= 0;
     if (n.characters.empty() ||
         !buildTextFlow(n, noWrap ? 0 : n.width, ctx, false, flow)) {
         // Empty box (or missing fonts): caret at the alignment origin.
-        outX = alignedX(0);
-        outY = base.alignV == TextStyle::AlignV::Center ? (n.height - fallbackH) * 0.5f
-               : base.alignV == TextStyle::AlignV::Bottom ? n.height - fallbackH
-                                                          : 0.0f;
+        outX = alignedLineX(n, 0);
+        outY = alignedTop(n, fallbackH);
         outH = fallbackH;
         return true;
     }
 
-    float top = 0;
-    if (base.alignV == TextStyle::AlignV::Center) top = (n.height - flow.contentH) * 0.5f;
-    else if (base.alignV == TextStyle::AlignV::Bottom) top = n.height - flow.contentH;
-
+    float top = alignedTop(n, flow.contentH);
     const int caret = std::clamp(caretByte, 0, static_cast<int>(n.characters.size()));
     for (size_t li = 0; li < flow.lines.size(); ++li) {
         const auto& ln = flow.lines[li];
@@ -1138,26 +1175,7 @@ bool textCaretRect(const Node& n, int caretByte, BuildContext& ctx, float& outX,
             top += flow.lineHs[li];
             continue;
         }
-        float x = alignedX(ln.width);
-        for (const TextPiece* p : ln.ps) {
-            if (caret >= p->srcEnd) {
-                x += p->width;
-                continue;
-            }
-            if (caret <= p->srcStart) break;
-            // Inside the token: prefix advance with the token's resolved font.
-            auto* t = tvg::Text::gen();
-            if (t->font(p->fontKey.c_str()) == tvg::Result::Success) {
-                t->size(p->fontPt);
-                int glyphs = 0;
-                const std::string prefix = n.characters.substr(
-                    p->srcStart, static_cast<size_t>(caret - p->srcStart));
-                x += measureAdvance(*t, prefix, glyphs) * p->letterFactor;
-            }
-            tvg::Paint::rel(t);
-            break;
-        }
-        outX = x;
+        outX = lineCaretX(n, ln, alignedLineX(n, ln.width), caret);
         outY = top;
         outH = flow.lineHs[li];
         return true;
@@ -1174,6 +1192,111 @@ bool measureTextNode(const Node& n, float maxWidth, BuildContext& ctx,
     outWidth = flow.maxLineW;
     outHeight = flow.contentH;
     return true;
+}
+
+int textByteFromPoint(const Node& n, BuildContext& ctx, float x, float y) {
+    if (n.characters.empty()) return 0;
+    const TextStyle& base = n.textStyle;
+    TextFlow flow;
+    const bool noWrap = base.autoResize == "WIDTH_AND_HEIGHT" || n.width <= 0;
+    if (!buildTextFlow(n, noWrap ? 0 : n.width, ctx, false, flow)) return -1;
+
+    // Pick the line by y (clamped to first/last), then walk its pieces.
+    float top = alignedTop(n, flow.contentH);
+    size_t li = 0;
+    while (li + 1 < flow.lines.size() && y >= top + flow.lineHs[li]) {
+        top += flow.lineHs[li];
+        ++li;
+    }
+    const auto& ln = flow.lines[li];
+
+    float px = alignedLineX(n, ln.width);
+    if (x <= px) return ln.srcStart;
+    for (const TextPiece* p : ln.ps) {
+        if (p->newline || p->srcStart < 0) break;
+        if (x >= px + p->width) {
+            px += p->width;
+            continue;
+        }
+        // Inside this token: snap to the nearest code-point boundary.
+        if (!p->text) {  // spaces carry no glyphs — distribute evenly
+            int cps = 0;
+            for (size_t b = p->srcStart; b < static_cast<size_t>(p->srcEnd);
+                 b = nextCpBoundary(n.characters, b)) {
+                ++cps;
+            }
+            const float w = cps > 0 ? p->width / cps : p->width;
+            size_t b = p->srcStart;
+            float bx = px;
+            while (b < static_cast<size_t>(p->srcEnd) && x > bx + w * 0.5f) {
+                bx += w;
+                b = nextCpBoundary(n.characters, b);
+            }
+            return static_cast<int>(b);
+        }
+        auto* t = tvg::Text::gen();
+        int result = p->srcEnd;
+        if (t->font(p->fontKey.c_str()) == tvg::Result::Success) {
+            t->size(p->fontPt);
+            float prev = 0;
+            size_t b = p->srcStart;
+            while (b < static_cast<size_t>(p->srcEnd)) {
+                const size_t nb = nextCpBoundary(n.characters, b);
+                int glyphs = 0;
+                const std::string prefix =
+                    n.characters.substr(p->srcStart, nb - p->srcStart);
+                const float adv = measureAdvance(*t, prefix, glyphs) * p->letterFactor;
+                if (x < px + (prev + adv) * 0.5f) {  // nearer the left boundary
+                    result = static_cast<int>(b);
+                    break;
+                }
+                prev = adv;
+                b = nb;
+                result = static_cast<int>(b);
+            }
+        }
+        tvg::Paint::rel(t);
+        return result;
+    }
+    // Past the last glyph: line end, but in front of a hard line break.
+    int e = ln.srcEnd;
+    if (e > ln.srcStart && e > 0 && n.characters[e - 1] == '\n') --e;
+    return e;
+}
+
+bool textSelectionRects(const Node& n, int a, int b, BuildContext& ctx,
+                        std::vector<std::array<float, 4>>& outRects) {
+    if (n.characters.empty() || a >= b) return false;
+    const TextStyle& base = n.textStyle;
+    TextFlow flow;
+    const bool noWrap = base.autoResize == "WIDTH_AND_HEIGHT" || n.width <= 0;
+    if (!buildTextFlow(n, noWrap ? 0 : n.width, ctx, false, flow)) return false;
+
+    const int len = static_cast<int>(n.characters.size());
+    a = std::clamp(a, 0, len);
+    b = std::clamp(b, 0, len);
+    float top = alignedTop(n, flow.contentH);
+    for (size_t li = 0; li < flow.lines.size(); ++li) {
+        const auto& ln = flow.lines[li];
+        const float lineH = flow.lineHs[li];
+        const int lo = std::max(a, ln.srcStart);
+        const int hi = std::min(b, ln.srcEnd);
+        if (hi > lo) {
+            const float sx = alignedLineX(n, ln.width);
+            const float x0 = lineCaretX(n, ln, sx, lo);
+            float x1;
+            if (b > ln.srcEnd) {  // selection continues past this line
+                float w = 0;
+                for (const TextPiece* p : ln.ps) w += p->width;
+                x1 = sx + w;
+            } else {
+                x1 = lineCaretX(n, ln, sx, hi);
+            }
+            if (x1 > x0) outRects.push_back({x0, top, x1 - x0, lineH});
+        }
+        top += lineH;
+    }
+    return !outRects.empty();
 }
 
 tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx,
@@ -1203,6 +1326,19 @@ tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx
 
     bool skipChildren = false;
     if (node.type == NodeType::Text) {
+        // Selection highlight first, so it sits behind the glyphs.
+        if (node.caretByte >= 0 && node.selAnchorByte >= 0 &&
+            node.selAnchorByte != node.caretByte) {
+            const int a = std::min(node.caretByte, node.selAnchorByte);
+            const int b = std::max(node.caretByte, node.selAnchorByte);
+            std::vector<std::array<float, 4>> rects;
+            if (textSelectionRects(node, a, b, ctx, rects)) {
+                auto* sel = tvg::Shape::gen();
+                for (const auto& r : rects) sel->appendRect(r[0], r[1], r[2], r[3], 2, 2);
+                sel->fill(64, 140, 255, 105);
+                scene->add(sel);
+            }
+        }
         if (auto* rich = makeRichText(node, ctx)) scene->add(rich);
         else if (auto* text = makeText(node, ctx)) scene->add(text);
         if (node.caretByte >= 0) {  // focused for editing: draw the caret

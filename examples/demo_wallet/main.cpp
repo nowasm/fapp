@@ -232,6 +232,34 @@ int main(int argc, char** argv) {
                 ui->navigateBack(0.0f);
                 ui->focusText("greeting");
                 ui->textInput(" — 你好");
+            } else if (frame == 104) {
+                // Click-to-place-caret + drag-selection: sweep the pointer
+                // across the focused greeting (one block — interleaving real
+                // frames would fight the backend's mouse feed).
+                if (auto* g = ui->document().findByName("greeting")) {
+                    const auto t = ui->renderer().contentTransform();
+                    auto vp = [&](float lx, float ly, float& vx, float& vy) {
+                        float fx, fy;
+                        g->absoluteTransform.apply(lx, ly, fx, fy);
+                        t.apply(fx, fy, vx, vy);
+                    };
+                    float ax, ay, bx, by;
+                    vp(g->width * 0.15f, g->height * 0.5f, ax, ay);
+                    vp(g->width * 0.75f, g->height * 0.5f, bx, by);
+                    ui->pointerDown(ax, ay);
+                    ui->pointerMove(bx, by);
+                    ui->pointerUp(bx, by);
+                    std::printf("selection: anchor=%d caret=%d (text=%zu bytes)\n",
+                                g->selAnchorByte, g->caretByte, g->characters.size());
+                }
+            } else if (frame == 112) {
+                shot("select");
+            } else if (frame == 116) {
+                ui->editKey(figmalib::FigmaUI::EditKey::Left);  // collapse to start
+                if (auto* g = ui->document().findByName("greeting")) {
+                    std::printf("after Left: anchor=%d caret=%d\n", g->selAnchorByte,
+                                g->caretByte);
+                }
             } else if (frame == 120) {
                 shot("edit");
                 ui->blur();
