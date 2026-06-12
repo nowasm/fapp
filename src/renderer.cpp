@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <thorvg.h>
@@ -38,21 +40,57 @@ struct Renderer::Impl {
     std::vector<uint32_t> buffer;
     uint32_t width = 0, height = 0;
     Node* frame = nullptr;
-    bool dirty = true;       // document/scene changed → rebuild the tvg scene
-    bool viewDirty = true;   // only the view transform changed → re-raster only
+    bool dirty = true;        // document/scene changed → rebuild the tvg scene
+    bool viewDirty = true;    // only the view transform changed → re-raster only
+    bool scrollDirty = false; // only scroll offsets changed → retarget + re-raster
     bool targetValid = false;
     FontProvider fonts;
     std::string imageDir;
     Mat23 viewTransform;
     bool hasViewTransform = false;
-    // Active frame transition (outgoing frame + progress); null when idle.
-    Node* transFrom = nullptr;
-    Renderer::FrameTransition transType = Renderer::FrameTransition::Dissolve;
-    float transProgress = 0;
     // Persistent scene: rebuilding thousands of tvg objects (path parsing,
     // text layout) dwarfs rasterization cost, so the scene survives view
     // changes and is only rebuilt when the document changes.
     tvg::Scene* rootScene = nullptr;  // owned by the canvas once added
+    // Scrolled sub-scenes registered during the last build, plus the scroll
+    // offsets they were built with (to delta-update hit-test transforms).
+    std::vector<ScrollBinding> scrollBindings;
+    std::unordered_map<Node*, std::pair<float, float>> appliedScroll;
+
+    // Retarget every scrolled sub-scene at the current offsets and shift the
+    // cached absolute (hit-test) transforms by the world-space delta. Pure
+    // transform updates — no tvg object is created or destroyed.
+    void syncScroll() {
+        for (auto& b : scrollBindings) {
+            Mat23 shift;
+            shift.m02 = -b.scroller->scrollX;
+            shift.m12 = -b.scroller->scrollY;
+            const Mat23 local = shift * b.baseLocal;
+            const tvg::Matrix m{local.m00, local.m01, local.m02,
+                                local.m10, local.m11, local.m12, 0, 0, 1};
+            b.scene->transform(m);
+            if (b.clip) b.clip->transform(m);
+        }
+        for (auto& [scroller, applied] : appliedScroll) {
+            const float dx = applied.first - scroller->scrollX;
+            const float dy = applied.second - scroller->scrollY;
+            if (dx == 0 && dy == 0) continue;
+            // Translation in scroller-local space → world space via the
+            // linear part of its absolute transform (scale/rotation only).
+            const Mat23& a = scroller->absoluteTransform;
+            const float wx = a.m00 * dx + a.m01 * dy;
+            const float wy = a.m10 * dx + a.m11 * dy;
+            for (auto& b : scrollBindings) {
+                if (b.scroller != scroller) continue;
+                b.child->visit([&](Node& n) {
+                    n.absoluteTransform.m02 += wx;
+                    n.absoluteTransform.m12 += wy;
+                    return true;
+                });
+            }
+            applied = {scroller->scrollX, scroller->scrollY};
+        }
+    }
 
     Mat23 contentTransform() const {
         if (hasViewTransform) return viewTransform;
@@ -156,22 +194,7 @@ void Renderer::setFrame(Node* frame) {
 
 void Renderer::markDirty() { impl_->dirty = true; }
 
-void Renderer::setTransition(Node* fromFrame, FrameTransition type, float progress) {
-    if (!fromFrame || progress >= 1.0f) {
-        clearTransition();
-        return;
-    }
-    impl_->transFrom = fromFrame;
-    impl_->transType = type;
-    impl_->transProgress = std::max(0.0f, progress);
-    impl_->dirty = true;  // the composition lives inside the scene graph
-}
-
-void Renderer::clearTransition() {
-    if (!impl_->transFrom) return;
-    impl_->transFrom = nullptr;
-    impl_->dirty = true;
-}
+void Renderer::markScrollDirty() { impl_->scrollDirty = true; }
 
 void Renderer::setViewTransform(const Mat23& view) {
     const Mat23& cur = impl_->viewTransform;
@@ -196,7 +219,10 @@ void Renderer::clearViewTransform() {
 
 bool Renderer::render() {
     auto& d = *impl_;
-    if ((!d.dirty && !d.viewDirty) || !d.frame || !d.targetValid || !d.canvas) return false;
+    if ((!d.dirty && !d.viewDirty && !d.scrollDirty) || !d.frame || !d.targetValid ||
+        !d.canvas) {
+        return false;
+    }
 
     if (!d.rootScene) {
         d.rootScene = tvg::Scene::gen();
@@ -205,47 +231,24 @@ bool Renderer::render() {
 
     if (d.dirty) {  // document changed → rebuild the scene graph
         d.rootScene->remove();
+        d.scrollBindings.clear();
+        d.appliedScroll.clear();
         BuildContext ctx;
         ctx.fonts = &d.fonts;
         ctx.imageDir = d.imageDir;
+        ctx.scrollBindings = &d.scrollBindings;
         // In view-transform (editor) mode the frame keeps its canvas position
         // so sibling frames of a page stay laid out; in fit mode it is
         // re-origined.
         const bool reorigin = !d.hasViewTransform;
         if (auto* frameScene = buildNodeScene(*d.frame, Mat23::identity(), ctx, reorigin)) {
-            if (d.transFrom && d.transFrom != d.frame) {
-                // Frame transition: outgoing behind, incoming on top, offsets
-                // in frame-local units (the root content transform scales both).
-                const float w = d.frame->width, h = d.frame->height;
-                const float p = d.transProgress;
-                float inX = 0, inY = 0, outX = 0, outY = 0;
-                switch (d.transType) {
-                case FrameTransition::Dissolve: break;
-                case FrameTransition::SlideLeft: inX = (1 - p) * w; outX = -p * w; break;
-                case FrameTransition::SlideRight: inX = -(1 - p) * w; outX = p * w; break;
-                case FrameTransition::SlideUp: inY = (1 - p) * h; outY = -p * h; break;
-                case FrameTransition::SlideDown: inY = -(1 - p) * h; outY = p * h; break;
-                }
-                // ThorVG ignores translate() once transform() was set on the
-                // scene (buildNodeScene sets the root local matrix), so shift
-                // by rewriting the full matrix.
-                auto shifted = [&](const Node& fr, float tx, float ty) {
-                    Mat23 m = reorigin ? Mat23::identity() : fr.relativeTransform;
-                    return tvg::Matrix{m.m00, m.m01, m.m02 + tx,
-                                       m.m10, m.m11, m.m12 + ty, 0, 0, 1};
-                };
-                if (auto* outScene =
-                        buildNodeScene(*d.transFrom, Mat23::identity(), ctx, reorigin)) {
-                    outScene->transform(shifted(*d.transFrom, outX, outY));
-                    d.rootScene->add(outScene);
-                }
-                frameScene->transform(shifted(*d.frame, inX, inY));
-                if (d.transType == FrameTransition::Dissolve) {
-                    frameScene->opacity(static_cast<uint8_t>(std::lround(p * 255)));
-                }
-            }
             d.rootScene->add(frameScene);
         }
+        for (const auto& b : d.scrollBindings) {
+            d.appliedScroll[b.scroller] = {b.scroller->scrollX, b.scroller->scrollY};
+        }
+    } else if (d.scrollDirty) {  // offsets only → retarget the scrolled scenes
+        d.syncScroll();
     }
 
     const Mat23 content = d.contentTransform();
@@ -256,6 +259,7 @@ bool Renderer::render() {
     d.canvas->sync();
     d.dirty = false;
     d.viewDirty = false;
+    d.scrollDirty = false;
     return true;
 }
 

@@ -87,6 +87,14 @@ int main(int argc, char** argv) {
     ui->setResizeMode(figmalib::FigmaUI::ResizeMode::Reflow);
     ui->selectFrame("Home");
 
+    // wallet.fig quirk: Discover/Marketplace/Profile author their "Bottom Nav
+    // Bar" as fixed-when-scrolling, but the Home screens forgot to — pin them
+    // all so the navigation never scrolls away with the content.
+    ui->document().root->visit([](figmalib::Node& n) {
+        if (n.name == "Bottom Nav Bar") n.scrollFixed = true;
+        return true;
+    });
+
     // ---- data: the portfolio list ----
     // Several frames contain a node named "List" (Trending is one); scope the
     // binding to the Portfolio section by renaming its list first.
@@ -215,6 +223,10 @@ int main(int argc, char** argv) {
                         ui->pointerUp(vx, vy);
                     }
                 }
+            } else if (frame == 36) {
+                // Mid-slide: outgoing Home and incoming Coin Info composited
+                // from the backend's cached textures, side by side.
+                shot("transition");
             } else if (frame == 90) {
                 shot("coin");
                 ui->navigateBack(0.0f);
@@ -224,9 +236,34 @@ int main(int argc, char** argv) {
                 shot("edit");
                 ui->blur();
                 ui->scrollBy(GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f, 0, 400);
+            } else if (frame == 144) {
+                // Hit-test sanity after pure-scroll updates (no scene
+                // rebuild): the node under the viewport center must match the
+                // scrolled layout, not the pre-scroll one.
+                figmalib::Node* hit =
+                    ui->hitTest(GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f);
+                std::printf("post-scroll hit at center: %s (scrollY=%.1f)\n",
+                            hit ? hit->name.c_str() : "(none)",
+                            ui->currentFrame()->scrollY);
             } else if (frame == 150) {
                 shot("scroll");
                 SetWindowSize(700, 560);  // resize coverage (landscape-ish)
+            } else if (frame == 158) {
+                // Drag-fling check: a quick upward drag synthesized in one
+                // block (interleaving real frames would fight the backend's
+                // own mouse feed), then release — the content must keep
+                // coasting after the pointer lifts.
+                const float cx = GetScreenWidth() * 0.5f;
+                ui->pointerDown(cx, 400);
+                for (int i = 1; i <= 5; ++i) {
+                    ui->pointerMove(cx, 400.0f - i * 15.0f);
+                    ui->update(1.0f / 60.0f);  // velocity sampling between moves
+                }
+                ui->pointerUp(cx, 325);
+                std::printf("fling release: scrollY=%.1f\n", ui->currentFrame()->scrollY);
+            } else if (frame == 172) {
+                std::printf("fling +14 frames: scrollY=%.1f (should keep growing)\n",
+                            ui->currentFrame()->scrollY);
             } else if (frame == 180) {
                 std::printf("after resize: screen=%dx%d render=%dx%d dpi=%.2f "
                             "uiPixels=%ux%u\n",

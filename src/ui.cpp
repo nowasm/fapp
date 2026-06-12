@@ -30,6 +30,24 @@ struct FigmaUI::Impl {
     float dragAccumX = 0, dragAccumY = 0;
     float lastPointerX = 0, lastPointerY = 0;
     static constexpr float kDragScrollThreshold = 6.0f;  // viewport px
+
+    // Smooth scrolling. Wheel deltas ease toward a target offset; releasing a
+    // drag keeps its velocity as a decaying fling. Advanced by update(dt);
+    // every step goes through Renderer::markScrollDirty (transform retarget,
+    // no scene rebuild), which is what makes per-frame animation affordable.
+    struct ScrollAnim {
+        float targetX = 0, targetY = 0;  // wheel easing target (frame-local)
+        float velX = 0, velY = 0;        // fling velocity (frame-local px/s)
+        bool easing = false, fling = false;
+    };
+    std::unordered_map<Node*, ScrollAnim> scrollAnims;
+    Node* dragConsumer = nullptr;        // node the current drag actually scrolls
+    float dragMoveX = 0, dragMoveY = 0;  // frame-local travel since last update
+    float dragVelX = 0, dragVelY = 0;    // lowpassed drag velocity (px/s)
+    static constexpr float kEaseRate = 14.0f;    // wheel easing strength (1/s)
+    static constexpr float kFlingFriction = 4.0f;  // fling decay (1/s)
+    static constexpr float kFlingStart = 60.0f;  // min release speed (px/s)
+    static constexpr float kFlingStop = 10.0f;   // fling ends below this
     std::unordered_map<std::string, std::vector<ClickHandler>> clickHandlers;
     std::unordered_map<std::string, std::vector<HoverHandler>> hoverHandlers;
 
@@ -169,16 +187,98 @@ struct FigmaUI::Impl {
     }
 
     // Apply a frame-local delta at `start`, bubbling to scrollable ancestors
-    // when the inner frame is already at its limit.
-    bool scrollWithBubble(Node* start, float dx, float dy) {
+    // when the inner frame is already at its limit. Returns the node that
+    // consumed the delta (drag scrolling flings it on release).
+    Node* scrollWithBubble(Node* start, float dx, float dy) {
         for (Node* n = start; n; n = n->parent) {
             if (n->scrolls() && applyScroll(*n, dx, dy)) {
-                renderer.markDirty();
-                return true;
+                renderer.markScrollDirty();
+                return n;
+            }
+            if (n == frame) break;
+        }
+        return nullptr;
+    }
+
+    // Wheel path: ease toward an accumulated target instead of jumping.
+    // Bubbling compares against the pending target, so notches that already
+    // saturated an inner frame flow to its scrollable ancestor.
+    bool smoothScrollBy(Node* start, float dx, float dy) {
+        for (Node* n = start; n; n = n->parent) {
+            if (n->scrolls()) {
+                const auto it = scrollAnims.find(n);
+                const bool easing = it != scrollAnims.end() && it->second.easing;
+                const float bx = easing ? it->second.targetX : n->scrollX;
+                const float by = easing ? it->second.targetY : n->scrollY;
+                const float nx = std::clamp(bx + dx, 0.0f, n->maxScrollX());
+                const float ny = std::clamp(by + dy, 0.0f, n->maxScrollY());
+                if (nx != bx || ny != by) {
+                    ScrollAnim& a = scrollAnims[n];
+                    a.targetX = nx;
+                    a.targetY = ny;
+                    a.easing = true;
+                    a.fling = false;
+                    return true;
+                }
             }
             if (n == frame) break;
         }
         return false;
+    }
+
+    // Advance wheel easing and drag flings; also turns the raw drag travel of
+    // this tick into a lowpassed release velocity.
+    void stepScrollAnims(float dt) {
+        if (dragScrolling) {
+            const float blend = 1 - std::exp(-dt * 20.0f);
+            dragVelX += (dragMoveX / dt - dragVelX) * blend;
+            dragVelY += (dragMoveY / dt - dragVelY) * blend;
+            dragMoveX = dragMoveY = 0;
+        }
+        bool changed = false;
+        for (auto it = scrollAnims.begin(); it != scrollAnims.end();) {
+            Node* n = it->first;
+            ScrollAnim& a = it->second;
+            float x = n->scrollX, y = n->scrollY;
+            if (a.easing) {
+                const float k = 1 - std::exp(-dt * kEaseRate);
+                x += (a.targetX - x) * k;
+                y += (a.targetY - y) * k;
+                if (std::abs(a.targetX - x) < 0.25f && std::abs(a.targetY - y) < 0.25f) {
+                    x = a.targetX;
+                    y = a.targetY;
+                    a.easing = false;
+                }
+                // Layout may have shrunk the range under a stale target.
+                x = std::clamp(x, 0.0f, n->maxScrollX());
+                y = std::clamp(y, 0.0f, n->maxScrollY());
+            } else if (a.fling) {
+                x = std::clamp(x + a.velX * dt, 0.0f, n->maxScrollX());
+                y = std::clamp(y + a.velY * dt, 0.0f, n->maxScrollY());
+                const float decay = std::exp(-dt * kFlingFriction);
+                a.velX *= decay;
+                a.velY *= decay;
+                // Edges swallow the remaining momentum on their axis.
+                if (x <= 0 || x >= n->maxScrollX()) a.velX = 0;
+                if (y <= 0 || y >= n->maxScrollY()) a.velY = 0;
+                if (std::hypot(a.velX, a.velY) < kFlingStop) a.fling = false;
+            }
+            if (x != n->scrollX || y != n->scrollY) {
+                n->scrollX = x;
+                n->scrollY = y;
+                changed = true;
+            }
+            if (!a.easing && !a.fling) it = scrollAnims.erase(it);
+            else ++it;
+        }
+        if (changed) renderer.markScrollDirty();
+    }
+
+    void stopScrollAnims() {
+        scrollAnims.clear();
+        dragVelX = dragVelY = 0;
+        dragMoveX = dragMoveY = 0;
+        dragConsumer = nullptr;
     }
 
     // ---- Text editing ----
@@ -227,6 +327,8 @@ struct FigmaUI::Impl {
     Node* transFrom = nullptr;  // outgoing frame of the active transition
     FigmaUI::Transition transType = FigmaUI::Transition::None;
     float transElapsed = 0, transDuration = 0;
+    float transProgress = 0;  // eased, consumed by the backend compositor
+    uint32_t transId = 0;     // bumped per navigation → backend snapshots
 
     Node* findFrame(const std::string& nameOrId) {
         for (Node* f : doc->topLevelFrames()) {
@@ -243,17 +345,8 @@ struct FigmaUI::Impl {
         pressed = nullptr;
         dragScrollNode = nullptr;
         dragScrolling = false;
+        stopScrollAnims();
         reflow();
-    }
-
-    static Renderer::FrameTransition toRenderer(FigmaUI::Transition t) {
-        switch (t) {
-        case FigmaUI::Transition::SlideLeft: return Renderer::FrameTransition::SlideLeft;
-        case FigmaUI::Transition::SlideRight: return Renderer::FrameTransition::SlideRight;
-        case FigmaUI::Transition::SlideUp: return Renderer::FrameTransition::SlideUp;
-        case FigmaUI::Transition::SlideDown: return Renderer::FrameTransition::SlideDown;
-        default: return Renderer::FrameTransition::Dissolve;
-        }
     }
 
     static FigmaUI::Transition reverseOf(FigmaUI::Transition t) {
@@ -267,8 +360,8 @@ struct FigmaUI::Impl {
     }
 
     void startTransition(Node* from, FigmaUI::Transition t, float duration) {
+        ++transId;  // even a cut (no animation) invalidates a backend snapshot
         if (t == FigmaUI::Transition::None || duration <= 0 || !from || from == frame) {
-            renderer.clearTransition();
             transFrom = nullptr;
             return;
         }
@@ -276,7 +369,7 @@ struct FigmaUI::Impl {
         transType = t;
         transElapsed = 0;
         transDuration = duration;
-        renderer.setTransition(from, toRenderer(t), 0);
+        transProgress = 0;
     }
 
     // Maps an authored Figma transition type onto our animation set.
@@ -354,8 +447,8 @@ std::vector<std::string> FigmaUI::frameNames() const {
 bool FigmaUI::selectFrame(const std::string& name) {
     Node* f = impl_->findFrame(name);
     if (!f) return false;
-    impl_->renderer.clearTransition();
     impl_->transFrom = nullptr;
+    ++impl_->transId;  // hard switch: a backend snapshot of the old frame is stale
     impl_->navStack.clear();  // hard switch resets navigation history
     impl_->switchToFrame(f);
     return true;
@@ -387,21 +480,31 @@ bool FigmaUI::navigateBack(float durationSec) {
 bool FigmaUI::canGoBack() const { return !impl_->navStack.empty(); }
 
 void FigmaUI::update(float dtSeconds) {
-    if (!impl_->transFrom || dtSeconds <= 0) return;
+    if (dtSeconds <= 0) return;
+    impl_->stepScrollAnims(dtSeconds);
+    if (!impl_->transFrom) return;
     impl_->transElapsed += dtSeconds;
     float p = impl_->transDuration > 0 ? impl_->transElapsed / impl_->transDuration : 1.0f;
     if (p >= 1.0f) {
         impl_->transFrom = nullptr;
-        impl_->renderer.clearTransition();
         return;
     }
-    // Ease in-out (cubic) for a Figma-like feel.
-    const float eased = p < 0.5f ? 4 * p * p * p : 1 - std::pow(-2 * p + 2, 3.0f) / 2;
-    impl_->renderer.setTransition(impl_->transFrom, Impl::toRenderer(impl_->transType),
-                                  eased);
+    // Ease in-out (cubic) for a Figma-like feel. No re-raster happens here:
+    // the backend composites its cached textures at this progress.
+    impl_->transProgress = p < 0.5f ? 4 * p * p * p : 1 - std::pow(-2 * p + 2, 3.0f) / 2;
 }
 
 bool FigmaUI::animating() const { return impl_->transFrom != nullptr; }
+
+uint32_t FigmaUI::transitionId() const { return impl_->transId; }
+
+FigmaUI::Transition FigmaUI::transitionType() const {
+    return impl_->transFrom ? impl_->transType : Transition::None;
+}
+
+float FigmaUI::transitionProgress() const {
+    return impl_->transFrom ? impl_->transProgress : 1.0f;
+}
 
 Node* FigmaUI::currentFrame() const { return impl_->frame; }
 
@@ -451,13 +554,19 @@ void FigmaUI::pointerMove(float x, float y) {
                 impl_->dragScrolling = true;
                 // Replay the pre-threshold travel so the content doesn't jump.
                 const float s = impl_->viewportToFrameScale();
-                impl_->scrollWithBubble(impl_->dragScrollNode,
-                                        -impl_->dragAccumX * s, -impl_->dragAccumY * s);
+                impl_->dragConsumer = impl_->scrollWithBubble(
+                    impl_->dragScrollNode, -impl_->dragAccumX * s, -impl_->dragAccumY * s);
+                impl_->dragMoveX = -impl_->dragAccumX * s;
+                impl_->dragMoveY = -impl_->dragAccumY * s;
             }
         } else {
             // Content follows the finger: dragging up reveals what is below.
             const float s = impl_->viewportToFrameScale();
-            impl_->scrollWithBubble(impl_->dragScrollNode, -dx * s, -dy * s);
+            if (Node* c = impl_->scrollWithBubble(impl_->dragScrollNode, -dx * s, -dy * s)) {
+                impl_->dragConsumer = c;
+            }
+            impl_->dragMoveX += -dx * s;
+            impl_->dragMoveY += -dy * s;
         }
         if (impl_->dragScrolling) return;  // no hover churn while panning
     }
@@ -482,11 +591,23 @@ void FigmaUI::pointerDown(float x, float y) {
     impl_->dragAccumX = impl_->dragAccumY = 0;
     impl_->lastPointerX = x;
     impl_->lastPointerY = y;
+    impl_->stopScrollAnims();  // the finger catches any easing/fling in flight
 }
 
 void FigmaUI::pointerUp(float x, float y) {
     if (impl_->dragScrolling) {
-        // The gesture was a pan, not a click.
+        // The gesture was a pan, not a click. Fast release → fling.
+        Node* n = impl_->dragConsumer ? impl_->dragConsumer : impl_->dragScrollNode;
+        if (n && std::hypot(impl_->dragVelX, impl_->dragVelY) > Impl::kFlingStart) {
+            Impl::ScrollAnim& a = impl_->scrollAnims[n];
+            a.velX = impl_->dragVelX;
+            a.velY = impl_->dragVelY;
+            a.fling = true;
+            a.easing = false;
+        }
+        impl_->dragVelX = impl_->dragVelY = 0;
+        impl_->dragMoveX = impl_->dragMoveY = 0;
+        impl_->dragConsumer = nullptr;
         impl_->pressed = nullptr;
         impl_->dragScrollNode = nullptr;
         impl_->dragScrolling = false;
@@ -555,15 +676,16 @@ bool FigmaUI::scrollBy(float x, float y, float dx, float dy) {
     Node* target = impl_->scrollableAtViewport(x, y);
     if (!target) return false;
     const float s = impl_->viewportToFrameScale();
-    return impl_->scrollWithBubble(target, dx * s, dy * s);
+    return impl_->smoothScrollBy(target, dx * s, dy * s);
 }
 
 bool FigmaUI::setScroll(const std::string& nodeName, float offsetX, float offsetY) {
     Node* n = impl_->findMutable(nodeName);
     if (!n || !n->scrolls()) return false;
+    impl_->scrollAnims.erase(n);  // programmatic set overrides any animation
     n->scrollX = std::clamp(offsetX, 0.0f, n->maxScrollX());
     n->scrollY = std::clamp(offsetY, 0.0f, n->maxScrollY());
-    impl_->renderer.markDirty();
+    impl_->renderer.markScrollDirty();
     return true;
 }
 
@@ -662,6 +784,7 @@ bool FigmaUI::bindList(const std::string& listName, size_t count,
                        const ListBinder& bind) {
     Node* list = impl_->findMutable(listName);
     if (!list) return false;
+    impl_->stopScrollAnims();  // items are about to be destroyed/recreated
 
     // First bind detaches the template; later binds reuse the stored one.
     auto it = impl_->listTemplates.find(list);
@@ -755,6 +878,7 @@ bool FigmaUI::setVariant(const std::string& instanceName, const std::string& pro
                          const std::string& value) {
     Node* inst = impl_->findMutable(instanceName);
     if (!inst || inst->componentId.empty()) return false;
+    impl_->stopScrollAnims();  // the instance subtree is about to be replaced
     Document& doc = *impl_->doc;
 
     Node* current = doc.findById(inst->componentId);

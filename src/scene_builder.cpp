@@ -1182,15 +1182,18 @@ tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx
     if (node.type == NodeType::Slice) return nullptr;
 
     Mat23 local = isRoot ? Mat23::identity() : node.relativeTransform;
+    const Mat23 baseLocal = local;
     // Children of a scrolling frame shift by the frame's scroll offset;
     // scrollFixed children (sticky headers/navbars) stay put. Folding the
     // offset into `local` keeps absoluteTransform — and therefore hit
     // testing — consistent with what is drawn.
+    bool scrolled = false;
     if (!isRoot && node.parent && node.parent->scrolls() && !node.scrollFixed) {
         Mat23 shift;
         shift.m02 = -node.parent->scrollX;
         shift.m12 = -node.parent->scrollY;
         local = shift * local;
+        scrolled = true;
     }
     node.absoluteTransform = parentAbs * local;
 
@@ -1233,14 +1236,19 @@ tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx
 
     // Scrolling frames always clip — content outside the viewport box must
     // not bleed even when the author left "clip content" off.
+    tvg::Shape* clipShape = nullptr;
     if ((node.clipsContent || node.scrolls()) && node.width > 0 && node.height > 0) {
-        auto* clip = tvg::Shape::gen();
-        appendPrimitive(*clip, node);
+        clipShape = tvg::Shape::gen();
+        appendPrimitive(*clipShape, node);
         // A clipper attaches to the clipped paint's PARENT, so it inherits
         // ancestor transforms but not this scene's own local transform —
         // apply it explicitly or the clip lands at the parent's origin.
-        clip->transform(toTvg(local));
-        scene->clip(clip);
+        clipShape->transform(toTvg(local));
+        scene->clip(clipShape);
+    }
+
+    if (scrolled && ctx.scrollBindings) {
+        ctx.scrollBindings->push_back({node.parent, &node, scene, clipShape, baseLocal});
     }
 
     applyEffects(*scene, node);

@@ -48,6 +48,21 @@ public:
     void update(float dtSeconds);  // advances transitions; cheap when idle
     bool animating() const;
 
+    // ---- Transition compositing (backend contract) ----
+    // Transitions do not re-rasterize the vector scene per tick. Instead the
+    // backend keeps the previous frame's texture as a snapshot and composites
+    // it with the current frame's texture on the GPU:
+    //   - transitionId() increments every time a navigation starts. When the
+    //     backend sees a new id, its current texture still shows the outgoing
+    //     frame — snapshot it into a "previous" texture before rendering.
+    //   - While animating(), draw the snapshot and the current texture
+    //     offset (slides) or alpha-faded (dissolve, incoming on top) by
+    //     transitionProgress(); the incoming frame itself rasterizes once.
+    // See backends/raylib for the reference implementation.
+    uint32_t transitionId() const;
+    Transition transitionType() const;
+    float transitionProgress() const;  // eased, [0,1)
+
     // ---- Render ----
     // How the frame follows the viewport size:
     //   Scale  — uniform scale-to-fit, letterboxed (default; authored layout)

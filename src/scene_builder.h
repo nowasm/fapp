@@ -2,6 +2,7 @@
 // Builds a ThorVG scene graph from a figmalib node tree.
 
 #include <string>
+#include <vector>
 
 #include <thorvg.h>
 
@@ -10,9 +11,21 @@
 
 namespace figmalib {
 
+// One scrolled child of a scrolling frame: enough to retarget its scene (and
+// its own clipper, which does not inherit the scene's local transform) when
+// only the scroll offset changes — scrolling never rebuilds the scene graph.
+struct ScrollBinding {
+    Node* scroller = nullptr;     // the scrolling frame
+    Node* child = nullptr;        // the shifted child (subtree root)
+    tvg::Scene* scene = nullptr;  // owned by the canvas scene graph
+    tvg::Shape* clip = nullptr;   // child's own clipper, if any
+    Mat23 baseLocal;              // child local matrix without the scroll shift
+};
+
 struct BuildContext {
     FontProvider* fonts = nullptr;
     std::string imageDir;
+    std::vector<ScrollBinding>* scrollBindings = nullptr;  // filled during build
 };
 
 // Returns a scene for the node subtree, or nullptr if the node is hidden.

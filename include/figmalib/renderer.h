@@ -36,14 +36,6 @@ public:
     // ignored) and uniformly scaled to fit the target, centered (letterboxed).
     void setFrame(Node* frame);
 
-    // ---- Frame transitions ----
-    // While active, render() composes `fromFrame` (outgoing) with the current
-    // frame (incoming) at `progress` ∈ [0,1]. Driven per-tick by
-    // FigmaUI::update(); call clearTransition() (or pass progress ≥ 1) to end.
-    enum class FrameTransition { Dissolve, SlideLeft, SlideRight, SlideUp, SlideDown };
-    void setTransition(Node* fromFrame, FrameTransition type, float progress);
-    void clearTransition();
-
     // Editor mode: render with an explicit world→pixel view transform instead
     // of the letterbox fit. The frame keeps its own canvas position, so a
     // whole CANVAS page (with frames at their canvas coordinates) can be
@@ -55,6 +47,12 @@ public:
     // Re-rasterize if dirty. Returns true if the pixel buffer changed.
     bool render();
     void markDirty();
+
+    // Scroll offsets changed but nothing else did: render() then only
+    // retargets the scrolled sub-scenes' transforms (and the cached
+    // hit-test transforms) and re-rasterizes — no scene rebuild. Far
+    // cheaper than markDirty(); smooth scrolling depends on it.
+    void markScrollDirty();
 
     // Pixel access — RGBA8888, straight (non-premultiplied) alpha, row-major,
     // stride == width. Valid after the first successful render().

@@ -1,26 +1,39 @@
 #include "figmalib_raylib.h"
 
+#include <utility>
+
 #include <rlgl.h>
 
 namespace figmalib {
 
 RaylibFigmaView::~RaylibFigmaView() {
-    if (textureValid_) UnloadTexture(texture_);
+    if (texture_.id != 0) UnloadTexture(texture_);
     if (rt_.id != 0) UnloadRenderTexture(rt_);
+    dropPrev();
+}
+
+void RaylibFigmaView::dropPrev() {
+    if (prevTexture_.id != 0) UnloadTexture(prevTexture_);
+    prevTexture_ = {};
+    if (rtPrev_.id != 0) UnloadRenderTexture(rtPrev_);
+    rtPrev_ = {};
+    prevValid_ = false;
 }
 
 bool RaylibFigmaView::setGpu(bool enabled) {
     if (enabled == gpuWanted_) return gpuActive_;
     gpuWanted_ = enabled;
     // Drop both paths' resources; the next resize() rebuilds the active one.
-    if (textureValid_) {
+    if (texture_.id != 0) {
         UnloadTexture(texture_);
+        texture_ = {};
         textureValid_ = false;
     }
     if (rt_.id != 0) {
         UnloadRenderTexture(rt_);
         rt_ = {};
     }
+    dropPrev();
     gpuActive_ = false;
     resize(GetScreenWidth(), GetScreenHeight());
     return gpuActive_;
@@ -34,6 +47,7 @@ void RaylibFigmaView::resize(int width, int height) {
     if (gpuWanted_) {
         if (gpuActive_ && rt_.id != 0 && w == ui_.pixelWidth() && h == ui_.pixelHeight()) return;
         if (rt_.id != 0) UnloadRenderTexture(rt_);
+        dropPrev();  // snapshot no longer matches the target size
         rt_ = LoadRenderTexture(width, height);
         gpuActive_ = rt_.id != 0 &&
                      ui_.setViewportGL(static_cast<int32_t>(rt_.id), w, h);
@@ -48,10 +62,12 @@ void RaylibFigmaView::resize(int width, int height) {
 
     if (w == ui_.pixelWidth() && h == ui_.pixelHeight() && textureValid_) return;
     ui_.setViewport(w, h);
-    if (textureValid_) {
+    if (texture_.id != 0) {
         UnloadTexture(texture_);
+        texture_ = {};
         textureValid_ = false;
     }
+    dropPrev();  // snapshot no longer matches the target size
 }
 
 void RaylibFigmaView::update() {
@@ -102,6 +118,30 @@ void RaylibFigmaView::update() {
         if (IsKeyPressed(KEY_ESCAPE)) ui_.blur();
     }
 
+    // A navigation just started: the live texture still shows the outgoing
+    // frame, so swap it into the snapshot slot. The incoming frame then
+    // rasterizes ONCE into a fresh target and draw() composites the two
+    // textures per tick — no per-tick vector re-raster.
+    if (ui_.transitionId() != seenTransId_) {
+        seenTransId_ = ui_.transitionId();
+        if (!ui_.animating()) {
+            prevValid_ = false;  // hard cut — never composite a stale snapshot
+        } else if (gpuActive_) {
+            std::swap(rt_, rtPrev_);
+            prevValid_ = rtPrev_.id != 0;
+            if (rt_.id == 0) {
+                rt_ = LoadRenderTexture(static_cast<int>(ui_.pixelWidth()),
+                                        static_cast<int>(ui_.pixelHeight()));
+            }
+            gpuActive_ = rt_.id != 0 &&
+                         ui_.setViewportGL(static_cast<int32_t>(rt_.id),
+                                           ui_.pixelWidth(), ui_.pixelHeight());
+        } else {
+            std::swap(texture_, prevTexture_);
+            std::swap(textureValid_, prevValid_);
+        }
+    }
+
     if (gpuActive_) {
         // ThorVG drives GL directly: flush raylib's pending batch first, then
         // restore the state rlgl assumes (it caches and won't re-apply).
@@ -135,15 +175,43 @@ void RaylibFigmaView::update() {
 }
 
 void RaylibFigmaView::draw(int x, int y, ::Color tint) const {
-    if (gpuActive_) {
-        // FBO color attachments are bottom-up in GL: draw with a flipped
-        // source rect (the usual raylib RenderTexture convention).
-        const Rectangle src{0, 0, static_cast<float>(rt_.texture.width),
-                            -static_cast<float>(rt_.texture.height)};
-        DrawTextureRec(rt_.texture, src, {static_cast<float>(x), static_cast<float>(y)}, tint);
+    const bool curOk = gpuActive_ ? rt_.id != 0 : textureValid_;
+    if (!curOk) return;
+    const Texture2D& cur = gpuActive_ ? rt_.texture : texture_;
+
+    // FBO color attachments are bottom-up in GL: draw with a flipped source
+    // rect (the usual raylib RenderTexture convention).
+    auto src = [this](const Texture2D& t) {
+        return Rectangle{0, 0, static_cast<float>(t.width),
+                         gpuActive_ ? -static_cast<float>(t.height)
+                                    : static_cast<float>(t.height)};
+    };
+    const float fx = static_cast<float>(x), fy = static_cast<float>(y);
+
+    if (!ui_.animating() || !prevValid_) {
+        DrawTextureRec(cur, src(cur), {fx, fy}, tint);
         return;
     }
-    if (textureValid_) DrawTexture(texture_, x, y, tint);
+
+    // Frame transition: composite the cached outgoing snapshot (behind) with
+    // the incoming texture (on top) at the eased progress, all on the GPU.
+    const Texture2D& prev = gpuActive_ ? rtPrev_.texture : prevTexture_;
+    const float p = ui_.transitionProgress();
+    const float w = static_cast<float>(cur.width);
+    const float h = static_cast<float>(cur.height);
+    float inX = 0, inY = 0, outX = 0, outY = 0;
+    ::Color inTint = tint;
+    switch (ui_.transitionType()) {
+    case FigmaUI::Transition::SlideLeft: inX = (1 - p) * w; outX = -p * w; break;
+    case FigmaUI::Transition::SlideRight: inX = -(1 - p) * w; outX = p * w; break;
+    case FigmaUI::Transition::SlideUp: inY = (1 - p) * h; outY = -p * h; break;
+    case FigmaUI::Transition::SlideDown: inY = -(1 - p) * h; outY = p * h; break;
+    default:  // Dissolve: incoming fades in over the outgoing frame
+        inTint.a = static_cast<unsigned char>(tint.a * p);
+        break;
+    }
+    DrawTextureRec(prev, src(prev), {fx + outX, fy + outY}, tint);
+    DrawTextureRec(cur, src(cur), {fx + inX, fy + inY}, inTint);
 }
 
 }  // namespace figmalib
