@@ -259,7 +259,9 @@ python -m http.server 8123 -d build_web   # 打开 http://localhost:8123/figmapl
 emsdk 默认在 `D:\devlib\emsdk`（`EMSDK_HOME` 覆盖）。设计以预转换的
 canvas.json + images 打包进虚拟文件系统（.fig 转换是原生步骤），字体打包自
 `examples/assets/fonts`（浏览器没有系统字体，wallet 用的 Titillium Web/Poppins
-已内置）。限制：web 上 fetch 暂为 stub，热重载/`--shot` 仅桌面有效。
+已内置）。脚本层 `fetch()` 经 emscripten Fetch（`-sFETCH`，异步 XHR）走真实
+网络请求——同源随意，跨域受浏览器 CORS 约束（服务端需带
+`Access-Control-Allow-Origin`）。限制：热重载/`--shot` 仅桌面有效。
 
 ## Android 构建（无 gradle）
 

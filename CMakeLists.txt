@@ -198,6 +198,7 @@ if(FIGMALIB_SCRIPTING AND FIGMALIB_BACKEND_RAYLIB)
             "-sALLOW_MEMORY_GROWTH=1"
             "-sSTACK_SIZE=2097152"
             "-sFORCE_FILESYSTEM=1"
+            "-sFETCH"  # script-layer fetch() → browser XHR (async, no pthreads)
             # SHELL: keeps each flag+arg pair intact (CMake de-dups bare flags)
             "SHELL:--preload-file ${FIGMALIB_WEB_DESIGN_DIR}@/assets/wallet"
             "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/examples/scripts/wallet.js@/scripts/wallet.js"

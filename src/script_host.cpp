@@ -20,6 +20,10 @@
 #include <winhttp.h>
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/fetch.h>
+#endif
+
 #include <map>
 
 #include <nlohmann/json.hpp>
@@ -167,6 +171,87 @@ void fetchWorker(std::shared_ptr<FetchQueue> queue, uint64_t id, std::string url
         res.body.resize(at + got);
     }
     finish();
+}
+
+#elif defined(__EMSCRIPTEN__)
+
+// Browser XHR via the emscripten Fetch API (-sFETCH, async — works without
+// pthreads). fetchWorker only STARTS the request and returns; the completion
+// callbacks run on the main thread between frames and push into the shared
+// queue exactly like the Windows worker threads do. Subject to the browser's
+// CORS rules: cross-origin servers must send Access-Control-Allow-Origin.
+struct EmFetch {
+    std::shared_ptr<FetchQueue> queue;
+    uint64_t id = 0;
+    std::string method, body;
+    std::vector<std::string> headerStorage;  // alternating key, value
+    std::vector<const char*> headerPtrs;     // …as C strings, null-terminated
+};
+
+void emFetchDone(emscripten_fetch_t* f) {
+    std::unique_ptr<EmFetch> c(static_cast<EmFetch*>(f->userData));
+    FetchResult res;
+    res.id = c->id;
+    res.status = f->status;
+    if (f->data && f->numBytes > 0) {
+        res.body.assign(f->data, f->data + f->numBytes);
+    }
+    // onerror also fires for non-2xx statuses, but those ARE completed HTTP
+    // responses — resolve with the status (fetch semantics: ok=false), and
+    // reject only when nothing came back at all (network/CORS failure).
+    if (res.status == 0) res.error = "network error (unreachable or CORS)";
+    {
+        std::lock_guard<std::mutex> lock(c->queue->mutex);
+        c->queue->results.push_back(std::move(res));
+    }
+    emscripten_fetch_close(f);
+}
+
+void fetchWorker(std::shared_ptr<FetchQueue> queue, uint64_t id, std::string url,
+                 std::string method, std::string headers, std::string body) {
+    auto c = std::make_unique<EmFetch>();
+    c->queue = std::move(queue);
+    c->id = id;
+    c->method = method.empty() ? "GET" : std::move(method);
+    c->body = std::move(body);
+    // "Key: Value\r\n…" → alternating key/value strings.
+    for (size_t at = 0; at < headers.size();) {
+        size_t end = headers.find("\r\n", at);
+        if (end == std::string::npos) end = headers.size();
+        const std::string line = headers.substr(at, end - at);
+        at = end + 2;
+        const size_t colon = line.find(':');
+        if (colon == std::string::npos) continue;
+        std::string val = line.substr(colon + 1);
+        val.erase(0, val.find_first_not_of(' '));
+        c->headerStorage.push_back(line.substr(0, colon));
+        c->headerStorage.push_back(std::move(val));
+    }
+    for (const std::string& s : c->headerStorage) c->headerPtrs.push_back(s.c_str());
+    c->headerPtrs.push_back(nullptr);
+
+    emscripten_fetch_attr_t attr;
+    emscripten_fetch_attr_init(&attr);
+    std::snprintf(attr.requestMethod, sizeof(attr.requestMethod), "%s",
+                  c->method.c_str());
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+    attr.onsuccess = emFetchDone;
+    attr.onerror = emFetchDone;
+    if (c->headerPtrs.size() > 1) attr.requestHeaders = c->headerPtrs.data();
+    if (!c->body.empty()) {
+        attr.requestData = c->body.data();
+        attr.requestDataSize = c->body.size();
+    }
+    attr.userData = c.get();
+    if (emscripten_fetch(&attr, url.c_str())) {
+        c.release();  // owned by the request now; emFetchDone frees it
+    } else {
+        FetchResult res;
+        res.id = id;
+        res.error = "fetch failed to start";
+        std::lock_guard<std::mutex> lock(c->queue->mutex);
+        c->queue->results.push_back(std::move(res));
+    }
 }
 
 #else
@@ -794,8 +879,9 @@ JSValue js_fetchNative(JSContext* ctx, JSValueConst, int argc, JSValueConst* arg
                 std::move(headers), std::move(body))
         .detach();
 #else
-    // No thread (wasm builds run without pthreads): the stub/sync worker
-    // queues its result immediately; the promise settles on the next update.
+    // No thread (wasm builds run without pthreads): emscripten's worker just
+    // STARTS the async browser request; the stub queues its error
+    // immediately. Either way the promise settles in a later update().
     fetchWorker(im->fetchQueue, id, std::move(url), std::move(method),
                 std::move(headers), std::move(body));
 #endif
