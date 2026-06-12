@@ -353,6 +353,50 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Navigation: navigateTo with a slide transition must show a mid-state
+    // distinct from both frames, then settle on the target; back returns.
+    if (seen.size() >= 2) {
+        ui->selectFrame(seen[0]);
+        ui->render();
+        const uint32_t total = ui->pixelWidth() * ui->pixelHeight();
+        std::vector<uint32_t> a(ui->pixels(), ui->pixels() + total);
+        ui->selectFrame(seen[1]);
+        ui->render();
+        std::vector<uint32_t> b(ui->pixels(), ui->pixels() + total);
+        ui->selectFrame(seen[0]);
+        ui->render();
+
+        if (!ui->navigateTo(seen[1], figmalib::FigmaUI::Transition::SlideLeft, 0.3f)) {
+            std::printf("FAIL: navigateTo(%s)\n", seen[1].c_str());
+            ++failures;
+        } else {
+            ui->update(0.15f);  // halfway
+            ui->render();
+            uint32_t diffA = 0, diffB = 0;
+            for (uint32_t i = 0; i < total; ++i) {
+                if (ui->pixels()[i] != a[i]) ++diffA;
+                if (ui->pixels()[i] != b[i]) ++diffB;
+            }
+            ui->update(0.5f);  // finish
+            ui->render();
+            uint32_t settled = 0;
+            for (uint32_t i = 0; i < total; ++i) {
+                if (ui->pixels()[i] != b[i]) ++settled;
+            }
+            const bool backOk =
+                ui->canGoBack() && ui->navigateBack(0.0f) && ui->currentFrame() &&
+                ui->currentFrame()->name == seen[0];
+            std::printf("navigate %s -> %s: mid diff vs A=%u vs B=%u, settled diff=%u, "
+                        "back=%d\n",
+                        seen[0].c_str(), seen[1].c_str(), diffA, diffB, settled,
+                        backOk ? 1 : 0);
+            if (diffA == 0 || diffB == 0 || settled != 0 || !backOk) {
+                std::printf("FAIL: navigation transition wrong\n");
+                ++failures;
+            }
+        }
+    }
+
     // Hit-test sanity on the sample UI: center of the start button.
     if (ui->selectFrame("MainMenu")) {
         ui->render();

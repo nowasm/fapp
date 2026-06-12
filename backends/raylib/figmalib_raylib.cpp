@@ -55,6 +55,7 @@ void RaylibFigmaView::resize(int width, int height) {
 }
 
 void RaylibFigmaView::update() {
+    ui_.update(GetFrameTime());  // frame transitions / animations
     const Vector2 mouse = GetMousePosition();
     ui_.pointerMove(mouse.x, mouse.y);
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) ui_.pointerDown(mouse.x, mouse.y);

@@ -219,6 +219,12 @@ struct NodeData {
     // Instances: id of the COMPONENT this instance was created from.
     std::string componentId;
 
+    // Prototype navigation, when authored in Figma: clicking this node goes
+    // to the target frame. FigmaUI wires these automatically.
+    std::string transitionNodeId;  // destination frame id ("" = none)
+    std::string transitionType;    // MOVE_IN/PUSH/SLIDE_IN/DISSOLVE/...
+    float transitionDuration = 0;  // seconds
+
     // ---- Layout (responsive reflow) ----
     Constraint constraintH = Constraint::Min;
     Constraint constraintV = Constraint::Min;

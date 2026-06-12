@@ -189,6 +189,85 @@ struct FigmaUI::Impl {
 
     // Pristine item templates detached by bindList, keyed by the list node.
     std::unordered_map<Node*, std::unique_ptr<Node>> listTemplates;
+
+    // ---- Navigation ----
+    struct NavEntry {
+        Node* frame;
+        FigmaUI::Transition transition;  // used to leave it (reversed on back)
+    };
+    std::vector<NavEntry> navStack;
+    Node* transFrom = nullptr;  // outgoing frame of the active transition
+    FigmaUI::Transition transType = FigmaUI::Transition::None;
+    float transElapsed = 0, transDuration = 0;
+
+    Node* findFrame(const std::string& nameOrId) {
+        for (Node* f : doc->topLevelFrames()) {
+            if (f->name == nameOrId || f->id == nameOrId) return f;
+        }
+        return nullptr;
+    }
+
+    void switchToFrame(Node* f) {
+        setFocus(nullptr);
+        frame = f;
+        renderer.setFrame(f);
+        hovered = nullptr;
+        pressed = nullptr;
+        dragScrollNode = nullptr;
+        dragScrolling = false;
+        reflow();
+    }
+
+    static Renderer::FrameTransition toRenderer(FigmaUI::Transition t) {
+        switch (t) {
+        case FigmaUI::Transition::SlideLeft: return Renderer::FrameTransition::SlideLeft;
+        case FigmaUI::Transition::SlideRight: return Renderer::FrameTransition::SlideRight;
+        case FigmaUI::Transition::SlideUp: return Renderer::FrameTransition::SlideUp;
+        case FigmaUI::Transition::SlideDown: return Renderer::FrameTransition::SlideDown;
+        default: return Renderer::FrameTransition::Dissolve;
+        }
+    }
+
+    static FigmaUI::Transition reverseOf(FigmaUI::Transition t) {
+        switch (t) {
+        case FigmaUI::Transition::SlideLeft: return FigmaUI::Transition::SlideRight;
+        case FigmaUI::Transition::SlideRight: return FigmaUI::Transition::SlideLeft;
+        case FigmaUI::Transition::SlideUp: return FigmaUI::Transition::SlideDown;
+        case FigmaUI::Transition::SlideDown: return FigmaUI::Transition::SlideUp;
+        default: return t;
+        }
+    }
+
+    void startTransition(Node* from, FigmaUI::Transition t, float duration) {
+        if (t == FigmaUI::Transition::None || duration <= 0 || !from || from == frame) {
+            renderer.clearTransition();
+            transFrom = nullptr;
+            return;
+        }
+        transFrom = from;
+        transType = t;
+        transElapsed = 0;
+        transDuration = duration;
+        renderer.setTransition(from, toRenderer(t), 0);
+    }
+
+    // Maps an authored Figma transition type onto our animation set.
+    static FigmaUI::Transition fromAuthored(const std::string& type) {
+        if (type.find("DISSOLVE") != std::string::npos ||
+            type.find("SMART") != std::string::npos) {
+            return FigmaUI::Transition::Dissolve;
+        }
+        if (type.find("RIGHT") != std::string::npos) return FigmaUI::Transition::SlideRight;
+        if (type.find("TOP") != std::string::npos || type.find("UP") != std::string::npos) {
+            return FigmaUI::Transition::SlideUp;
+        }
+        if (type.find("BOTTOM") != std::string::npos ||
+            type.find("DOWN") != std::string::npos) {
+            return FigmaUI::Transition::SlideDown;
+        }
+        if (type.empty()) return FigmaUI::Transition::Dissolve;
+        return FigmaUI::Transition::SlideLeft;
+    }
 };
 
 FigmaUI::FigmaUI() : impl_(std::make_unique<Impl>()) {}
@@ -245,19 +324,56 @@ std::vector<std::string> FigmaUI::frameNames() const {
 }
 
 bool FigmaUI::selectFrame(const std::string& name) {
-    for (Node* f : impl_->doc->topLevelFrames()) {
-        if (f->name == name || f->id == name) {
-            impl_->setFocus(nullptr);
-            impl_->frame = f;
-            impl_->renderer.setFrame(f);
-            impl_->hovered = nullptr;
-            impl_->pressed = nullptr;
-            impl_->reflow();
-            return true;
-        }
-    }
-    return false;
+    Node* f = impl_->findFrame(name);
+    if (!f) return false;
+    impl_->renderer.clearTransition();
+    impl_->transFrom = nullptr;
+    impl_->navStack.clear();  // hard switch resets navigation history
+    impl_->switchToFrame(f);
+    return true;
 }
+
+bool FigmaUI::navigateTo(const std::string& frameName, Transition transition,
+                         float durationSec) {
+    Node* f = impl_->findFrame(frameName);
+    if (!f || f == impl_->frame) return false;
+    Node* from = impl_->frame;
+    impl_->navStack.push_back({from, transition});
+    impl_->switchToFrame(f);
+    impl_->startTransition(from, transition, durationSec);
+    impl_->renderer.markDirty();
+    return true;
+}
+
+bool FigmaUI::navigateBack(float durationSec) {
+    if (impl_->navStack.empty()) return false;
+    const Impl::NavEntry entry = impl_->navStack.back();
+    impl_->navStack.pop_back();
+    Node* from = impl_->frame;
+    impl_->switchToFrame(entry.frame);
+    impl_->startTransition(from, Impl::reverseOf(entry.transition), durationSec);
+    impl_->renderer.markDirty();
+    return true;
+}
+
+bool FigmaUI::canGoBack() const { return !impl_->navStack.empty(); }
+
+void FigmaUI::update(float dtSeconds) {
+    if (!impl_->transFrom || dtSeconds <= 0) return;
+    impl_->transElapsed += dtSeconds;
+    float p = impl_->transDuration > 0 ? impl_->transElapsed / impl_->transDuration : 1.0f;
+    if (p >= 1.0f) {
+        impl_->transFrom = nullptr;
+        impl_->renderer.clearTransition();
+        return;
+    }
+    // Ease in-out (cubic) for a Figma-like feel.
+    const float eased = p < 0.5f ? 4 * p * p * p : 1 - std::pow(-2 * p + 2, 3.0f) / 2;
+    impl_->renderer.setTransition(impl_->transFrom, Impl::toRenderer(impl_->transType),
+                                  eased);
+}
+
+bool FigmaUI::animating() const { return impl_->transFrom != nullptr; }
 
 Node* FigmaUI::currentFrame() const { return impl_->frame; }
 
@@ -384,6 +500,15 @@ void FigmaUI::pointerUp(float x, float y) {
         if (target) {
             impl_->fireUp(impl_->clickHandlers, target,
                           [](ClickHandler& h, Node& n) { h(n); });
+        }
+        // Authored Figma prototype link anywhere in the chain: navigate.
+        for (Node* n = hit; n; n = n->parent) {
+            if (!n->transitionNodeId.empty()) {
+                navigateTo(n->transitionNodeId, Impl::fromAuthored(n->transitionType),
+                           n->transitionDuration > 0 ? n->transitionDuration : 0.3f);
+                break;
+            }
+            if (n == impl_->frame) break;
         }
     }
     impl_->pressed = nullptr;

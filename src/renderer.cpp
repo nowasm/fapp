@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cmath>
 #include <vector>
 
 #include <thorvg.h>
@@ -44,6 +45,10 @@ struct Renderer::Impl {
     std::string imageDir;
     Mat23 viewTransform;
     bool hasViewTransform = false;
+    // Active frame transition (outgoing frame + progress); null when idle.
+    Node* transFrom = nullptr;
+    Renderer::FrameTransition transType = Renderer::FrameTransition::Dissolve;
+    float transProgress = 0;
     // Persistent scene: rebuilding thousands of tvg objects (path parsing,
     // text layout) dwarfs rasterization cost, so the scene survives view
     // changes and is only rebuilt when the document changes.
@@ -151,6 +156,23 @@ void Renderer::setFrame(Node* frame) {
 
 void Renderer::markDirty() { impl_->dirty = true; }
 
+void Renderer::setTransition(Node* fromFrame, FrameTransition type, float progress) {
+    if (!fromFrame || progress >= 1.0f) {
+        clearTransition();
+        return;
+    }
+    impl_->transFrom = fromFrame;
+    impl_->transType = type;
+    impl_->transProgress = std::max(0.0f, progress);
+    impl_->dirty = true;  // the composition lives inside the scene graph
+}
+
+void Renderer::clearTransition() {
+    if (!impl_->transFrom) return;
+    impl_->transFrom = nullptr;
+    impl_->dirty = true;
+}
+
 void Renderer::setViewTransform(const Mat23& view) {
     const Mat23& cur = impl_->viewTransform;
     if (impl_->hasViewTransform && cur.m00 == view.m00 && cur.m01 == view.m01 &&
@@ -191,6 +213,37 @@ bool Renderer::render() {
         // re-origined.
         const bool reorigin = !d.hasViewTransform;
         if (auto* frameScene = buildNodeScene(*d.frame, Mat23::identity(), ctx, reorigin)) {
+            if (d.transFrom && d.transFrom != d.frame) {
+                // Frame transition: outgoing behind, incoming on top, offsets
+                // in frame-local units (the root content transform scales both).
+                const float w = d.frame->width, h = d.frame->height;
+                const float p = d.transProgress;
+                float inX = 0, inY = 0, outX = 0, outY = 0;
+                switch (d.transType) {
+                case FrameTransition::Dissolve: break;
+                case FrameTransition::SlideLeft: inX = (1 - p) * w; outX = -p * w; break;
+                case FrameTransition::SlideRight: inX = -(1 - p) * w; outX = p * w; break;
+                case FrameTransition::SlideUp: inY = (1 - p) * h; outY = -p * h; break;
+                case FrameTransition::SlideDown: inY = -(1 - p) * h; outY = p * h; break;
+                }
+                // ThorVG ignores translate() once transform() was set on the
+                // scene (buildNodeScene sets the root local matrix), so shift
+                // by rewriting the full matrix.
+                auto shifted = [&](const Node& fr, float tx, float ty) {
+                    Mat23 m = reorigin ? Mat23::identity() : fr.relativeTransform;
+                    return tvg::Matrix{m.m00, m.m01, m.m02 + tx,
+                                       m.m10, m.m11, m.m12 + ty, 0, 0, 1};
+                };
+                if (auto* outScene =
+                        buildNodeScene(*d.transFrom, Mat23::identity(), ctx, reorigin)) {
+                    outScene->transform(shifted(*d.transFrom, outX, outY));
+                    d.rootScene->add(outScene);
+                }
+                frameScene->transform(shifted(*d.frame, inX, inY));
+                if (d.transType == FrameTransition::Dissolve) {
+                    frameScene->opacity(static_cast<uint8_t>(std::lround(p * 255)));
+                }
+            }
             d.rootScene->add(frameScene);
         }
     }

@@ -1022,6 +1022,13 @@ void parseKiwiLayout(const json& j, Node& node) {
     else if (scroll == "BOTH") node.scrollDirection = ScrollDirection::Both;
     node.scrollFixed =
         jstr(j, "scrollBehavior") == "FIXED_WHEN_CHILD_OF_SCROLLING_FRAME";
+
+    // Prototype link: kiwi stores the destination as a guid object.
+    if (auto it = j.find("transitionNodeID"); it != j.end() && it->is_object()) {
+        node.transitionNodeId = symbolIDKey(*it);
+        node.transitionType = jstr(j, "transitionType");
+        node.transitionDuration = jfloat(j, "transitionDuration", 0);
+    }
 }
 
 std::unique_ptr<Node> parseCanvasNode(const json& j, Node* parent, int depth) {

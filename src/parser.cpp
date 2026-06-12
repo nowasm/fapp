@@ -233,6 +233,10 @@ void parseLayout(const json& j, Node& node) {
     }
     node.scrollFixed = jbool(j, "isFixed", false) || jstr(j, "scrollBehavior") == "FIXED";
 
+    node.transitionNodeId = jstr(j, "transitionNodeID");
+    node.transitionType = jstr(j, "transitionType");  // absent in REST: keep ""
+    node.transitionDuration = jfloat(j, "transitionDuration", 0);
+
     node.minWidth = jfloat(j, "minWidth");
     node.maxWidth = jfloat(j, "maxWidth");
     node.minHeight = jfloat(j, "minHeight");

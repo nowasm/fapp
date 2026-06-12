@@ -33,6 +33,21 @@ public:
     bool selectFrame(const std::string& name);  // also accepts a node id
     Node* currentFrame() const;
 
+    // ---- Navigation (frame stack with transitions) ----
+    // navigateTo pushes the current frame onto the back stack and switches to
+    // the target (name or id) with an animated transition; navigateBack pops
+    // with the reverse animation. Drive animations by calling update(dt) once
+    // per host frame. Nodes with an authored Figma prototype link
+    // (transitionNodeID) navigate automatically when clicked.
+    enum class Transition { None, Dissolve, SlideLeft, SlideRight, SlideUp, SlideDown };
+    bool navigateTo(const std::string& frameName,
+                    Transition transition = Transition::SlideLeft,
+                    float durationSec = 0.3f);
+    bool navigateBack(float durationSec = 0.3f);
+    bool canGoBack() const;
+    void update(float dtSeconds);  // advances transitions; cheap when idle
+    bool animating() const;
+
     // ---- Render ----
     // How the frame follows the viewport size:
     //   Scale  — uniform scale-to-fit, letterboxed (default; authored layout)
