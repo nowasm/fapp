@@ -176,6 +176,29 @@ int main(int argc, char** argv) {
                     ++failures;
                 }
             }
+            // Resize while scrolled: a viewport tall enough to swallow the
+            // scroll range must pull the offset back in (window-resize bug).
+            ui->setResizeMode(figmalib::FigmaUI::ResizeMode::Reflow);
+            ui->setViewport(900, 640);
+            ui->setScroll(scrollable->name, scrollable->maxScrollX(),
+                          scrollable->maxScrollY());
+            ui->setViewport(900, 2400);
+            ui->render();
+            if (scrollable->scrollY > scrollable->maxScrollY() + 0.01f ||
+                scrollable->scrollX > scrollable->maxScrollX() + 0.01f) {
+                std::printf("FAIL: scroll offset (%.1f, %.1f) beyond range "
+                            "(%.1f, %.1f) after resize\n",
+                            scrollable->scrollX, scrollable->scrollY,
+                            scrollable->maxScrollX(), scrollable->maxScrollY());
+                ++failures;
+            } else {
+                std::printf("scroll clamp after resize: (%.1f, %.1f) within "
+                            "(%.1f, %.1f)\n",
+                            scrollable->scrollX, scrollable->scrollY,
+                            scrollable->maxScrollX(), scrollable->maxScrollY());
+            }
+            ui->setResizeMode(figmalib::FigmaUI::ResizeMode::Scale);
+            ui->setViewport(900, 640);
             ui->setScroll(scrollable->name, 0, 0);
         }
     }

@@ -33,12 +33,27 @@ struct FigmaUI::Impl {
     std::unordered_map<std::string, std::vector<ClickHandler>> clickHandlers;
     std::unordered_map<std::string, std::vector<HoverHandler>> hoverHandlers;
 
+    // Layout changes shrink scroll ranges (a taller viewport can swallow the
+    // whole range): pull every scrolling frame's offset back inside, or the
+    // content stays shoved out of its clip box.
+    void clampScrollOffsets() {
+        if (!frame) return;
+        frame->visit([](Node& n) {
+            if (n.scrolls()) {
+                n.scrollX = std::clamp(n.scrollX, 0.0f, n.maxScrollX());
+                n.scrollY = std::clamp(n.scrollY, 0.0f, n.maxScrollY());
+            }
+            return true;
+        });
+    }
+
     // In Reflow mode the current frame tracks the viewport size.
     void reflow() {
         if (resizeMode != ResizeMode::Reflow || !frame) return;
         const uint32_t w = renderer.width(), h = renderer.height();
         if (w == 0 || h == 0) return;
         layoutFrame(*frame, static_cast<float>(w), static_cast<float>(h));
+        clampScrollOffsets();
         renderer.markDirty();
     }
 
@@ -384,6 +399,7 @@ void FigmaUI::setResizeMode(ResizeMode mode) {
     impl_->resizeMode = mode;
     if (mode == ResizeMode::Scale && impl_->frame) {
         resetLayout(*impl_->frame);  // back to the authored geometry
+        impl_->clampScrollOffsets();
         impl_->renderer.markDirty();
     } else {
         impl_->reflow();
@@ -663,6 +679,7 @@ bool FigmaUI::bindList(const std::string& listName, size_t count,
 
     relayoutNode(*list);  // re-stack the clones, grow hug axes
     impl_->reflow();      // Reflow mode: ancestors (incl. hug chains) follow
+    impl_->clampScrollOffsets();  // fewer items can shrink the scroll range
     impl_->renderer.markDirty();
     return true;
 }

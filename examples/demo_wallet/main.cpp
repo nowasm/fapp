@@ -206,6 +206,25 @@ int main(int argc, char** argv) {
                 ui->scrollBy(GetScreenWidth() * 0.5f, GetScreenHeight() * 0.5f, 0, 400);
             } else if (frame == 150) {
                 shot("scroll");
+                SetWindowSize(700, 560);  // resize coverage (landscape-ish)
+            } else if (frame == 180) {
+                std::printf("after resize: screen=%dx%d render=%dx%d dpi=%.2f "
+                            "uiPixels=%ux%u\n",
+                            GetScreenWidth(), GetScreenHeight(), GetRenderWidth(),
+                            GetRenderHeight(), GetWindowScaleDPI().x,
+                            ui->pixelWidth(), ui->pixelHeight());
+                if (auto* home = ui->currentFrame()) {
+                    std::printf("home scrollY=%.1f maxScrollY=%.1f height=%.1f\n",
+                                home->scrollY, home->maxScrollY(), home->height);
+                }
+                shot("resized");
+                SetWindowSize(420, 1500);  // taller than the content
+            } else if (frame == 210) {
+                if (auto* home = ui->currentFrame()) {
+                    std::printf("tall window: scrollY=%.1f maxScrollY=%.1f height=%.1f\n",
+                                home->scrollY, home->maxScrollY(), home->height);
+                }
+                shot("tall");
                 quit = true;
             }
         }
