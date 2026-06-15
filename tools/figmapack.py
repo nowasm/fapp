@@ -44,6 +44,27 @@ def slug(name):
     return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "app"
 
 
+def resolve_icon(app_dir, m):
+    """Absolute path to package.icon (a square PNG), or None."""
+    icon = m.get("package", {}).get("icon")
+    if not icon:
+        return None
+    p = os.path.join(app_dir, icon)
+    if not os.path.isfile(p):
+        die(f"package.icon not found: {p}")
+    return os.path.abspath(p)
+
+
+def resize_png(src, dst, size):
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    try:
+        from PIL import Image
+    except ImportError:  # no Pillow: ship the source as-is (browsers/android scale)
+        shutil.copy(src, dst)
+        return
+    Image.open(src).convert("RGBA").resize((size, size), Image.LANCZOS).save(dst)
+
+
 def load_app(app_dir):
     mp = os.path.join(app_dir, "app.json")
     if not os.path.isfile(mp):
@@ -128,7 +149,7 @@ def cmd_wrapper(lines):
 
 
 # ----------------------------------------------------------------------- win --
-def pack_win(stage, m, out):
+def pack_win(stage, m, out, icon):
     exe = os.path.join(ROOT, "build", "figmaplay.exe")
     if not os.path.isfile(exe):
         die("build/figmaplay.exe missing — build the desktop target first "
@@ -142,11 +163,15 @@ def pack_win(stage, m, out):
     shutil.copytree(stage, app_dst)
     with open(os.path.join(dst, "run.cmd"), "w", encoding="ascii") as f:
         f.write('@echo off\r\n"%~dp0figmaplay.exe" "%~dp0app"\r\n')
+    # Embedding the icon into the .exe needs a rebuild with a .rc resource;
+    # ship it alongside for now.
+    if icon:
+        resize_png(icon, os.path.join(dst, "icon.png"), 256)
     log(f"win -> {os.path.relpath(dst, os.getcwd())}  (run.cmd)")
 
 
 # ----------------------------------------------------------------------- web --
-def pack_web(stage, m, out):
+def pack_web(stage, m, out, icon):
     build_web = os.path.join(ROOT, "build_web")
     extra = ""
     for dep in ("raylib", "quickjs"):
@@ -172,16 +197,32 @@ def pack_web(stage, m, out):
         src = os.path.join(build_web, f"figmaplay.{ext}")
         if os.path.isfile(src):
             shutil.copy(src, os.path.join(dst, name))
+    # Page title + favicon / apple-touch-icon.
+    html_path = os.path.join(dst, "index.html")
+    html = open(html_path, encoding="utf-8").read()
+    title = (m["name"].replace("&", "&amp;").replace("<", "&lt;"))
+    if re.search(r"<title>.*?</title>", html, re.S):
+        html = re.sub(r"<title>.*?</title>", f"<title>{title}</title>", html,
+                      count=1, flags=re.S)
+    head = ""
+    if icon:
+        resize_png(icon, os.path.join(dst, "favicon.png"), 64)
+        resize_png(icon, os.path.join(dst, "apple-touch-icon.png"), 180)
+        head = ('<link rel="icon" type="image/png" href="favicon.png">'
+                '<link rel="apple-touch-icon" href="apple-touch-icon.png">')
+    if head and "</head>" in html:
+        html = html.replace("</head>", head + "</head>", 1)
+    open(html_path, "w", encoding="utf-8").write(html)
     log(f"web -> {os.path.relpath(dst, os.getcwd())}  (serve index.html)")
 
 
 # ------------------------------------------------------------------- android --
-def pack_android(stage, m, out):
+def pack_android(stage, m, out, icon):
     ps1 = os.path.join(ROOT, "tools", "build_android.ps1")
     pkg = m["package"]
     dst = os.path.join(out, "android")
     os.makedirs(dst, exist_ok=True)
-    rc = subprocess.call([
+    args = [
         "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1,
         "-AppDir", stage,
         "-PackageId", pkg["id"],
@@ -189,7 +230,17 @@ def pack_android(stage, m, out):
         "-VersionName", pkg["version"],
         "-VersionCode", str(version_code(pkg["version"])),
         "-OutApk", os.path.join(dst, f"{slug(m['name'])}.apk"),
-    ])
+    ]
+    if icon:  # res/mipmap-<density>/ic_launcher.png at the standard buckets
+        res_dir = os.path.join(os.path.dirname(stage), "android-res")
+        if os.path.isdir(res_dir):
+            shutil.rmtree(res_dir)
+        for density, size in (("mdpi", 48), ("hdpi", 72), ("xhdpi", 96),
+                              ("xxhdpi", 144), ("xxxhdpi", 192)):
+            resize_png(icon, os.path.join(res_dir, f"mipmap-{density}",
+                                          "ic_launcher.png"), size)
+        args += ["-ResDir", res_dir]
+    rc = subprocess.call(args)
     if rc:
         die("android build failed")
     log(f"android -> {os.path.relpath(dst, os.getcwd())}")
@@ -215,16 +266,17 @@ def main():
             die(f"unknown target '{t}'. choices: {', '.join(TARGETS)}, all")
 
     m = load_app(args.app_dir)
+    icon = resolve_icon(args.app_dir, m)
     out = os.path.join(os.path.abspath(args.out), slug(m["name"]))
     os.makedirs(out, exist_ok=True)
     log(f"app '{m['name']}'  (id {m['package']['id']} v{m['package']['version']})  "
-        f"targets: {', '.join(targets)}")
+        f"targets: {', '.join(targets)}{'  +icon' if icon else ''}")
     stage, sm = stage_app(args.app_dir, m, os.path.join(out, ".stage"))
     log(f"staged -> {os.path.relpath(stage, os.getcwd())}  (design: {sm['design']}"
         f"{', fonts' if sm.get('fonts') else ', NO fonts — text may be blank on web/android'})")
 
     for t in targets:
-        TARGETS[t](stage, m, out)
+        TARGETS[t](stage, m, out, icon)
     log(f"done -> {os.path.relpath(out, os.getcwd())}")
 
 

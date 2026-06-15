@@ -12,7 +12,8 @@ param(
     [string]$AppName = "figmaplay",
     [string]$VersionName = "1.0",
     [int]$VersionCode = 1,
-    [string]$OutApk = ""
+    [string]$OutApk = "",
+    [string]$ResDir = ""   # res/ with mipmap-*/ic_launcher.png -> launcher icon
 )
 $ErrorActionPreference = "Stop"
 
@@ -66,13 +67,14 @@ $manifest = Get-ChildItem $assetRoot -Recurse -File | ForEach-Object {
 }
 Set-Content "$assetRoot\manifest.txt" ($manifest -join "`n") -Encoding ascii
 
-# 2b) AndroidManifest with the app's package id / version / label.
+# 2b) AndroidManifest with the app's package id / version / label / icon.
+$iconAttr = if ($ResDir) { ' android:icon="@mipmap/ic_launcher"' } else { "" }
 $manifestXml = @"
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="$PackageId" android:versionCode="$VersionCode" android:versionName="$VersionName">
   <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="34"/>
-  <application android:label="$AppName" android:hasCode="false" android:extractNativeLibs="true">
+  <application android:label="$AppName"$iconAttr android:hasCode="false" android:extractNativeLibs="true">
     <activity android:name="android.app.NativeActivity" android:exported="true"
               android:configChanges="orientation|keyboardHidden|screenSize">
       <meta-data android:name="android.app.lib_name" android:value="figmaplay"/>
@@ -96,7 +98,9 @@ $manifestPath = "$genDir\AndroidManifest.xml"
 $unsigned = "$OUT\figmaplay-unsigned.apk"
 $aligned = "$OUT\figmaplay-aligned.apk"
 Remove-Item $unsigned, $aligned, $OutApk -ErrorAction SilentlyContinue
-& "$BT\aapt.exe" package -f -F $unsigned -M $manifestPath -I $JAR -A $assetRoot
+$aaptArgs = @("package", "-f", "-F", $unsigned, "-M", $manifestPath, "-I", $JAR, "-A", $assetRoot)
+if ($ResDir) { $aaptArgs += @("-S", $ResDir) }
+& "$BT\aapt.exe" @aaptArgs
 if ($LASTEXITCODE) { throw "aapt package failed" }
 Push-Location $stage
 & "$BT\aapt.exe" add $unsigned "lib/arm64-v8a/libfigmaplay.so" "lib/x86_64/libfigmaplay.so" | Out-Null

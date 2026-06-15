@@ -311,9 +311,11 @@ python tools/figmapack.py examples/apps/sample -t all
 - **android**：签名好的 `<app>.apk`（`adb install -r` 装机）
 
 打包元数据取自 app.json 的 `package` 段：`id` → android 包名、`version` →
-versionName/Code、`name` → 应用名。原理：figmapack 把 app 目录 staging 后，web/
-android 运行时**优先读 staging 的 `app.json`**（无则回退 wallet demo），三端共用同
-一份 design + 逻辑。
+versionName/Code、`name` → 应用名/web 标题、`icon`（方形 PNG）→ web favicon +
+apple-touch-icon、android 各密度 `mipmap/ic_launcher`（win 旁置 `icon.png`；exe
+内嵌图标需重建，暂未做）。原理：figmapack 把 app 目录 staging 后，web/android
+运行时**优先读 staging 的 `app.json`**（无则回退 wallet demo），三端共用同一份
+design + 逻辑。
 
 约定与坑：
 - **.fig 设计**在打包时用 fig2json 转 canvas.json（web/android 不能现场转）；
