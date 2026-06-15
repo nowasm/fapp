@@ -89,8 +89,10 @@ figmaplay <dir> --shot out.png [--frames N]     # 渲 N 帧截图退出
 python tools/figmapack.py <app-dir> --target win|web|android|all
 ```
 产物在 `dist/<app>/<target>/`（win=exe+run.cmd、web=index.html+wasm、android=apk）。
-元数据取自 app.json 的 `package` 段。**web/android 要把 design 用到的字体放进 app 的
-`fonts/` 目录**，否则文字空白。iOS/macOS 需 Mac，暂不支持。
+元数据取自 app.json 的 `package` 段：`id`/`version`/`name`、`icon`（方形 PNG →
+各端图标，win 内嵌进 exe）、`splashColor`+`icon` → 启动图（web 遮罩 / android
+windowBackground）。**web/android 要把 design 用到的字体放进 app 的 `fonts/` 目录**，
+否则文字空白。iOS/macOS 需 Mac，暂不支持。
 
 ---
 **闭环**：脚手架 → figmaedit 套 token 建设计 → 写 app.js → `--shot` 看图 → 迭代。

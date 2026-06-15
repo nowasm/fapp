@@ -55,6 +55,11 @@ def resolve_icon(app_dir, m):
     return os.path.abspath(p)
 
 
+VCVARS = os.environ.get(
+    "VCVARS",
+    r"C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat")
+
+
 def resize_png(src, dst, size):
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     try:
@@ -63,6 +68,27 @@ def resize_png(src, dst, size):
         shutil.copy(src, dst)
         return
     Image.open(src).convert("RGBA").resize((size, size), Image.LANCZOS).save(dst)
+
+
+def make_ico(src, dst):
+    """Multi-resolution .ico for the Windows exe."""
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    from PIL import Image  # Pillow required for .ico
+    Image.open(src).convert("RGBA").save(
+        dst, format="ICO",
+        sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
+
+
+def splash_color(m):
+    """package.splashColor (#rrggbb) or a sensible default."""
+    c = m.get("package", {}).get("splashColor", "#0b0e14")
+    return c if re.match(r"^#[0-9a-fA-F]{6}$", c) else "#0b0e14"
+
+
+def text_on(hex_color):
+    """Readable text color (#fff/#111) for a given background."""
+    r, g, b = (int(hex_color[i:i + 2], 16) for i in (1, 3, 5))
+    return "#111418" if (0.299 * r + 0.587 * g + 0.114 * b) > 150 else "#ffffff"
 
 
 def load_app(app_dir):
@@ -148,9 +174,37 @@ def cmd_wrapper(lines):
         os.remove(bat)
 
 
+def embed_win_icon(ico):
+    """Relink figmaplay.exe with the app icon as a resource (reuses build/ — only
+    figmaplay relinks, seconds), then clear the cache var so the dev build is
+    unaffected. Returns True on success."""
+    build = os.path.join(ROOT, "build")
+    if not os.path.isfile(os.path.join(build, "CMakeCache.txt")):
+        log("win icon: no build/ cache — skipping embed (run cmake -B build once)")
+        return False
+    icop = ico.replace("\\", "/")
+    rc = cmd_wrapper([
+        f'call "{VCVARS}" >nul 2>&1',
+        f'cd /d "{build}"',
+        f'cmake -DFIGMALIB_WIN_ICON={icop} . >nul',
+        'cmake --build . --config Release --target figmaplay',
+    ])
+    cmd_wrapper([  # restore: drop the icon resource from the dev build's cache
+        f'call "{VCVARS}" >nul 2>&1',
+        f'cd /d "{build}"',
+        'cmake -DFIGMALIB_WIN_ICON= . >nul',
+    ])
+    return rc == 0
+
+
 # ----------------------------------------------------------------------- win --
 def pack_win(stage, m, out, icon):
     exe = os.path.join(ROOT, "build", "figmaplay.exe")
+    if icon:  # embed the icon into the exe (else ship it alongside as icon.png)
+        ico = os.path.join(os.path.dirname(stage), "app.ico")
+        make_ico(icon, ico)
+        if not embed_win_icon(ico):
+            log("win icon: embed failed — shipping icon.png alongside")
     if not os.path.isfile(exe):
         die("build/figmaplay.exe missing — build the desktop target first "
             "(cmake --build build --target figmaplay)")
@@ -163,8 +217,6 @@ def pack_win(stage, m, out, icon):
     shutil.copytree(stage, app_dst)
     with open(os.path.join(dst, "run.cmd"), "w", encoding="ascii") as f:
         f.write('@echo off\r\n"%~dp0figmaplay.exe" "%~dp0app"\r\n')
-    # Embedding the icon into the .exe needs a rebuild with a .rc resource;
-    # ship it alongside for now.
     if icon:
         resize_png(icon, os.path.join(dst, "icon.png"), 256)
     log(f"win -> {os.path.relpath(dst, os.getcwd())}  (run.cmd)")
@@ -212,6 +264,25 @@ def pack_web(stage, m, out, icon):
                 '<link rel="apple-touch-icon" href="apple-touch-icon.png">')
     if head and "</head>" in html:
         html = html.replace("</head>", head + "</head>", 1)
+    # Branded splash over the wasm load (fades out shortly after window load).
+    bg, fg = splash_color(m), text_on(splash_color(m))
+    img = ('<img src="apple-touch-icon.png" alt="" style="width:96px;height:96px;'
+           'border-radius:22px">') if icon else ""
+    splash = (
+        f'<div id="figmasplash" style="position:fixed;inset:0;z-index:99999;display:flex;'
+        f'flex-direction:column;align-items:center;justify-content:center;background:{bg};'
+        f'transition:opacity .45s">{img}'
+        f'<div style="margin-top:18px;font:600 18px system-ui,-apple-system,sans-serif;'
+        f'color:{fg}">{title}</div>'
+        f'<div style="margin-top:22px;width:26px;height:26px;border-radius:50%;'
+        f'border:3px solid {fg}40;border-top-color:{fg};animation:fpspin .8s linear infinite">'
+        f'</div></div><style>@keyframes fpspin{{to{{transform:rotate(360deg)}}}}</style>')
+    hide = ('<script>(function(){var s=document.getElementById("figmasplash");if(!s)return;'
+            'function h(){s.style.opacity=0;setTimeout(function(){if(s.parentNode)'
+            's.parentNode.removeChild(s)},500)}window.addEventListener("load",function(){'
+            'setTimeout(h,800)})})();</script>')
+    if "</body>" in html:
+        html = html.replace("</body>", splash + hide + "</body>", 1)
     open(html_path, "w", encoding="utf-8").write(html)
     log(f"web -> {os.path.relpath(dst, os.getcwd())}  (serve index.html)")
 
@@ -231,7 +302,7 @@ def pack_android(stage, m, out, icon):
         "-VersionCode", str(version_code(pkg["version"])),
         "-OutApk", os.path.join(dst, f"{slug(m['name'])}.apk"),
     ]
-    if icon:  # res/mipmap-<density>/ic_launcher.png at the standard buckets
+    if icon:  # res/mipmap-<density>/ic_launcher.png + a splash windowBackground
         res_dir = os.path.join(os.path.dirname(stage), "android-res")
         if os.path.isdir(res_dir):
             shutil.rmtree(res_dir)
@@ -239,6 +310,21 @@ def pack_android(stage, m, out, icon):
                               ("xxhdpi", 144), ("xxxhdpi", 192)):
             resize_png(icon, os.path.join(res_dir, f"mipmap-{density}",
                                           "ic_launcher.png"), size)
+        # Splash: a theme windowBackground (solid color + centered icon) shown
+        # while the NativeActivity loads, before the first frame.
+        os.makedirs(os.path.join(res_dir, "drawable"), exist_ok=True)
+        os.makedirs(os.path.join(res_dir, "values"), exist_ok=True)
+        with open(os.path.join(res_dir, "drawable", "splash.xml"), "w", encoding="utf-8") as f:
+            f.write('<?xml version="1.0" encoding="utf-8"?>\n'
+                    '<layer-list xmlns:android="http://schemas.android.com/apk/res/android">\n'
+                    f'  <item><shape android:shape="rectangle"><solid android:color="{splash_color(m)}"/></shape></item>\n'
+                    '  <item><bitmap android:src="@mipmap/ic_launcher" android:gravity="center"/></item>\n'
+                    '</layer-list>\n')
+        with open(os.path.join(res_dir, "values", "styles.xml"), "w", encoding="utf-8") as f:
+            f.write('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
+                    '  <style name="AppSplash" parent="@android:style/Theme.NoTitleBar.Fullscreen">\n'
+                    '    <item name="android:windowBackground">@drawable/splash</item>\n'
+                    '  </style>\n</resources>\n')
         args += ["-ResDir", res_dir]
     rc = subprocess.call(args)
     if rc:

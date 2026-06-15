@@ -216,6 +216,15 @@ if(FIGMALIB_SCRIPTING AND FIGMALIB_BACKEND_RAYLIB)
                 "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/examples/assets/fonts@/fonts")
         endif()
     endif()
+    if(WIN32 AND NOT EMSCRIPTEN AND NOT ANDROID)
+        # figmapack sets this per app to embed the app's icon into figmaplay.exe.
+        set(FIGMALIB_WIN_ICON "" CACHE FILEPATH "A .ico embedded into figmaplay.exe")
+        if(FIGMALIB_WIN_ICON)
+            set(_figmaplay_rc "${CMAKE_CURRENT_BINARY_DIR}/figmaplay_icon.rc")
+            file(WRITE "${_figmaplay_rc}" "IDI_ICON1 ICON \"${FIGMALIB_WIN_ICON}\"\n")
+            target_sources(figmaplay PRIVATE "${_figmaplay_rc}")
+        endif()
+    endif()
 endif()
 
 # ---- editor app ----

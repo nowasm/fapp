@@ -67,15 +67,17 @@ $manifest = Get-ChildItem $assetRoot -Recurse -File | ForEach-Object {
 }
 Set-Content "$assetRoot\manifest.txt" ($manifest -join "`n") -Encoding ascii
 
-# 2b) AndroidManifest with the app's package id / version / label / icon.
+# 2b) AndroidManifest with the app's package id / version / label / icon / splash.
 $iconAttr = if ($ResDir) { ' android:icon="@mipmap/ic_launcher"' } else { "" }
+# figmapack writes a splash theme (windowBackground) into the res dir alongside.
+$themeAttr = if ($ResDir -and (Test-Path "$ResDir\values\styles.xml")) { ' android:theme="@style/AppSplash"' } else { "" }
 $manifestXml = @"
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="$PackageId" android:versionCode="$VersionCode" android:versionName="$VersionName">
   <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="34"/>
   <application android:label="$AppName"$iconAttr android:hasCode="false" android:extractNativeLibs="true">
-    <activity android:name="android.app.NativeActivity" android:exported="true"
+    <activity android:name="android.app.NativeActivity" android:exported="true"$themeAttr
               android:configChanges="orientation|keyboardHidden|screenSize">
       <meta-data android:name="android.app.lib_name" android:value="figmaplay"/>
       <intent-filter>

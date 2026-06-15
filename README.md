@@ -310,12 +310,17 @@ python tools/figmapack.py examples/apps/sample -t all
 - **web**：`index.html` + wasm/js/data（`python -m http.server` 起服务打开）
 - **android**：签名好的 `<app>.apk`（`adb install -r` 装机）
 
-打包元数据取自 app.json 的 `package` 段：`id` → android 包名、`version` →
-versionName/Code、`name` → 应用名/web 标题、`icon`（方形 PNG）→ web favicon +
-apple-touch-icon、android 各密度 `mipmap/ic_launcher`（win 旁置 `icon.png`；exe
-内嵌图标需重建，暂未做）。原理：figmapack 把 app 目录 staging 后，web/android
-运行时**优先读 staging 的 `app.json`**（无则回退 wallet demo），三端共用同一份
-design + 逻辑。
+打包元数据取自 app.json 的 `package` 段：
+- `id` → android 包名、`version` → versionName/Code、`name` → 应用名/web 标题。
+- `icon`（方形 PNG）→ web favicon + apple-touch-icon、android 各密度
+  `mipmap/ic_launcher`、**win 把图标内嵌进 exe**（用 .rc 重链 figmaplay，需要
+  `build/` 已配置 + VS 环境；`VCVARS` 环境变量可覆盖路径）。
+- `splashColor`（`#rrggbb`，可选）+ `icon` → **启动图**：web 注入品牌化加载遮罩
+  （图标 + 应用名 + spinner，load 后淡出）、android 用主题 windowBackground
+  （底色 + 居中图标）在 NativeActivity 加载期显示。
+
+原理：figmapack 把 app 目录 staging 后，web/android 运行时**优先读 staging 的
+`app.json`**（无则回退 wallet demo），三端共用同一份 design + 逻辑。
 
 约定与坑：
 - **.fig 设计**在打包时用 fig2json 转 canvas.json（web/android 不能现场转）；
