@@ -1,0 +1,16 @@
+{
+  "name": "Among Us",
+  "design": "design.json",
+  "script": "app.js",
+  "viewport": [
+    390,
+    844
+  ],
+  "entryFrame": "MainMenu",
+  "fonts": "fonts",
+  "designSystem": "duolingo",
+  "package": {
+    "id": "com.example.amongus",
+    "version": "1.0.0"
+  }
+}
