@@ -26,6 +26,11 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "D:\work_open\figmalib\bui
 
 ## AI 开发 app 的闭环
 
+> 从零做一个 app 走 **`/new-app` skill**（`.claude/skills/new-app/`）——脚手架
+> (`tools/figmanew.py`) → 设计（figmaedit MCP，套 `design-systems/` 的审美 token）
+> → 写 app.js → `--shot` 自验 → 迭代。一个 app 也可是标准目录
+> `<dir>/app.json`（`figmaplay <dir>`，字段见 README "app 工程"）。下面是底层速查：
+
 1. **设计**：启动 `build\figmaedit.exe <file.fig>`，仓库根 `.mcp.json` 已配置
    figmaedit 的 MCP（127.0.0.1:9223），用它的 15 个工具直接读改设计
    （get_node_tree / create_node / update_nodes / get_screenshot / save_document…）。
