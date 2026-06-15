@@ -172,6 +172,34 @@ console.log("ready —", ui.frameNames().length, "frames");
 （数据绑定、导航、底部栏、可编辑文本、设计数据修补）。宿主只负责加载
 两个文件 + 帧循环（`host.update(dt)` 驱动 `ui.onUpdate` 与 JS 任务队列）。
 
+### app 工程（标准目录）
+
+散文件之外，一个 app 也可以是**一个目录 + `app.json`**——把设计、逻辑、视口、
+字体、设计系统、打包元数据收拢成一个工程，直接传目录给 figmaplay：
+
+```
+figmaplay examples/apps/sample            # 读 sample/app.json
+```
+
+```jsonc
+// examples/apps/sample/app.json
+{
+  "name": "Starfall Menu",
+  "design": "design.json",      // 相对本目录；.fig / canvas.json / REST JSON 均可
+  "script": "app.js",
+  "viewport": [420, 900],        // 窗口尺寸
+  "entryFrame": "MainMenu",      // 启动选中的 frame（脚本仍可再导航）
+  "fonts": "fonts",              // 可选；无系统字体的平台用
+  "designSystem": "linear-app",  // 可选；指向 design-systems/ 里的审美 token
+  "package": { "id": "com.figmalib.sample", "version": "1.0.0" }  // 预留给打包
+}
+```
+
+manifest 会以 `globalThis.APP` 暴露给脚本（`APP.name` / `APP.entryFrame` …）。
+不传目录、仍传两个散文件时行为完全不变（向后兼容）。`designSystem` 字段把
+[`design-systems/`](design-systems/) 的设计审美知识接进创作闭环——AI 建设计前先读
+对应 token，见 `design-systems/TOKEN_MAPPING.md`。
+
 ### 获取 Figma 数据
 
 **方式一：本地 .fig 文件（推荐，离线）**

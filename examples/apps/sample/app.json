@@ -1,0 +1,12 @@
+{
+  "name": "Starfall Menu",
+  "design": "design.json",
+  "script": "app.js",
+  "viewport": [420, 900],
+  "entryFrame": "MainMenu",
+  "designSystem": "linear-app",
+  "package": {
+    "id": "com.figmalib.sample",
+    "version": "1.0.0"
+  }
+}

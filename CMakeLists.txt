@@ -184,6 +184,7 @@ if(FIGMALIB_SCRIPTING AND FIGMALIB_BACKEND_RAYLIB)
         add_executable(figmaplay apps/figmaplay/main.cpp)
     endif()
     target_link_libraries(figmaplay PRIVATE figmalib_raylib figmalib_script)
+    target_include_directories(figmaplay PRIVATE third_party)  # nlohmann (app.json)
     target_compile_definitions(figmaplay PRIVATE
         EXAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples")
     if(EMSCRIPTEN)

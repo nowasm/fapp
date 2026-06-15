@@ -1,0 +1,423 @@
+{
+  "name": "figmalib sample UI",
+  "document": {
+    "id": "0:0",
+    "name": "Document",
+    "type": "DOCUMENT",
+    "children": [
+      {
+        "id": "0:1",
+        "name": "Page 1",
+        "type": "CANVAS",
+        "children": [
+          {
+            "id": "1:0",
+            "name": "MainMenu",
+            "type": "FRAME",
+            "size": { "x": 800, "y": 600 },
+            "relativeTransform": [[1, 0, 0], [0, 1, 0]],
+            "clipsContent": true,
+            "fills": [
+              {
+                "type": "GRADIENT_LINEAR",
+                "gradientHandlePositions": [{ "x": 0.15, "y": 0.0 }, { "x": 0.85, "y": 1.0 }, { "x": 0.0, "y": 1.0 }],
+                "gradientStops": [
+                  { "position": 0.0, "color": { "r": 0.102, "g": 0.086, "b": 0.20, "a": 0.92 } },
+                  { "position": 1.0, "color": { "r": 0.169, "g": 0.106, "b": 0.302, "a": 0.92 } }
+                ]
+              }
+            ],
+            "children": [
+              {
+                "id": "1:1",
+                "name": "glow-a",
+                "type": "ELLIPSE",
+                "size": { "x": 420, "y": 420 },
+                "relativeTransform": [[1, 0, -120], [0, 1, -140]],
+                "opacity": 0.18,
+                "fills": [{ "type": "SOLID", "color": { "r": 0.486, "g": 0.361, "b": 1.0, "a": 1 } }]
+              },
+              {
+                "id": "1:2",
+                "name": "glow-b",
+                "type": "ELLIPSE",
+                "size": { "x": 360, "y": 360 },
+                "relativeTransform": [[1, 0, 560], [0, 1, 340]],
+                "opacity": 0.12,
+                "fills": [{ "type": "SOLID", "color": { "r": 0.176, "g": 0.882, "b": 0.761, "a": 1 } }]
+              },
+              {
+                "id": "1:3",
+                "name": "star-icon",
+                "type": "VECTOR",
+                "size": { "x": 64, "y": 60 },
+                "relativeTransform": [[1, 0, 368], [0, 1, 62]],
+                "fills": [{ "type": "SOLID", "color": { "r": 1.0, "g": 0.788, "b": 0.302, "a": 1 } }],
+                "fillGeometry": [
+                  {
+                    "path": "M32 0L39.6 22.9H63.7L44.2 37.1L51.7 60L32 45.8L12.3 60L19.8 37.1L0.3 22.9H24.4L32 0Z",
+                    "windingRule": "NONZERO"
+                  }
+                ],
+                "effects": [
+                  {
+                    "type": "DROP_SHADOW",
+                    "visible": true,
+                    "color": { "r": 1.0, "g": 0.788, "b": 0.302, "a": 0.55 },
+                    "offset": { "x": 0, "y": 0 },
+                    "radius": 18
+                  }
+                ]
+              },
+              {
+                "id": "1:4",
+                "name": "title",
+                "type": "TEXT",
+                "size": { "x": 600, "y": 66 },
+                "relativeTransform": [[1, 0, 100], [0, 1, 142]],
+                "characters": "STARFALL",
+                "style": {
+                  "fontFamily": "Segoe UI",
+                  "fontWeight": 700,
+                  "fontSize": 56,
+                  "textAlignHorizontal": "CENTER",
+                  "textAlignVertical": "CENTER",
+                  "letterSpacing": 6
+                },
+                "fills": [{ "type": "SOLID", "color": { "r": 1, "g": 1, "b": 1, "a": 1 } }]
+              },
+              {
+                "id": "1:5",
+                "name": "subtitle",
+                "type": "TEXT",
+                "size": { "x": 600, "y": 24 },
+                "relativeTransform": [[1, 0, 100], [0, 1, 212]],
+                "characters": "A figmalib demo - Figma rendered by ThorVG inside raylib",
+                "style": {
+                  "fontFamily": "Segoe UI",
+                  "fontWeight": 400,
+                  "fontSize": 15,
+                  "textAlignHorizontal": "CENTER",
+                  "textAlignVertical": "CENTER"
+                },
+                "fills": [{ "type": "SOLID", "color": { "r": 0.725, "g": 0.702, "b": 0.851, "a": 1 } }]
+              },
+              {
+                "id": "1:6",
+                "name": "panel",
+                "type": "FRAME",
+                "size": { "x": 320, "y": 236 },
+                "relativeTransform": [[1, 0, 240], [0, 1, 280]],
+                "cornerRadius": 18,
+                "clipsContent": false,
+                "fills": [{ "type": "SOLID", "color": { "r": 0.086, "g": 0.071, "b": 0.169, "a": 0.66 } }],
+                "effects": [
+                  {
+                    "type": "DROP_SHADOW",
+                    "visible": true,
+                    "color": { "r": 0, "g": 0, "b": 0, "a": 0.45 },
+                    "offset": { "x": 0, "y": 10 },
+                    "radius": 30
+                  }
+                ],
+                "children": [
+                  {
+                    "id": "1:7",
+                    "name": "btn-start",
+                    "type": "FRAME",
+                    "size": { "x": 272, "y": 52 },
+                    "relativeTransform": [[1, 0, 24], [0, 1, 24]],
+                    "cornerRadius": 12,
+                    "clipsContent": false,
+                    "fills": [
+                      {
+                        "type": "GRADIENT_LINEAR",
+                        "gradientHandlePositions": [{ "x": 0, "y": 0 }, { "x": 1, "y": 1 }, { "x": 0, "y": 1 }],
+                        "gradientStops": [
+                          { "position": 0.0, "color": { "r": 0.486, "g": 0.361, "b": 1.0, "a": 1 } },
+                          { "position": 1.0, "color": { "r": 0.353, "g": 0.247, "b": 0.941, "a": 1 } }
+                        ]
+                      }
+                    ],
+                    "children": [
+                      {
+                        "id": "1:8",
+                        "name": "label",
+                        "type": "TEXT",
+                        "size": { "x": 272, "y": 52 },
+                        "relativeTransform": [[1, 0, 0], [0, 1, 0]],
+                        "characters": "START GAME",
+                        "style": {
+                          "fontFamily": "Segoe UI",
+                          "fontWeight": 600,
+                          "fontSize": 18,
+                          "textAlignHorizontal": "CENTER",
+                          "textAlignVertical": "CENTER",
+                          "letterSpacing": 1.5
+                        },
+                        "fills": [{ "type": "SOLID", "color": { "r": 1, "g": 1, "b": 1, "a": 1 } }]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "1:9",
+                    "name": "btn-options",
+                    "type": "FRAME",
+                    "size": { "x": 272, "y": 52 },
+                    "relativeTransform": [[1, 0, 24], [0, 1, 92]],
+                    "cornerRadius": 12,
+                    "clipsContent": false,
+                    "fills": [{ "type": "SOLID", "color": { "r": 0.165, "g": 0.137, "b": 0.278, "a": 1 } }],
+                    "strokes": [{ "type": "SOLID", "color": { "r": 0.486, "g": 0.361, "b": 1.0, "a": 0.8 } }],
+                    "strokeWeight": 1.5,
+                    "strokeAlign": "INSIDE",
+                    "children": [
+                      {
+                        "id": "1:10",
+                        "name": "label",
+                        "type": "TEXT",
+                        "size": { "x": 272, "y": 52 },
+                        "relativeTransform": [[1, 0, 0], [0, 1, 0]],
+                        "characters": "OPTIONS",
+                        "style": {
+                          "fontFamily": "Segoe UI",
+                          "fontWeight": 600,
+                          "fontSize": 18,
+                          "textAlignHorizontal": "CENTER",
+                          "textAlignVertical": "CENTER",
+                          "letterSpacing": 1.5
+                        },
+                        "fills": [{ "type": "SOLID", "color": { "r": 0.85, "g": 0.83, "b": 0.95, "a": 1 } }]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "1:11",
+                    "name": "btn-quit",
+                    "type": "FRAME",
+                    "size": { "x": 272, "y": 52 },
+                    "relativeTransform": [[1, 0, 24], [0, 1, 160]],
+                    "cornerRadius": 12,
+                    "clipsContent": false,
+                    "fills": [{ "type": "SOLID", "color": { "r": 0.165, "g": 0.137, "b": 0.278, "a": 1 } }],
+                    "children": [
+                      {
+                        "id": "1:12",
+                        "name": "label",
+                        "type": "TEXT",
+                        "size": { "x": 272, "y": 52 },
+                        "relativeTransform": [[1, 0, 0], [0, 1, 0]],
+                        "characters": "QUIT",
+                        "style": {
+                          "fontFamily": "Segoe UI",
+                          "fontWeight": 600,
+                          "fontSize": 18,
+                          "textAlignHorizontal": "CENTER",
+                          "textAlignVertical": "CENTER",
+                          "letterSpacing": 1.5
+                        },
+                        "fills": [{ "type": "SOLID", "color": { "r": 0.85, "g": 0.83, "b": 0.95, "a": 1 } }]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "1:13",
+                "name": "footer",
+                "type": "TEXT",
+                "size": { "x": 800, "y": 18 },
+                "relativeTransform": [[1, 0, 0], [0, 1, 566]],
+                "characters": "v0.1.0 - powered by thorvg",
+                "style": {
+                  "fontFamily": "Segoe UI",
+                  "fontWeight": 400,
+                  "fontSize": 12,
+                  "textAlignHorizontal": "CENTER",
+                  "textAlignVertical": "CENTER"
+                },
+                "fills": [{ "type": "SOLID", "color": { "r": 0.435, "g": 0.416, "b": 0.557, "a": 1 } }]
+              }
+            ]
+          },
+          {
+            "id": "2:0",
+            "name": "Settings",
+            "type": "FRAME",
+            "size": { "x": 800, "y": 600 },
+            "relativeTransform": [[1, 0, 900], [0, 1, 0]],
+            "clipsContent": true,
+            "fills": [{ "type": "SOLID", "color": { "r": 0.078, "g": 0.063, "b": 0.133, "a": 0.94 } }],
+            "children": [
+              {
+                "id": "2:1",
+                "name": "settings-title",
+                "type": "TEXT",
+                "size": { "x": 600, "y": 48 },
+                "relativeTransform": [[1, 0, 100], [0, 1, 80]],
+                "characters": "OPTIONS",
+                "style": {
+                  "fontFamily": "Segoe UI",
+                  "fontWeight": 700,
+                  "fontSize": 40,
+                  "textAlignHorizontal": "CENTER",
+                  "textAlignVertical": "CENTER",
+                  "letterSpacing": 4
+                },
+                "fills": [{ "type": "SOLID", "color": { "r": 1, "g": 1, "b": 1, "a": 1 } }]
+              },
+              {
+                "id": "2:2",
+                "name": "row-music",
+                "type": "FRAME",
+                "size": { "x": 480, "y": 56 },
+                "relativeTransform": [[1, 0, 160], [0, 1, 180]],
+                "cornerRadius": 12,
+                "clipsContent": false,
+                "fills": [{ "type": "SOLID", "color": { "r": 0.118, "g": 0.094, "b": 0.224, "a": 1 } }],
+                "children": [
+                  {
+                    "id": "2:3",
+                    "name": "row-label",
+                    "type": "TEXT",
+                    "size": { "x": 220, "y": 56 },
+                    "relativeTransform": [[1, 0, 20], [0, 1, 0]],
+                    "characters": "MUSIC VOLUME",
+                    "style": {
+                      "fontFamily": "Segoe UI",
+                      "fontWeight": 600,
+                      "fontSize": 14,
+                      "textAlignHorizontal": "LEFT",
+                      "textAlignVertical": "CENTER",
+                      "letterSpacing": 1
+                    },
+                    "fills": [{ "type": "SOLID", "color": { "r": 0.85, "g": 0.83, "b": 0.95, "a": 1 } }]
+                  },
+                  {
+                    "id": "2:4",
+                    "name": "slider-track",
+                    "type": "RECTANGLE",
+                    "size": { "x": 180, "y": 6 },
+                    "relativeTransform": [[1, 0, 270], [0, 1, 25]],
+                    "cornerRadius": 3,
+                    "fills": [{ "type": "SOLID", "color": { "r": 0.227, "g": 0.184, "b": 0.4, "a": 1 } }]
+                  },
+                  {
+                    "id": "2:5",
+                    "name": "slider-fill",
+                    "type": "RECTANGLE",
+                    "size": { "x": 120, "y": 6 },
+                    "relativeTransform": [[1, 0, 270], [0, 1, 25]],
+                    "cornerRadius": 3,
+                    "fills": [{ "type": "SOLID", "color": { "r": 0.486, "g": 0.361, "b": 1.0, "a": 1 } }]
+                  },
+                  {
+                    "id": "2:6",
+                    "name": "slider-knob",
+                    "type": "ELLIPSE",
+                    "size": { "x": 18, "y": 18 },
+                    "relativeTransform": [[1, 0, 381], [0, 1, 19]],
+                    "fills": [{ "type": "SOLID", "color": { "r": 1, "g": 1, "b": 1, "a": 1 } }]
+                  }
+                ]
+              },
+              {
+                "id": "2:7",
+                "name": "row-sfx",
+                "type": "FRAME",
+                "size": { "x": 480, "y": 56 },
+                "relativeTransform": [[1, 0, 160], [0, 1, 252]],
+                "cornerRadius": 12,
+                "clipsContent": false,
+                "fills": [{ "type": "SOLID", "color": { "r": 0.118, "g": 0.094, "b": 0.224, "a": 1 } }],
+                "children": [
+                  {
+                    "id": "2:8",
+                    "name": "row-label",
+                    "type": "TEXT",
+                    "size": { "x": 220, "y": 56 },
+                    "relativeTransform": [[1, 0, 20], [0, 1, 0]],
+                    "characters": "SFX VOLUME",
+                    "style": {
+                      "fontFamily": "Segoe UI",
+                      "fontWeight": 600,
+                      "fontSize": 14,
+                      "textAlignHorizontal": "LEFT",
+                      "textAlignVertical": "CENTER",
+                      "letterSpacing": 1
+                    },
+                    "fills": [{ "type": "SOLID", "color": { "r": 0.85, "g": 0.83, "b": 0.95, "a": 1 } }]
+                  },
+                  {
+                    "id": "2:9",
+                    "name": "slider-track",
+                    "type": "RECTANGLE",
+                    "size": { "x": 180, "y": 6 },
+                    "relativeTransform": [[1, 0, 270], [0, 1, 25]],
+                    "cornerRadius": 3,
+                    "fills": [{ "type": "SOLID", "color": { "r": 0.227, "g": 0.184, "b": 0.4, "a": 1 } }]
+                  },
+                  {
+                    "id": "2:10",
+                    "name": "slider-fill",
+                    "type": "RECTANGLE",
+                    "size": { "x": 150, "y": 6 },
+                    "relativeTransform": [[1, 0, 270], [0, 1, 25]],
+                    "cornerRadius": 3,
+                    "fills": [{ "type": "SOLID", "color": { "r": 0.176, "g": 0.882, "b": 0.761, "a": 1 } }]
+                  },
+                  {
+                    "id": "2:11",
+                    "name": "slider-knob",
+                    "type": "ELLIPSE",
+                    "size": { "x": 18, "y": 18 },
+                    "relativeTransform": [[1, 0, 411], [0, 1, 19]],
+                    "fills": [{ "type": "SOLID", "color": { "r": 1, "g": 1, "b": 1, "a": 1 } }]
+                  }
+                ]
+              },
+              {
+                "id": "2:12",
+                "name": "btn-back",
+                "type": "FRAME",
+                "size": { "x": 200, "y": 52 },
+                "relativeTransform": [[1, 0, 300], [0, 1, 460]],
+                "cornerRadius": 12,
+                "clipsContent": false,
+                "fills": [
+                  {
+                    "type": "GRADIENT_LINEAR",
+                    "gradientHandlePositions": [{ "x": 0, "y": 0 }, { "x": 1, "y": 1 }, { "x": 0, "y": 1 }],
+                    "gradientStops": [
+                      { "position": 0.0, "color": { "r": 0.486, "g": 0.361, "b": 1.0, "a": 1 } },
+                      { "position": 1.0, "color": { "r": 0.353, "g": 0.247, "b": 0.941, "a": 1 } }
+                    ]
+                  }
+                ],
+                "children": [
+                  {
+                    "id": "2:13",
+                    "name": "label",
+                    "type": "TEXT",
+                    "size": { "x": 200, "y": 52 },
+                    "relativeTransform": [[1, 0, 0], [0, 1, 0]],
+                    "characters": "BACK",
+                    "style": {
+                      "fontFamily": "Segoe UI",
+                      "fontWeight": 600,
+                      "fontSize": 18,
+                      "textAlignHorizontal": "CENTER",
+                      "textAlignVertical": "CENTER",
+                      "letterSpacing": 1.5
+                    },
+                    "fills": [{ "type": "SOLID", "color": { "r": 1, "g": 1, "b": 1, "a": 1 } }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

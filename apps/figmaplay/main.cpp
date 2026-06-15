@@ -23,9 +23,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <memory>
 #include <string>
 
+#include <nlohmann/json.hpp>
 #include <raylib.h>
 
 #include <figmalib/figmalib.h>
@@ -89,6 +91,12 @@ struct Player {
     const char* drivePrefix = nullptr;
     int shotFrames = 30;
 
+    // App project (app.json): viewport / fonts / entry frame / the manifest
+    // exposed to the script as globalThis.APP.
+    int winW = 420, winH = 900;
+    std::string fontsDir, entryFrame;
+    std::string appInject = "globalThis.APP = {};";
+
     std::unique_ptr<figmalib::FigmaUI> ui;
     std::unique_ptr<figmalib::ScriptHost> host;
     std::unique_ptr<figmalib::RaylibFigmaView> view;
@@ -98,12 +106,65 @@ struct Player {
     int watchTick = 0;
     bool done = false;
 
+    // An app = <dir>/app.json bundling design + script + config. When `design`
+    // names a directory (or an app.json path) this resolves those fields;
+    // otherwise it leaves `design` as a plain design file (the old two-file
+    // form). On a malformed/missing manifest it clears `design` so main()
+    // reports usage.
+    void loadManifest() {
+        namespace fs = std::filesystem;
+        std::error_code ec;
+        std::string manifestPath, dir;
+        if (fs::is_directory(design, ec)) {
+            dir = design;
+            manifestPath = (fs::path(design) / "app.json").string();
+        } else if (design.size() >= 8 &&
+                   design.compare(design.size() - 8, 8, "app.json") == 0) {
+            manifestPath = design;
+            dir = fs::path(design).parent_path().string();
+        } else {
+            return;  // a plain design file, not an app project
+        }
+        std::ifstream in(manifestPath);
+        nlohmann::json m;
+        if (!in) {
+            std::printf("[figmaplay] no app.json at %s\n", manifestPath.c_str());
+            design.clear();
+            return;
+        }
+        try {
+            in >> m;
+        } catch (const std::exception& e) {
+            std::printf("[figmaplay] bad app.json: %s\n", e.what());
+            design.clear();
+            return;
+        }
+        auto rel = [&](const std::string& p) { return (fs::path(dir) / p).string(); };
+        design = m.contains("design") ? rel(m["design"].get<std::string>()) : "";
+        if (m.contains("script")) script = rel(m["script"].get<std::string>());
+        if (m.contains("fonts")) {
+            const std::string f = rel(m["fonts"].get<std::string>());
+            if (fs::exists(f, ec)) fontsDir = f;
+        }
+        if (m.contains("viewport") && m["viewport"].is_array() &&
+            m["viewport"].size() == 2) {
+            winW = m["viewport"][0].get<int>();
+            winH = m["viewport"][1].get<int>();
+        }
+        if (m.contains("entryFrame")) entryFrame = m["entryFrame"].get<std::string>();
+        appInject = "globalThis.APP = " + m.dump() + ";";
+        std::printf("[figmaplay] app '%s' (%s)\n",
+                    m.value("name", std::string("app")).c_str(), dir.c_str());
+    }
+
     bool loadScript() {
         ui->clearHandlers();  // the script re-registers everything it needs
         host = std::make_unique<figmalib::ScriptHost>(*ui);
         host->setStoragePath(script + ".storage.json");
         if (drivePrefix) host->eval("globalThis.SELFDRIVE = true;", "<selfdrive>");
         if (!shotPath.empty()) host->eval("globalThis.SHOT = true;", "<shot>");
+        host->eval(appInject, "<app>");          // globalThis.APP = manifest
+        if (!entryFrame.empty()) ui->selectFrame(entryFrame);  // script may re-navigate
         const bool ok = host->runFile(script);
         ui->markDirty();
         return ok;
@@ -176,6 +237,9 @@ int main(int argc, char** argv) {
     if (p->design.empty()) p->design = "/assets/wallet/canvas.json";
     if (p->script.empty()) p->script = "/scripts/wallet.js";
 #elif !defined(__ANDROID__)
+    // App project: a directory (or app.json path) bundles design + script +
+    // config; resolves p->design/script/viewport/fonts. No-op for a plain file.
+    if (!p->design.empty()) p->loadManifest();
     if (p->design.empty()) {
         for (const char* cand : {"wallet.fig", "../wallet.fig",
                                  "D:/work_open/fig2psd/test/figma/wallet.fig"}) {
@@ -188,8 +252,8 @@ int main(int argc, char** argv) {
     }
     if (p->script.empty()) p->script = std::string(EXAMPLES_DIR) + "/scripts/wallet.js";
     if (p->design.empty()) {
-        std::printf("usage: figmaplay [design.fig] [logic.js] [--selfdrive prefix] "
-                    "[--shot out.png] [--frames N]\n");
+        std::printf("usage: figmaplay [app-dir | design.fig] [logic.js] "
+                    "[--selfdrive prefix] [--shot out.png] [--frames N]\n");
         return 1;
     }
 #endif
@@ -204,7 +268,7 @@ int main(int argc, char** argv) {
 #else
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
 #endif
-    InitWindow(420, 900, "figmaplay — design.fig + logic.js");
+    InitWindow(p->winW, p->winH, "figmaplay — design.fig + logic.js");
 
 #ifdef __ANDROID__
     // The window is up → the activity (and its asset manager) is live.
@@ -221,6 +285,7 @@ int main(int argc, char** argv) {
 #elif defined(__ANDROID__)
     p->ui->renderer().registerFontsFromDirectory(assetBase + "/fonts");
 #endif
+    if (!p->fontsDir.empty()) p->ui->renderer().registerFontsFromDirectory(p->fontsDir);
     if (!p->loadScript()) {
         CloseWindow();
         return 1;
