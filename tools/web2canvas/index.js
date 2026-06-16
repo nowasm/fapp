@@ -23,7 +23,7 @@ const { chromium } = require('playwright-core');
 
 function parseArgs(argv) {
   const a = { input: null, out: null, root: 'body', vw: 1280, vh: 720,
-              browser: 'msedge', wait: 400, scale: 2 };
+              browser: 'msedge', wait: 400, scale: 2, fonts: null };
   for (let i = 2; i < argv.length; i++) {
     const t = argv[i];
     if (t === '-o' || t === '--out') a.out = argv[++i];
@@ -32,6 +32,7 @@ function parseArgs(argv) {
     else if (t === '--browser') a.browser = argv[++i];
     else if (t === '--wait') a.wait = +argv[++i];
     else if (t === '--scale') a.scale = Math.max(1, +argv[++i]);
+    else if (t === '--fonts') a.fonts = argv[++i];
     else if (!t.startsWith('-')) a.input = t;
   }
   return a;
@@ -48,12 +49,13 @@ const MIME = { '.js': 'application/javascript', '.mjs': 'application/javascript'
 // Babel-in-browser fetches .jsx via XHR, which file:// blocks (CORS). Serve the
 // input's directory over a throwaway local HTTP server so real React apps load.
 function startStaticServer(rootDir) {
+  const base = path.resolve(rootDir);
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       try {
         const rel = decodeURIComponent((req.url || '/').split('?')[0]);
-        const file = path.normalize(path.join(rootDir, rel));
-        if (!file.startsWith(rootDir)) { res.writeHead(403); return res.end(); }
+        const file = path.normalize(path.join(base, rel));
+        if (!file.startsWith(base)) { res.writeHead(403); return res.end(); }
         const body = fs.readFileSync(file);
         res.writeHead(200, { 'content-type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
                              'access-control-allow-origin': '*' });
@@ -395,16 +397,37 @@ function rasterMarks(n, acc) {
   const page = await browser.newPage({ viewport: { width: a.vw, height: a.vh }, deviceScaleFactor: a.scale });
   await setupCdnRoutes(page);
 
-  let server = null, pageUrl;
+  let server = null, pageUrl, fontsCssUrl = null;
   if (/^https?:\/\//.test(a.input)) pageUrl = a.input;
   else {
     const abs = path.resolve(a.input);
-    server = await startStaticServer(path.dirname(abs));
-    pageUrl = `http://127.0.0.1:${server.address().port}/${encodeURIComponent(path.basename(abs))}`;
+    let root = path.dirname(abs), inputRel = path.basename(abs);
+    if (a.fonts) {  // serve a common root so the real fonts.css is reachable
+      const fAbs = path.resolve(a.fonts);
+      const da = path.dirname(abs).split(/[\\/]/), db = fAbs.split(/[\\/]/);
+      let i = 0; while (i < da.length && i < db.length && da[i].toLowerCase() === db[i].toLowerCase()) i++;
+      root = da.slice(0, i).join('/');
+      inputRel = path.relative(root, abs).replace(/\\/g, '/');
+      const fontsRel = path.relative(root, fAbs).replace(/\\/g, '/');
+      if (fs.existsSync(path.join(fAbs, 'fonts.css'))) fontsCssUrl = fontsRel + '/fonts.css';
+    }
+    server = await startStaticServer(root);
+    const enc = s => s.split('/').map(encodeURIComponent).join('/');
+    pageUrl = `http://127.0.0.1:${server.address().port}/${enc(inputRel)}`;
+    if (fontsCssUrl) fontsCssUrl = `http://127.0.0.1:${server.address().port}/${enc(fontsCssUrl)}`;
   }
   console.log(`loading ${pageUrl}`);
   await page.goto(pageUrl, { waitUntil: 'networkidle' }).catch(() => {});
   await page.waitForTimeout(a.wait);
+  // Load the project's real fonts so text is measured at true widths (Google
+  // Fonts are aborted; without this, fallback-font widths cause overlaps).
+  if (fontsCssUrl) {
+    try {
+      await page.addStyleTag({ url: fontsCssUrl });
+      await page.evaluate(() => document.fonts.ready);
+      await page.waitForTimeout(500);
+    } catch (e) { console.error('fonts:', e.message); }
+  }
   await page.screenshot({ path: out.replace(/\.canvas\.json$|\.json$/, '') + '.web.png' }).catch(() => {});
 
   const { tree, rootW, rootH } = await page.evaluate(collectorFn, a.root);

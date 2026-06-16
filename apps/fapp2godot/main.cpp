@@ -880,7 +880,7 @@ static std::vector<FontEntry> loadFonts(const fs::path& fontsSrc, const fs::path
     if (fontsSrc.empty() || !fs::exists(fontsSrc)) return out;
     std::error_code ec;
     fs::create_directories(outFonts, ec);
-    for (const auto& de : fs::directory_iterator(fontsSrc, ec)) {
+    for (const auto& de : fs::recursive_directory_iterator(fontsSrc, ec)) {
         if (!de.is_regular_file()) continue;
         std::string ext = de.path().extension().string();
         for (auto& c : ext) c = (char)std::tolower((unsigned char)c);
