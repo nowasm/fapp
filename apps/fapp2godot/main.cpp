@@ -224,6 +224,42 @@ static float cornerR(const Node& n) {
     return 0;
 }
 
+static bool subtreeHasText(const Node& n) {
+    if (n.type == NodeType::Text) return true;
+    for (const auto& c : n.children)
+        if (subtreeHasText(*c)) return true;
+    return false;
+}
+static bool subtreeHasVector(const Node& n) {
+    switch (n.type) {
+        case NodeType::Vector:
+        case NodeType::BooleanOperation:
+        case NodeType::Star:
+        case NodeType::RegularPolygon:
+        case NodeType::Line:
+            return true;
+        default:
+            break;
+    }
+    for (const auto& c : n.children)
+        if (subtreeHasVector(*c)) return true;
+    return false;
+}
+
+// A multi-part vector icon (or a boolean operation) is best rasterized as one
+// flat image: its sub-shapes compose a single glyph (masks, overlaps, boolean
+// ops) that fall apart when emitted as separate nodes. Heuristic: a container
+// of only vector/shape parts (no text), icon-sized, with at least one true
+// vector. Boolean operations always flatten (children are operands, not art).
+static bool isVectorIcon(const Node& n) {
+    if (n.type == NodeType::BooleanOperation) return true;
+    if (n.children.empty()) return false;
+    const float maxDim = std::max(n.width, n.height);
+    if (maxDim > 128.0f) return false;  // keep larger compositions structured
+    if (subtreeHasText(n)) return false;
+    return subtreeHasVector(n);
+}
+
 // A node whose appearance a ColorRect can't reproduce -> must be rasterized.
 static bool needsBake(const Node& n) {
     if (!n.visible) return false;
@@ -358,15 +394,16 @@ struct Converter {
     int superScale = 2;     // sprite supersampling (1x for 9-slice)
     uint32_t curW = 0, curH = 0;  // current frame logical size
 
-    // Bake a node's own shape (no children, opacity 1) to a deduped PNG at the
-    // given supersample scale. The PNG is native (scale x) for crisp gradients,
-    // curves and shadows; Baked.{x,y,w,h} are in logical (1x) coordinates.
-    Baked bake(const Node& n, int scale) {
+    // Bake a node to a deduped PNG at the given supersample scale. By default
+    // only the node's own shape is rendered (children omitted); when flatten is
+    // true the whole subtree is rasterized into one image (vector-composed icons
+    // and boolean operations). PNG is native (scale x); Baked.{x,y,w,h} logical.
+    Baked bake(const Node& n, int scale, bool flatten = false) {
         Baked out;
         ui->setViewport(curW * scale, curH * scale);
 
         auto clone = figmalib::cloneNode(n, nullptr);
-        clone->children.clear();
+        if (!flatten) clone->children.clear();
         clone->opacity = 1.0f;
         clone->runtimeOpacity = -1.0f;
         clone->runtimeVisible = -1;
@@ -611,6 +648,27 @@ struct Converter {
             commonProps(n, isRoot);
             textProps(n);
             nodeJson["type"] = "Label";
+        } else if (!isRoot && isVectorIcon(n)) {
+            // Flatten a vector-composed icon (or boolean op) to one image.
+            Baked b = bake(n, superScale, /*flatten=*/true);
+            if (b.ok) {
+                std::string id = useTexture(b.hash);
+                header(name, "TextureRect", parentAttr);
+                placeNode(b.x - pax, b.y - pay, b.w, b.h);
+                commonProps(n, isRoot);
+                body += "texture = ExtResource(\"" + id + "\")\n";
+                body += "expand_mode = 1\nstretch_mode = 0\n";
+                nodeJson["type"] = "TextureRect";
+                nodeJson["sprite"] = all[b.hash].file;
+                nodeJson["flattened"] = true;
+            } else {
+                header(name, "Control", parentAttr);
+                placeNode(lx, ly, n.width, n.height);
+                commonProps(n, isRoot);
+                nodeJson["type"] = "Control";
+            }
+            frameNodes.push_back(nodeJson);
+            return;  // do not recurse into the flattened subtree
         } else if (isContainer) {
             header(name, "Control", parentAttr);
             placeNode(lx, ly, n.width, n.height);
