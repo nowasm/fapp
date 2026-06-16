@@ -23,7 +23,7 @@ const { chromium } = require('playwright-core');
 
 function parseArgs(argv) {
   const a = { input: null, out: null, root: 'body', vw: 1280, vh: 720,
-              browser: 'msedge', wait: 400, scale: 2, fonts: null };
+              browser: 'msedge', wait: 400, scale: 2, fonts: null, states: null, navFn: '__nav' };
   for (let i = 2; i < argv.length; i++) {
     const t = argv[i];
     if (t === '-o' || t === '--out') a.out = argv[++i];
@@ -33,6 +33,8 @@ function parseArgs(argv) {
     else if (t === '--wait') a.wait = +argv[++i];
     else if (t === '--scale') a.scale = Math.max(1, +argv[++i]);
     else if (t === '--fonts') a.fonts = argv[++i];
+    else if (t === '--states') a.states = argv[++i];
+    else if (t === '--nav-fn') a.navFn = argv[++i];
     else if (!t.startsWith('-')) a.input = t;
   }
   return a;
@@ -294,6 +296,7 @@ function rotationDeg(transform) {
 }
 
 let nameCounter = 0;
+let statePrefix = '';  // per-screen raster filename namespace (multi-state)
 function makeTextNode(n, base) {
   const tr = n.textRect;
   const node = {
@@ -349,7 +352,7 @@ function mapNode(n, parent) {
   if (!n.raster) { const rot = rotationDeg(n.transform); if (Math.abs(rot) > 0.1) node.transform.rotation = +rot.toFixed(2); }
   const fills = [];
   if (solid) fills.push(solid);
-  if (n.raster) fills.push({ type: 'IMAGE', image: { filename: `images/w2c_${n.raster}.png` }, scaleMode: 'FILL' });
+  if (n.raster) fills.push({ type: 'IMAGE', image: { filename: `images/w2c_${statePrefix}${n.raster}.png` }, scaleMode: 'FILL' });
   if (fills.length) node.fillPaints = fills;
   // A rasterized element already has its border (and its rounding) baked into
   // the screenshot; a separate stroke would double-draw it as a square.
@@ -428,36 +431,57 @@ function rasterMarks(n, acc) {
       await page.waitForTimeout(500);
     } catch (e) { console.error('fonts:', e.message); }
   }
-  await page.screenshot({ path: out.replace(/\.canvas\.json$|\.json$/, '') + '.web.png' }).catch(() => {});
+  // States: each drives window[navFn](state) and becomes one top-level frame.
+  // No --states → a single capture of the current screen (backward compatible).
+  const states = a.states ? a.states.split(',').map(s => s.trim()).filter(Boolean) : [null];
+  const multi = states.length > 1 || (states[0] && a.states);
+  const frames = [];
+  let totShot = 0, totMarks = 0, offsetX = 0;
 
-  const { tree, rootW, rootH } = await page.evaluate(collectorFn, a.root);
-  if (!tree) { await browser.close(); if (server) server.close(); console.error('FAIL: nothing collected from root ' + a.root); process.exit(1); }
+  for (let si = 0; si < states.length; si++) {
+    const st = states[si];
+    if (st) {
+      await page.evaluate(({ s, fn }) => { if (typeof window[fn] === 'function') window[fn](s); }, { s: st, fn: a.navFn });
+      await page.waitForTimeout(a.wait);
+    }
+    if (si === 0) await page.screenshot({ path: out.replace(/\.canvas\.json$|\.json$/, '') + '.web.png' }).catch(() => {});
 
-  const marks = rasterMarks(tree, []);
-  // whole-element rasters (img/svg) need no hide; collect them too
-  (function whole(n) { if (n.raster && !n.rasterHideContent) marks.push({ id: n.raster, whole: true }); for (const k of (n.kids || [])) whole(k); })(tree);
-  if (marks.length) fs.mkdirSync(imagesDir, { recursive: true });
-  let shot = 0;
-  for (const m of marks) {
-    const loc = page.locator(`[data-w2c="${m.id}"]`);
-    try {
-      if (!m.whole) await page.evaluate(setBgOnlyFn, { id: m.id, on: true });
-      await loc.screenshot({ path: path.join(imagesDir, `w2c_${m.id}.png`), omitBackground: true });
-      shot++;
-    } catch (e) { /* not screenshot-able */ }
-    finally { if (!m.whole) await page.evaluate(setBgOnlyFn, { id: m.id, on: false }); }
+    const res = await page.evaluate(collectorFn, a.root);
+    if (!res.tree) { console.error('WARN: nothing collected for state ' + st); continue; }
+    const tree = res.tree;
+    statePrefix = multi ? (si + '_') : '';
+
+    const marks = rasterMarks(tree, []);
+    (function whole(n) { if (n.raster && !n.rasterHideContent) marks.push({ id: n.raster, whole: true }); for (const k of (n.kids || [])) whole(k); })(tree);
+    if (marks.length) fs.mkdirSync(imagesDir, { recursive: true });
+    for (const m of marks) {
+      const loc = page.locator(`[data-w2c="${m.id}"]`);
+      try {
+        if (!m.whole) await page.evaluate(setBgOnlyFn, { id: m.id, on: true });
+        await loc.screenshot({ path: path.join(imagesDir, `w2c_${statePrefix}${m.id}.png`), omitBackground: true });
+        totShot++;
+      } catch (e) { /* not screenshot-able */ }
+      finally { if (!m.whole) await page.evaluate(setBgOnlyFn, { id: m.id, on: false }); }
+    }
+    totMarks += marks.length;
+
+    nameCounter = 0;
+    const frame = mapNode(tree, null);
+    frame.name = st || 'Page';
+    frame.scrollDirection = 'VERTICAL';
+    frame.transform = { x: offsetX, y: 0 };
+    offsetX += (frame.size.x || res.rootW) + 60;
+    frames.push(frame);
+    console.log(`  captured ${frame.name} (${marks.length} rasters)`);
   }
   await browser.close();
   if (server) server.close();
+  if (!frames.length) { console.error('FAIL: no frames captured'); process.exit(1); }
 
-  nameCounter = 0;
-  const rootFrame = mapNode(tree, null);
-  rootFrame.name = rootFrame.name || 'Page';
-  rootFrame.scrollDirection = 'VERTICAL';
   const doc = {
-    document: { type: 'DOCUMENT', children: [{ type: 'CANVAS', name: 'Page 1', children: [rootFrame] }] },
+    document: { type: 'DOCUMENT', children: [{ type: 'CANVAS', name: 'Page 1', children: frames }] },
     styles: {},
   };
   fs.writeFileSync(out, JSON.stringify(doc, null, 2));
-  console.log(`RESULT: OK  ${rootW}x${rootH}  ${shot}/${marks.length} rasters -> ${out}`);
+  console.log(`RESULT: OK  ${frames.length} frame(s)  ${totShot}/${totMarks} rasters -> ${out}`);
 })().catch(e => { console.error('FAIL:', e.message); process.exit(1); });
