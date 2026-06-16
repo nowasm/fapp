@@ -671,13 +671,24 @@ void hydrateRecursive(json& node,
 // styleIdForFill / styleIdForStrokeFill / styleIdForText resolution.
 void resolveSharedStyles(json& node,
                          const std::unordered_map<std::string, const json*>& styles) {
-    if (node.contains("styleIdForFill") && node["styleIdForFill"].is_string()) {
+    // A node's own (inline) paints are a local override and win over the linked
+    // style; only fall back to the style when the node carries no paint of its
+    // own. (Same precedence as the instance symbol-override path above. fig2json
+    // emits the resolved local fill alongside the style reference, so blindly
+    // re-applying the style would clobber an override — e.g. a green date linked
+    // to a red "System/Error" style.)
+    const bool hasLocalFill = node.contains("fillPaints") &&
+                              node["fillPaints"].is_array() && !node["fillPaints"].empty();
+    if (!hasLocalFill && node.contains("styleIdForFill") && node["styleIdForFill"].is_string()) {
         if (const json* st = findStyle(styles, node["styleIdForFill"].get<std::string>())) {
             if (st->contains("fillPaints") && !(*st)["fillPaints"].empty())
                 node["fillPaints"] = (*st)["fillPaints"];
         }
     }
-    if (node.contains("styleIdForStrokeFill") && node["styleIdForStrokeFill"].is_string()) {
+    const bool hasLocalStroke = node.contains("strokePaints") &&
+                                node["strokePaints"].is_array() && !node["strokePaints"].empty();
+    if (!hasLocalStroke && node.contains("styleIdForStrokeFill") &&
+        node["styleIdForStrokeFill"].is_string()) {
         if (const json* st =
                 findStyle(styles, node["styleIdForStrokeFill"].get<std::string>())) {
             if (st->contains("strokePaints") && !(*st)["strokePaints"].empty())
