@@ -8,3 +8,6 @@ build_godot/
 # fapp2godot generated output (scenes, sprites, manifests)
 godot_out/
 wallet_out/
+# web2canvas (node tool)
+node_modules/
+tools/web2canvas/test/*.canvas.json

@@ -1,0 +1,14 @@
+{
+  "name": "web2canvas",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Convert a rendered React/HTML page into figmalib canvas.json via a headless browser.",
+  "type": "commonjs",
+  "bin": { "web2canvas": "index.js" },
+  "scripts": {
+    "test": "node index.js test/sample.html -o test/out.canvas.json"
+  },
+  "dependencies": {
+    "playwright-core": "^1.48.0"
+  }
+}
