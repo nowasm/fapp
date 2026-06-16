@@ -170,6 +170,13 @@ if(FIGMALIB_BUILD_EXAMPLES AND FIGMALIB_DESKTOP)
     target_link_libraries(layout_test PRIVATE figmalib)
 endif()
 
+# ---- fapp2godot: design (.fig / canvas.json / REST) -> Godot .tscn ----
+if(FIGMALIB_DESKTOP)
+    add_executable(fapp2godot apps/fapp2godot/main.cpp)
+    target_link_libraries(fapp2godot PRIVATE figmalib)
+    target_include_directories(fapp2godot PRIVATE third_party)  # nlohmann (manifest, later)
+endif()
+
 # ---- figmaplay: the generic script player (an app = .fig + .js) ----
 if(FIGMALIB_SCRIPTING AND FIGMALIB_BACKEND_RAYLIB)
     if(ANDROID)
