@@ -644,10 +644,13 @@ struct Converter {
         if (std::fabs(rot) > 1e-3f) body += "rotation = " + num(rot) + "\n";
         if (!n.visible) body += "visible = false\n";
         if (n.opacity < 0.999f) body += "modulate = Color(1, 1, 1, " + num(n.opacity) + ")\n";
-        // Figma frames clip their content; the top-level frame always clips to
-        // the screen. (fig2json strips the default-on clip flag, so honor both
-        // the explicit flag and the root.)
-        if (isRoot || n.clipsContent) body += "clip_contents = true\n";
+        // Figma frames clip their content; the top-level SCREEN frame always
+        // clips to the screen. (fig2json strips the default-on clip flag, so
+        // honor both the explicit flag and the screen root.) A component scene
+        // root is NOT a screen — force-clipping it would shave off children that
+        // intentionally overhang it (e.g. a nav center button), so only clip a
+        // component root when its own clipsContent says so.
+        if ((isRoot && !inComponent) || n.clipsContent) body += "clip_contents = true\n";
     }
 
     void rect(float x, float y, float w, float h) {
