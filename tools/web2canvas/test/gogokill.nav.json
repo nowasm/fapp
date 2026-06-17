@@ -1,0 +1,73 @@
+{
+  "main": "lobby",
+  "graph": {
+    "lobby": [
+      { "text": "快速开始", "to": "role" },
+      { "text": "创建房间", "to": "room" },
+      { "text": "加入房间", "to": "search" },
+      { "text": "装扮", "to": "lobby_locker" },
+      { "text": "主教", "to": "lobby_profile" }
+    ],
+    "lobby_locker":  [ { "text": "关闭", "to": "lobby" } ],
+    "lobby_avatar":  [ { "text": "关闭", "to": "lobby" } ],
+    "lobby_settings":[ { "text": "关闭", "to": "lobby" }, { "text": "保存设置", "to": "lobby" } ],
+    "lobby_profile": [ { "text": "关闭", "to": "lobby" } ],
+    "lobby_chat":    [ { "text": "关闭", "to": "lobby" } ],
+    "lobby_gifts":   [ { "text": "关闭", "to": "lobby" } ],
+
+    "search": [
+      { "text": "返回大厅", "to": "lobby" },
+      { "text": "快速匹配", "to": "lobby" },
+      { "text": "🔒 加入", "to": "search_password" },
+      { "text": "加入", "to": "room" }
+    ],
+    "search_password": [ { "text": "取消", "to": "search" }, { "text": "关闭", "to": "search" }, { "text": "加入", "to": "room" } ],
+
+    "room": [
+      { "text": "返回大厅", "to": "lobby" },
+      { "text": "房间设置", "to": "room_settings" },
+      { "text": "更换装扮", "to": "room_locker" },
+      { "text": "选择地图", "to": "room_map" },
+      { "text": "房客", "to": "room_guest" },
+      { "text": "主教", "to": "room_profile" },
+      { "text": "开始对局", "to": "role" },
+      { "text": "准备就绪", "to": "role" }
+    ],
+    "room_guest":    [ { "text": "房主", "to": "room" }, { "text": "返回大厅", "to": "lobby" } ],
+    "room_settings": [ { "text": "取消", "to": "room" }, { "text": "关闭", "to": "room" }, { "text": "保存设置", "to": "room" } ],
+    "room_locker":   [ { "text": "关闭", "to": "room" } ],
+    "room_map":      [ { "text": "关闭", "to": "room" } ],
+    "room_profile":  [ { "text": "关闭", "to": "room" } ],
+
+    "role": [ { "auto": 2.5, "to": "game" } ],
+
+    "game": [
+      { "text": "返回大厅", "to": "lobby" },
+      { "text": "退出", "to": "lobby" },
+      { "text": "点击查看完整地图", "to": "game_map" }
+    ],
+    "game_settings": [ { "text": "关闭", "to": "game" } ],
+    "game_roleinfo": [ { "text": "关闭", "to": "game" } ],
+    "game_map":      [ { "text": "关闭", "to": "game" } ],
+    "game_death":    [ { "text": "进入观战", "to": "game" } ],
+    "game_bad": [
+      { "text": "返回大厅", "to": "lobby" },
+      { "text": "退出", "to": "lobby" }
+    ],
+    "game_bad_roleinfo": [ { "text": "关闭", "to": "game_bad" } ],
+    "game_bad_armory":   [ { "text": "关闭", "to": "game_bad" } ],
+
+    "meeting_intro":   [ { "text": "进入会议", "to": "meeting_discuss" } ],
+    "meeting_discuss": [ { "text": "进入投票", "to": "meeting_vote" } ],
+    "meeting_vote":    [ { "text": "确认投票", "to": "meeting_result" }, { "text": "弃票", "to": "meeting_result" } ],
+    "meeting_result":  [ { "text": "会议结束", "to": "game" } ],
+
+    "victory":   [ { "text": "查看战报", "to": "aftermath" } ],
+    "aftermath": [
+      { "text": "再来一局", "to": "role" },
+      { "text": "返回大厅", "to": "lobby" },
+      { "text": "主教", "to": "aftermath_profile" }
+    ],
+    "aftermath_profile": [ { "text": "关闭", "to": "aftermath" } ]
+  }
+}
