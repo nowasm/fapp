@@ -602,7 +602,8 @@ struct Converter {
     // only the node's own shape is rendered (children omitted); when flatten is
     // true the whole subtree is rasterized into one image (vector-composed icons
     // and boolean operations). PNG is native (scale x); Baked.{x,y,w,h} logical.
-    Baked bake(const Node& n, int scale, bool flatten = false, bool tryNine = false) {
+    Baked bake(const Node& n, int scale, bool flatten = false, bool tryNine = false,
+               bool nineOnly = false) {
         Baked out;
         ui->setViewport(curW * scale, curH * scale);
 
@@ -650,6 +651,7 @@ struct Converter {
         // uniform stretchable middle to 1px and dedup by the resulting tiny image,
         // so same-style different-size panels share one texture.
         if (tryNine && nineShrink(crop, cw, ch, scale, out.ml, out.mr, out.mt, out.mb)) out.nine = true;
+        else if (nineOnly) return out;  // not 9-sliceable at this scale; caller re-bakes full
 
         // FNV-1a 64 over the cropped pixels.
         uint64_t h = 1469598103934665603ull;
@@ -919,8 +921,11 @@ struct Converter {
                 emitColorBg(f, childAttr);
             }
         } else if (needsBake(n)) {
-            bool cand = nineCandidate(n);
-            Baked b = bake(n, superScale, /*flatten=*/false, /*tryNine=*/cand);
+            // 9-slice candidates: bake at 1x first (crisp corners, no downsample
+            // blur) and keep only if it's truly a 9-slice; otherwise full 2x bake.
+            Baked b;
+            if (nineCandidate(n)) b = bake(n, 1, /*flatten=*/false, /*tryNine=*/true, /*nineOnly=*/true);
+            if (!b.ok) b = bake(n, superScale);
             if (b.ok) {
                 std::string id = useTexture(b.hash);
                 if (b.nine) {
@@ -989,8 +994,9 @@ struct Converter {
 
     // Baked background for a container with a complex fill/stroke/corners.
     void emitBg(Node& n, const std::string& parentAttr, json& nodeJson) {
-        bool cand = nineCandidate(n);
-        Baked b = bake(n, superScale, /*flatten=*/false, /*tryNine=*/cand);
+        Baked b;
+        if (nineCandidate(n)) b = bake(n, 1, /*flatten=*/false, /*tryNine=*/true, /*nineOnly=*/true);
+        if (!b.ok) b = bake(n, superScale);
         if (!b.ok) return;
         std::string id = useTexture(b.hash);
         if (b.nine) {
