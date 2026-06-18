@@ -1083,6 +1083,25 @@ struct Converter {
                     body += "text = \"" + escapeStr(ic.characters) + "\"\n";
                     if (fi) body += "theme_override_colors/font_color = " + paintLit(*fi) + "\n";
                 }
+            } else if (needsBake(cc)) {
+                // A baked leaf (glow/gradient/clip) is placed at its SPRITE bounds,
+                // which a glow makes larger than the node box. The canon emits at
+                // those bounds, so an instance must too — re-bake it and place at
+                // the re-baked bounds, else inheriting the canon sprite into the
+                // node box squashes it (e.g. a slider fill's glow collapsing to a
+                // few px, the reported "progress bar not restored").
+                Baked bc = bake(cc, superScale), bi = bake(ic, superScale);
+                if (bi.ok && (bc.hash != bi.hash || posDiff)) {
+                    const float pax = ic.parent ? ic.parent->absoluteTransform.m02 : 0.f;
+                    const float pay = ic.parent ? ic.parent->absoluteTransform.m12 : 0.f;
+                    body += "\n[node name=\"" + uniq + "\" parent=\"" + parentPath + "\"]\n";
+                    body += "offset_left = " + num(bi.x - pax) + "\n";
+                    body += "offset_top = " + num(bi.y - pay) + "\n";
+                    body += "offset_right = " + num(bi.x - pax + bi.w) + "\n";
+                    body += "offset_bottom = " + num(bi.y - pay + bi.h) + "\n";
+                    if (bc.hash != bi.hash) body += "texture = ExtResource(\"" + useTexture(bi.hash) + "\")\n";
+                }
+                emitInstanceOverrides(cc, ic, parentPath + "/" + uniq);
             } else {
                 const std::string ci = imageRefOf(cc), ii = imageRefOf(ic);
                 const bool imgDiff = !ii.empty() && ii != ci;
