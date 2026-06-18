@@ -18,7 +18,12 @@
 // 32-bit BGRA top-down BMP.
 static bool writeBmp(const char* path, const uint32_t* rgba, uint32_t w, uint32_t h) {
     FILE* f = nullptr;
+#if defined(_MSC_VER)
     if (fopen_s(&f, path, "wb") != 0 || !f) return false;
+#else
+    f = std::fopen(path, "wb");
+    if (!f) return false;
+#endif
 
     const uint32_t imageSize = w * h * 4;
     uint8_t fileHeader[14] = {'B', 'M'};
