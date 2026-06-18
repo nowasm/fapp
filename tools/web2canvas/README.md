@@ -83,12 +83,13 @@ screenshot. Each capture becomes one top-level frame -> one `.tscn`.
 - Isolation is automatic: before each capture the target screen is remounted via
   a sentinel state, so a popup opened in one capture never leaks into the next.
 
-The popup is captured **in context** — the dimmed screen behind a *card* (a
-partial overlay over a translucent scrim) is part of the frame, exactly as the
-browser composites it. But when an overlay **fills the whole root with a
-near-opaque backdrop** (alpha ≥ 0.85, e.g. a full-screen death screen), the
-content behind it is invisible, so the siblings under it are dropped and the
-frame contains only the overlay subtree — no wasted hidden game tree.
+A click-triggered second-level page is captured as **just the overlay it opened**,
+not the parent screen behind it: before the steps run, every existing element is
+tagged; the overlay is then the largest NEW positioned element covering ≥25% of
+the root, and the frame is collected from it alone. A step that merely mutates
+the current screen (a toggle, a tab swap) adds no such overlay, so the full
+screen is kept. (Full-root opaque overlays are likewise reduced to their own
+subtree.)
 
 ## Example — GOGO KILL HUD (8 screens → Godot)
 

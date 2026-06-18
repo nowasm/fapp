@@ -894,12 +894,39 @@ async function aiNamePass(page, records, dir) {
       await page.evaluate(({ st, fn }) => { if (typeof window[fn] === 'function') window[fn](st); }, { st: cap.nav, fn: a.navFn });
       await page.waitForTimeout(a.wait);
     }
+    // A click-triggered second-level page (popup/overlay) should contain ONLY
+    // the opened overlay, not the parent screen behind it. Tag every existing
+    // element before the steps; afterwards the overlay is the largest NEW
+    // positioned element covering a good part of the screen — collect from it.
+    // (A step that just mutates the current screen, e.g. a toggle, adds no such
+    // overlay → we keep the full screen root.)
+    let captureRoot = a.root;
+    const hasSteps = cap.steps && cap.steps.length;
+    if (hasSteps) await page.evaluate(() => document.querySelectorAll('*').forEach(e => e.setAttribute('data-w2c-pre', '1')));
     try {
       for (const step of (cap.steps || [])) await runStep(page, step, a.navFn, a.wait);
     } catch (e) { console.error(`  WARN: step failed for ${cap.name}: ${e.message.split('\n')[0]}`); }
+    if (hasSteps) {
+      const ovl = await page.evaluate((rootSel) => {
+        const root = document.querySelector(rootSel) || document.body;
+        const rr = root.getBoundingClientRect(), rootArea = rr.width * rr.height;
+        let best = null, bestArea = 0;
+        for (const e of document.querySelectorAll('*')) {
+          if (e.hasAttribute('data-w2c-pre')) continue;            // pre-existing
+          const cs = getComputedStyle(e);
+          if (cs.position !== 'fixed' && cs.position !== 'absolute') continue;
+          if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+          const r = e.getBoundingClientRect(), area = r.width * r.height;
+          if (area >= rootArea * 0.25 && area > bestArea) { best = e; bestArea = area; }
+        }
+        if (best) { best.setAttribute('data-w2c-ovl', '1'); return true; }
+        return false;
+      }, a.root);
+      if (ovl) captureRoot = '[data-w2c-ovl]';
+    }
     if (si === 0) await page.screenshot({ path: out.replace(/\.canvas\.json$|\.json$/, '') + '.web.png' }).catch(() => {});
 
-    const res = await page.evaluate(collectorFn, { rootSelector: a.root, aiName: a.aiName });
+    const res = await page.evaluate(collectorFn, { rootSelector: captureRoot, aiName: a.aiName });
     if (!res.tree) { console.error('WARN: nothing collected for ' + (cap.name || 'page')); continue; }
     const tree = res.tree;
     statePrefix = multi ? (si + '_') : '';
