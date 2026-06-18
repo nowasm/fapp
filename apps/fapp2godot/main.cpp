@@ -180,6 +180,13 @@ static std::string num(float v) {
 static std::string colorLit(const figmalib::Color& c) {
     return "Color(" + num(c.r) + ", " + num(c.g) + ", " + num(c.b) + ", " + num(c.a) + ")";
 }
+// A paint's effective color folds its separate `opacity` into the alpha — a
+// translucent fill (e.g. inkSoft text at 0.55) must keep that dimming, not 1.0.
+static std::string paintLit(const figmalib::Paint& p) {
+    figmalib::Color c = p.color;
+    c.a *= p.opacity;
+    return colorLit(c);
+}
 
 static bool isRectish(NodeType t) {
     switch (t) {
@@ -718,7 +725,7 @@ struct Converter {
         body += "theme_override_font_sizes/font_size = " +
                 std::to_string((int)(n.textStyle.fontSize + 0.5f)) + "\n";
         if (const auto* f = solidFill(n))
-            body += "theme_override_colors/font_color = " + colorLit(f->color) + "\n";
+            body += "theme_override_colors/font_color = " + paintLit(*f) + "\n";
         int ha = 0;
         switch (n.textStyle.alignH) {
             case figmalib::TextStyle::AlignH::Center: ha = 1; break;
@@ -829,7 +836,7 @@ struct Converter {
             nodeJson["type"] = "Control";
             if (needsBake(n)) emitBg(n, childAttr, nodeJson);
             else if (const auto* f = solidFill(n)) {
-                nodeJson["solidBg"] = colorLit(f->color);
+                nodeJson["solidBg"] = paintLit(*f);
                 emitColorBg(f, childAttr);
             }
         } else if (needsBake(n)) {
@@ -871,7 +878,7 @@ struct Converter {
             header(name, "ColorRect", parentAttr);
             placeNode(lx, ly, n.width, n.height);
             commonProps(n, isRoot);
-            body += "color = " + colorLit(f->color) + "\n";
+            body += "color = " + paintLit(*f) + "\n";
             nodeJson["type"] = "ColorRect";
         } else {
             header(name, "Control", parentAttr);
@@ -902,7 +909,7 @@ struct Converter {
         if (!f) return;
         header("__bg", "ColorRect", parentAttr);
         placeFull();
-        body += "color = " + colorLit(f->color) + "\n";
+        body += "color = " + paintLit(*f) + "\n";
     }
 
     // Baked background for a container with a complex fill/stroke/corners.
@@ -969,7 +976,7 @@ struct Converter {
         if (const auto* cb = solidFill(canon)) if (const auto* ib = solidFill(inst))
             if (colorNe(cb->color, ib->color)) {
                 body += "\n[node name=\"__bg\" parent=\"" + parentPath + "\"]\n";
-                body += "color = " + colorLit(ib->color) + "\n";
+                body += "color = " + paintLit(*ib) + "\n";
             }
         const size_t cnt = std::min(canon.children.size(), inst.children.size());
         for (size_t i = 0; i < cnt; ++i) {
@@ -993,7 +1000,7 @@ struct Converter {
                     body += "\n[node name=\"" + uniq + "\" parent=\"" + parentPath + "\"]\n";
                     emitOffsets(ic);
                     body += "text = \"" + escapeStr(ic.characters) + "\"\n";
-                    if (fi) body += "theme_override_colors/font_color = " + colorLit(fi->color) + "\n";
+                    if (fi) body += "theme_override_colors/font_color = " + paintLit(*fi) + "\n";
                 }
             } else {
                 const std::string ci = imageRefOf(cc), ii = imageRefOf(ic);
@@ -1004,7 +1011,7 @@ struct Converter {
                     body += "\n[node name=\"" + uniq + "\" parent=\"" + parentPath + "\"]\n";
                     if (posDiff) emitOffsets(ic);
                     if (imgDiff) { Baked b = bake(ic, superScale); if (b.ok) body += "texture = ExtResource(\"" + useTexture(b.hash) + "\")\n"; }
-                    if (leafColDiff) body += "color = " + colorLit(li->color) + "\n";
+                    if (leafColDiff) body += "color = " + paintLit(*li) + "\n";
                 }
                 emitInstanceOverrides(cc, ic, parentPath + "/" + uniq);
             }

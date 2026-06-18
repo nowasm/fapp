@@ -319,14 +319,16 @@ function collectorFn({ rootSelector, aiName }) {
         r.selectNodeContents(ch);
         const rc = r.getBoundingClientRect();
         if (rc.width >= 1 && rc.height >= 1)
-          runs.push({ text: ch.textContent.replace(/\s+/g, ' ').trim(),
+          // keep a leading/trailing space (NOT trimmed) — the run's rect includes
+          // it, so the space renders as the gap to an adjacent inline sibling.
+          runs.push({ text: ch.textContent.replace(/\s+/g, ' '),
                       rect: { x: rc.left - ox, y: rc.top - oy, w: rc.width, h: rc.height } });
       }
     }
     if (!runs.length) return null;
     const x0 = Math.min(...runs.map(r => r.rect.x)), y0 = Math.min(...runs.map(r => r.rect.y));
     const x1 = Math.max(...runs.map(r => r.rect.x + r.rect.w)), y1 = Math.max(...runs.map(r => r.rect.y + r.rect.h));
-    return { runs, text: runs.map(r => r.text).join(' '), rect: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } };
+    return { runs, text: runs.map(r => r.text).join('').replace(/\s+/g, ' ').trim(), rect: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } };
   }
 
   function node(el, ox, oy, depth) {
@@ -561,7 +563,7 @@ function textRole(text, n) {
 function makeTextNode(n, base, txt, tr) {
   if (txt === undefined) { txt = n.text; tr = n.textRect; }
   const node = {
-    name: textRole(txt, n),
+    name: textRole(txt.trim(), n),
     type: 'TEXT',
     transform: { x: +(tr.x - base.x).toFixed(2), y: +(tr.y - base.y).toFixed(2) },
     size: { x: +tr.w.toFixed(2), y: +tr.h.toFixed(2) },
