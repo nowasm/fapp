@@ -455,12 +455,15 @@ struct Converter {
     // collapse to one prefab (sprite/text differences become per-instance
     // overrides). Non-component containers fall back to a pixel-exact sig.
     std::string groupKey(const Node& n) const {
-        // Group by source-component TYPE + structural shape (size/color/image/text
-        // ignored → those become per-instance overrides). Instances of a type that
-        // share a shape collapse to one prefab; a genuinely different shape
-        // (a conditional child nested in the content) forms another variant —
-        // merging those into one prefab can't be done without breaking layout.
-        return n.compType + "|" + sig(n, true);
+        // Group by source-component TYPE + a COARSE root-size bucket + structural
+        // shape. Content (text/color/image) and inner sizes are ignored → those
+        // become per-instance overrides, so same-size instances of a type collapse
+        // to one prefab (RoomThumb cards). But an instance used at a very different
+        // OUTER size (MenuChatBar at 660 vs 840) reflows its flex children non-
+        // uniformly, which per-child offset overrides can't fully reproduce — the
+        // size bucket keeps those as separate, each-correct variants.
+        const int wb = (int)std::lround(n.width) / 64, hb = (int)std::lround(n.height) / 64;
+        return n.compType + "|" + std::to_string(wb) + "x" + std::to_string(hb) + "|" + sig(n, true);
     }
     // First visible image-fill ref of a node (empty if none).
     static std::string imageRefOf(const Node& n) {
