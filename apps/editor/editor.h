@@ -2,7 +2,8 @@
 // figmaedit — a Figma-style editor on top of figmalib.
 // Interaction semantics intentionally mirror Figma: scope-based selection
 // (click = top-level under cursor, double-click drills in, Ctrl+click deep
-// selects, Esc pops out), space/middle-drag pan, Ctrl+wheel zoom at cursor.
+// selects, Esc pops out), space/middle-drag pan, Ctrl+wheel or two-finger
+// trackpad pinch (macOS) zoom at cursor.
 
 #include <algorithm>
 #include <memory>

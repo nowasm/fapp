@@ -250,12 +250,19 @@ if(FIGMALIB_BACKEND_RAYLIB AND FIGMALIB_DESKTOP)
         apps/editor/editor_dialogs.cpp
         apps/editor/editor_mcp.cpp
         apps/editor/editor_mcp_net.cpp
+        backends/raylib/pinch_stub.cpp   # trackpad pinch source (empty on Apple)
     )
     target_include_directories(figmaedit PRIVATE
-        "${raygui_SOURCE_DIR}/src" third_party)
+        "${raygui_SOURCE_DIR}/src" third_party backends/raylib)
     target_link_libraries(figmaedit PRIVATE figmalib raylib)
     if(WIN32)
         target_link_libraries(figmaedit PRIVATE comdlg32 ws2_32)  # dialogs + MCP socket
+    endif()
+    if(APPLE)
+        # Two-finger pinch zoom: a Cocoa NSEventMaskMagnify monitor that GLFW
+        # does not expose (see backends/raylib/pinch_macos.mm).
+        target_sources(figmaedit PRIVATE backends/raylib/pinch_macos.mm)
+        target_link_libraries(figmaedit PRIVATE "-framework Cocoa")
     endif()
     target_compile_definitions(figmaedit PRIVATE
         ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples/assets")

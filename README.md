@@ -66,7 +66,7 @@ Interactions mirror Figma:
 | Action | Shortcut |
 |---|---|
 | Pan canvas | Space+drag / middle-drag / scroll wheel (Shift = horizontal) |
-| Zoom | Ctrl+wheel (cursor-centered), Ctrl+= / Ctrl+-, Ctrl+0 = 100%, Shift+1 = fit |
+| Zoom | two-finger pinch (macOS trackpad, cursor-centered), Ctrl+wheel (cursor-centered), Ctrl+= / Ctrl+-, Ctrl+0 = 100%, Shift+1 = fit |
 | Select | click top object, Ctrl+click deep-select, double-click to enter container, Esc to exit, Shift+click add/remove, drag empty space to marquee |
 | Move | drag (Shift = axis lock), arrow keys to nudge (Shift = 10px) |
 | Resize object | corner/edge handles (Shift = uniform, Alt = symmetric about center) |

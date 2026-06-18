@@ -7,6 +7,7 @@
 #include <cstdlib>
 
 #include "editor.h"
+#include "pinch_gesture.h"  // macOS trackpad pinch (no-op elsewhere)
 
 namespace figmaedit {
 
@@ -266,6 +267,22 @@ void updateCanvas(EditorState& ed) {
             ed.viewSettled = false;
         }
         if (shift && IsKeyPressed(KEY_ONE)) ed.zoomToFit();
+    }
+
+    // ---- trackpad pinch (macOS) ----
+    // Two-finger magnify, zoomed at the cursor like Figma. GLFW does not
+    // surface these events; the Cocoa monitor (installed once) accumulates the
+    // magnification, which is a no-op on every other platform.
+    static bool pinchInstalled = false;
+    if (!pinchInstalled) {
+        figmalib::pinchGestureInstall();
+        pinchInstalled = true;
+    }
+    const float magnify = figmalib::pinchGestureConsume();
+    if (magnify != 0 && inViewport) {
+        ed.cam.zoomAt(mx, my, 1.0f + magnify);
+        ed.lastViewChange = GetTime();
+        ed.viewSettled = false;
     }
 
     // ---- wheel ----
