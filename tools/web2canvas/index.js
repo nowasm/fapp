@@ -433,6 +433,23 @@ function collectorFn({ rootSelector, aiName }) {
         el.setAttribute('data-w2c-cand', String(candId));
       }
     }
+    // A rasterized element with an outer glow/shadow paints BEYOND its box, but
+    // a screenshot clipped to the box (and a clip_contents parent) slices the glow
+    // off. Grow the node's box to the glow's reach and capture that expanded clip;
+    // children stay put (their frame-relative rects auto-compensate against the
+    // grown parent), and clipping to the grown box no longer cuts the glow.
+    if (raster && out.effect) {
+      const e = out.effect;
+      const gm = Math.ceil(Math.max(Math.abs(e.ox || 0), Math.abs(e.oy || 0)) + (e.blur || 0) + (e.spread || 0));
+      if (gm > 0) {
+        const x0 = Math.max(0, out.rect.x + ox - gm), y0 = Math.max(0, out.rect.y + oy - gm);
+        const x1 = Math.min(window.innerWidth, out.rect.x + ox + out.rect.w + gm);
+        const y1 = Math.min(window.innerHeight, out.rect.y + oy + out.rect.h + gm);
+        out.glowClip = { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+        out.rect = { x: x0 - ox, y: y0 - oy, w: x1 - x0, h: y1 - y0 };
+        out.effect = null;  // baked into the expanded sprite now
+      }
+    }
     return out;
   }
 
@@ -660,7 +677,7 @@ function mapNode(n, parent) {
 }
 
 function rasterMarks(n, acc) {
-  if (n.raster && n.rasterHideContent) acc.push({ id: n.raster });
+  if (n.raster && n.rasterHideContent) acc.push({ id: n.raster, clip: n.glowClip });
   for (const k of (n.kids || [])) rasterMarks(k, acc);
   return acc;
 }
@@ -958,7 +975,7 @@ async function aiNamePass(page, records, dir) {
     const marks = rasterMarks(tree, []);
     (function whole(n) {
       if (n.rasterGroup) marks.push({ id: n.raster, group: true, clip: n.groupClip });
-      else if (n.raster && !n.rasterHideContent) marks.push({ id: n.raster, whole: true });
+      else if (n.raster && !n.rasterHideContent) marks.push({ id: n.raster, whole: true, clip: n.glowClip });
       for (const k of (n.kids || [])) whole(k);
     })(tree);
     if (marks.length) fs.mkdirSync(imagesDir, { recursive: true });
@@ -967,6 +984,9 @@ async function aiNamePass(page, records, dir) {
       try {
         if (m.group) {  // one clip screenshot of the whole decoration cluster
           await page.evaluate(setGroupOnlyFn, { gid: m.id, on: true });
+          await page.screenshot({ path: outPath, clip: m.clip, omitBackground: true });
+        } else if (m.clip) {  // raster with an outer glow — capture the expanded box
+          await page.evaluate(setBgOnlyFn, { id: m.id, on: true, hideKids: !m.whole });
           await page.screenshot({ path: outPath, clip: m.clip, omitBackground: true });
         } else {
           await page.evaluate(setBgOnlyFn, { id: m.id, on: true, hideKids: !m.whole });
