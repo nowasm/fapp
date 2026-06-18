@@ -912,12 +912,13 @@ async function aiNamePass(page, records, dir) {
       await page.evaluate(({ st, fn }) => { if (typeof window[fn] === 'function') window[fn](st); }, { st: cap.nav, fn: a.navFn });
       await page.waitForTimeout(a.wait);
     }
-    // A click-triggered second-level page (popup/overlay) should contain ONLY
-    // the opened overlay, not the parent screen behind it. Tag every existing
-    // element before the steps; afterwards the overlay is the largest NEW
-    // positioned element covering a good part of the screen — collect from it.
-    // (A step that just mutates the current screen, e.g. a toggle, adds no such
-    // overlay → we keep the full screen root.)
+    // A click-triggered second-level page should contain ONLY what the click
+    // opened, not the parent screen behind it. Tag every existing element before
+    // the steps; afterwards find the root of the largest NEW subtree (a new
+    // element whose parent already existed) and collect from it. This catches
+    // both a positioned overlay (chat/settings modal) and an inline panel that
+    // REPLACES a sibling (the gift panel swapping the chat bar). A step that just
+    // mutates the current screen (a toggle) adds no such subtree → keep the screen.
     let captureRoot = a.root;
     const hasSteps = cap.steps && cap.steps.length;
     if (hasSteps) await page.evaluate(() => document.querySelectorAll('*').forEach(e => e.setAttribute('data-w2c-pre', '1')));
@@ -929,13 +930,18 @@ async function aiNamePass(page, records, dir) {
         const root = document.querySelector(rootSel) || document.body;
         const rr = root.getBoundingClientRect(), rootArea = rr.width * rr.height;
         let best = null, bestArea = 0;
-        for (const e of document.querySelectorAll('*')) {
-          if (e.hasAttribute('data-w2c-pre')) continue;            // pre-existing
+        for (const e of document.querySelectorAll(':not([data-w2c-pre])')) {
+          const p = e.parentElement;                                 // boundary = parent already existed
+          if (p && !p.hasAttribute('data-w2c-pre') && p !== document.body && p !== document.documentElement) continue;
           const cs = getComputedStyle(e);
-          if (cs.position !== 'fixed' && cs.position !== 'absolute') continue;
           if (cs.display === 'none' || cs.visibility === 'hidden') continue;
           const r = e.getBoundingClientRect(), area = r.width * r.height;
-          if (area >= rootArea * 0.25 && area > bestArea) { best = e; bestArea = area; }
+          const positioned = cs.position === 'fixed' || cs.position === 'absolute';
+          // a full-screen positioned overlay, OR an inline panel that's a real
+          // chunk but not a whole-screen re-render
+          const ok = (positioned && area >= rootArea * 0.25) ||
+                     (area >= rootArea * 0.02 && area <= rootArea * 0.90);
+          if (ok && area > bestArea) { best = e; bestArea = area; }
         }
         if (best) { best.setAttribute('data-w2c-ovl', '1'); return true; }
         return false;

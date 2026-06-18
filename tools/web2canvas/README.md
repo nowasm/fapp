@@ -83,13 +83,14 @@ screenshot. Each capture becomes one top-level frame -> one `.tscn`.
 - Isolation is automatic: before each capture the target screen is remounted via
   a sentinel state, so a popup opened in one capture never leaks into the next.
 
-A click-triggered second-level page is captured as **just the overlay it opened**,
+A click-triggered second-level page is captured as **just what the click opened**,
 not the parent screen behind it: before the steps run, every existing element is
-tagged; the overlay is then the largest NEW positioned element covering ≥25% of
-the root, and the frame is collected from it alone. A step that merely mutates
-the current screen (a toggle, a tab swap) adds no such overlay, so the full
-screen is kept. (Full-root opaque overlays are likewise reduced to their own
-subtree.)
+tagged; afterwards the frame is collected from the root of the largest NEW
+subtree (a new element whose parent already existed). That catches both a
+positioned overlay covering ≥25% of the root (a chat/settings modal) and an
+inline panel that REPLACES a sibling (the gift panel swapping the chat bar — a
+2–90% chunk). A step that merely mutates the current screen (a toggle) adds no
+such subtree, so the full screen is kept.
 
 ## Example — GOGO KILL HUD (8 screens → Godot)
 
