@@ -305,22 +305,28 @@ function collectorFn({ rootSelector, aiName }) {
            Math.abs(v[2]) > 0.01 || Math.abs(v[3] - 1) > 0.01;  // non-translation
   }
 
-  // Exact rect of an element's own (non-whitespace) text, via a Range — handles
-  // padding, alignment and wrapping. Returns null when there is no direct text.
+  // An element's own (non-whitespace) text, via a Range per direct text node.
+  // Each text node is a RUN with its own rect: an element with inline siblings
+  // (由 <span>name</span> rest) has its text split AROUND the span, so the runs
+  // must stay separate — merging them into one box would span the whole line and
+  // overlap the inline span. Returns { runs:[{text,rect}], text, rect } or null
+  // (text/rect = joined/union, for naming + the single-run fast path).
   function measureDirectText(el, ox, oy) {
-    let text = '', rects = [];
+    const runs = [];
     for (const ch of el.childNodes) {
       if (ch.nodeType === 3 && ch.textContent && ch.textContent.trim()) {
         const r = document.createRange();
         r.selectNodeContents(ch);
         const rc = r.getBoundingClientRect();
-        if (rc.width >= 1 && rc.height >= 1) { rects.push(rc); text += ch.textContent; }
+        if (rc.width >= 1 && rc.height >= 1)
+          runs.push({ text: ch.textContent.replace(/\s+/g, ' ').trim(),
+                      rect: { x: rc.left - ox, y: rc.top - oy, w: rc.width, h: rc.height } });
       }
     }
-    if (!rects.length) return null;
-    const x0 = Math.min(...rects.map(r => r.left)), y0 = Math.min(...rects.map(r => r.top));
-    const x1 = Math.max(...rects.map(r => r.right)), y1 = Math.max(...rects.map(r => r.bottom));
-    return { text: text.replace(/\s+/g, ' ').trim(), rect: { x: x0 - ox, y: y0 - oy, w: x1 - x0, h: y1 - y0 } };
+    if (!runs.length) return null;
+    const x0 = Math.min(...runs.map(r => r.rect.x)), y0 = Math.min(...runs.map(r => r.rect.y));
+    const x1 = Math.max(...runs.map(r => r.rect.x + r.rect.w)), y1 = Math.max(...runs.map(r => r.rect.y + r.rect.h));
+    return { runs, text: runs.map(r => r.text).join(' '), rect: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } };
   }
 
   function node(el, ox, oy, depth) {
@@ -360,6 +366,7 @@ function collectorFn({ rootSelector, aiName }) {
       rect: { x: r.left - ox, y: r.top - oy, w: r.width, h: r.height },
       text: ti ? ti.text : null,
       textRect: ti ? ti.rect : null,
+      textRuns: ti ? ti.runs : null,
       bg: norm(cs.backgroundColor),
       radius: [cs.borderTopLeftRadius, cs.borderTopRightRadius,
                cs.borderBottomRightRadius, cs.borderBottomLeftRadius].map(v => parseFloat(v) || 0),
@@ -549,14 +556,16 @@ function textRole(text, n) {
   return 'labelText';
 }
 
-function makeTextNode(n, base) {
-  const tr = n.textRect;
+// One TEXT node per text RUN (a contiguous text node). `txt`/`tr` are the run's
+// content/rect; font + color come from the owning element `n`.
+function makeTextNode(n, base, txt, tr) {
+  if (txt === undefined) { txt = n.text; tr = n.textRect; }
   const node = {
-    name: textRole(n.text, n),
+    name: textRole(txt, n),
     type: 'TEXT',
     transform: { x: +(tr.x - base.x).toFixed(2), y: +(tr.y - base.y).toFixed(2) },
     size: { x: +tr.w.toFixed(2), y: +tr.h.toFixed(2) },
-    textData: { characters: n.text },
+    textData: { characters: txt },
   };
   const fam = (n.fontFamily || 'Inter').split(',')[0].replace(/['"]/g, '').trim();
   node.fontName = { family: fam };
@@ -578,17 +587,24 @@ function makeTextNode(n, base) {
   return node;
 }
 
+// All TEXT nodes for an element's direct text — one per run (see measureDirectText).
+function textNodes(n, base) {
+  const runs = (n.textRuns && n.textRuns.length) ? n.textRuns : [{ text: n.text, rect: n.textRect }];
+  return runs.map(r => makeTextNode(n, base, r.text, r.rect));
+}
+
 function mapNode(n, parent) {
   const base = parent ? parent.rect : n.rect;
   const hasText = !!(n.text && n.textRect);
+  const singleRun = !n.textRuns || n.textRuns.length <= 1;
   const kids = n.kids || [];
   const solid = solidPaint(n.bg);
   const hasBorder = n.borderW > 0 && n.borderStyle !== 'none';
   const hasRadius = (n.radius || []).some(v => v > 0);
   const boxVisual = !!solid || !!n.raster || hasBorder || hasRadius || !!n.effect;
 
-  // Pure text (no box, no children) -> a single TEXT node.
-  if (parent && hasText && !boxVisual && kids.length === 0) {
+  // Pure text (no box, no children, one run) -> a single TEXT node.
+  if (parent && hasText && !boxVisual && kids.length === 0 && singleRun) {
     const t = makeTextNode(n, base);
     if (n.opacity < 0.999) t.opacity = n.opacity;
     return t;
@@ -635,7 +651,7 @@ function mapNode(n, parent) {
   if (n.opacity < 0.999) node.opacity = n.opacity;
 
   const children = [];
-  if (hasText) children.push(makeTextNode(n, n.rect));  // text relative to this frame
+  if (hasText) for (const t of textNodes(n, n.rect)) children.push(t);  // one per run
   for (const k of kids) children.push(mapNode(k, n));
   if (children.length) node.children = children;
   return node;
