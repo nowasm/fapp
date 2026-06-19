@@ -1315,6 +1315,154 @@ json toolDuplicateNode(EditorState& ed, const json& a) {
     return toolText(nodeDetail(ed, *raw).dump(2));
 }
 
+// ---- components & instances ------------------------------------------------
+// figo bakes instance children at load time (no live master link), so reuse is
+// modeled as: mark a master (make_component) → stamp copies (create_instance,
+// a deep clone tagged with the master id) → propagate master edits on demand
+// (sync_instances re-clones the master into every instance).
+
+Node* findComponentMaster(EditorState& ed, const json& a) {
+    const std::string cid = a.value("componentId", a.value("id", std::string()));
+    if (cid.empty()) throw ToolError("need \"componentId\" (the master node's id)");
+    Node* m = findNode(ed, cid);
+    if (!m) throw ToolError("component master not found: " + cid);
+    return m;
+}
+
+json toolMakeComponent(EditorState& ed, const json& a) {
+    requireDoc(ed);
+    Node* n = findNodeArg(ed, a, "id");
+    if (!n->parent) throw ToolError("cannot make the page/root a component");
+    if (n->type == NodeType::Instance)
+        throw ToolError("that node is an instance; components are masters");
+    std::vector<NodeProps> before{NodeProps::capture(n)};
+    n->type = NodeType::Component;
+    if (a.contains("name")) n->name = a["name"].get<std::string>();
+    ed.pushPropsUndo(std::move(before));
+    ed.bumpNode(n);
+    ed.markDocChanged();
+    ed.setStatus("MCP: made component " + n->name);
+    return toolText(json{{"componentId", n->id},
+                         {"name", n->name},
+                         {"hint", "create_instance with componentId='" + n->id + "'"}}
+                        .dump(2));
+}
+
+json toolCreateInstance(EditorState& ed, const json& a) {
+    requireDoc(ed);
+    Node* master = findComponentMaster(ed, a);
+    Node* parent = a.contains("parentId") ? findNodeArg(ed, a, "parentId") : ed.page;
+    if (parent->type == NodeType::Text) throw ToolError("cannot nest nodes inside a TEXT node");
+    for (Node* p = parent; p; p = p->parent)
+        if (p == master) throw ToolError("cannot place an instance inside its own master");
+
+    auto inst = figo::cloneNode(*master, parent);
+    assignFreshIds(ed, *inst);
+    inst->type = NodeType::Instance;
+    inst->componentId = master->id;
+    if (a.contains("name")) inst->name = a["name"].get<std::string>();
+    if (a.contains("x")) inst->relativeTransform.m02 = a["x"].get<float>();
+    if (a.contains("y")) inst->relativeTransform.m12 = a["y"].get<float>();
+    inst->baseTransform = inst->relativeTransform;
+
+    Node* raw = inst.get();
+    const size_t at = parent->children.size();
+    parent->children.push_back(std::move(inst));
+    UndoEntry e;
+    TreeChange ch;
+    ch.isInsert = true;
+    ch.parent = parent;
+    ch.index = at;
+    ch.node = raw;
+    e.tree.push_back(std::move(ch));
+    ed.undoStack.push_back(std::move(e));
+    ed.redoStack.clear();
+    ed.unsaved = true;
+    ed.markDocChanged();
+    ed.setStatus("MCP: instance of " + master->name);
+    return toolText(nodeDetail(ed, *raw).dump(2));
+}
+
+json toolSyncInstances(EditorState& ed, const json& a) {
+    requireDoc(ed);
+    Node* master = findComponentMaster(ed, a);
+
+    std::vector<Node*> targets;
+    if (a.contains("instanceIds") && a["instanceIds"].is_array()) {
+        for (const auto& idv : a["instanceIds"]) {
+            Node* n = findNode(ed, idv.get<std::string>());
+            if (n && n->componentId == master->id) targets.push_back(n);
+        }
+    } else {
+        std::function<void(Node*)> scan = [&](Node* n) {
+            if (n != master && n->type == NodeType::Instance && n->componentId == master->id)
+                targets.push_back(n);
+            for (auto& c : n->children) scan(c.get());
+        };
+        scan(ed.page);
+    }
+    if (targets.empty()) throw ToolError("no instances of '" + master->id + "' found on this page");
+
+    UndoEntry e;
+    int synced = 0;
+    for (Node* inst : targets) {
+        Node* parent = inst->parent;
+        if (!parent) continue;
+        auto& sib = parent->children;
+        size_t i = 0;
+        for (; i < sib.size(); ++i)
+            if (sib[i].get() == inst) break;
+        if (i >= sib.size()) continue;
+
+        // Fresh full clone of the master, keeping the instance's id and position.
+        auto fresh = figo::cloneNode(*master, parent);
+        assignFreshIds(ed, *fresh);
+        fresh->id = inst->id;
+        fresh->name = inst->name;
+        fresh->type = NodeType::Instance;
+        fresh->componentId = master->id;
+        fresh->relativeTransform.m02 = inst->relativeTransform.m02;
+        fresh->relativeTransform.m12 = inst->relativeTransform.m12;
+        fresh->baseTransform = fresh->relativeTransform;
+
+        // Drop editor references into the outgoing subtree.
+        ed.selection.erase(std::remove_if(ed.selection.begin(), ed.selection.end(),
+                                          [&](Node* s) {
+                                              for (Node* p = s; p; p = p->parent)
+                                                  if (p == inst) return true;
+                                              return false;
+                                          }),
+                           ed.selection.end());
+        for (Node* p = ed.scope; p; p = p->parent)
+            if (p == inst) { ed.scope = ed.page; break; }
+        ed.hovered = nullptr;
+
+        Node* freshRaw = fresh.get();
+        TreeChange rem;
+        rem.isInsert = false;
+        rem.parent = parent;
+        rem.index = i;
+        rem.node = inst;
+        rem.detached = std::move(sib[i]);  // keep the old subtree alive for undo
+        e.tree.push_back(std::move(rem));
+        sib[i] = std::move(fresh);  // in-place swap → sibling indices unchanged
+        TreeChange ins;
+        ins.isInsert = true;
+        ins.parent = parent;
+        ins.index = i;
+        ins.node = freshRaw;
+        e.tree.push_back(std::move(ins));
+        ++synced;
+    }
+    if (e.tree.empty()) throw ToolError("nothing synced");
+    ed.undoStack.push_back(std::move(e));
+    ed.redoStack.clear();
+    ed.unsaved = true;
+    ed.markDocChanged();
+    ed.setStatus("MCP: synced " + std::to_string(synced) + " instance(s)");
+    return toolText(json{{"componentId", master->id}, {"synced", synced}}.dump(2));
+}
+
 json toolMoveNode(EditorState& ed, const json& a) {
     requireDoc(ed);
     Node* n = findNodeArg(ed, a, "id");
@@ -1609,6 +1757,30 @@ const json& toolsJson() {
   }}
 },
 {
+  "name": "make_component",
+  "description": "Mark a node (and its subtree) as a reusable COMPONENT master. Returns a componentId (the node's id) to stamp instances from. Park masters on a spare page or off-canvas; build them well once, then reuse.",
+  "inputSchema": {"type": "object", "required": ["id"], "properties": {
+    "id": {"type": "string"}, "name": {"type": "string"}
+  }}
+},
+{
+  "name": "create_instance",
+  "description": "Stamp a copy of a component master (deep clone) as an INSTANCE, tagged with its componentId. Place via parentId/x/y. Use this instead of rebuilding shared UI (cards, buttons, list rows) so the design stays consistent. Note: figo instances have no live link — edit the master then call sync_instances to propagate.",
+  "inputSchema": {"type": "object", "required": ["componentId"], "properties": {
+    "componentId": {"type": "string", "description": "the master node's id (from make_component)"},
+    "parentId": {"type": "string"}, "name": {"type": "string"},
+    "x": {"type": "number"}, "y": {"type": "number"}
+  }}
+},
+{
+  "name": "sync_instances",
+  "description": "Propagate a master's current look to its instances: re-clones the master into every INSTANCE that references it (preserving each instance's id and position). Run after editing the master. Caveat: this overwrites instance content — per-instance text/color overrides are replaced, so re-apply them after. Pass instanceIds to limit scope.",
+  "inputSchema": {"type": "object", "required": ["componentId"], "properties": {
+    "componentId": {"type": "string"},
+    "instanceIds": {"type": "array", "items": {"type": "string"}}
+  }}
+},
+{
   "name": "move_node",
   "description": "Reparent and/or reorder a node. index is the position among the new siblings (default: append). Note: x/y stay relative to the new parent — adjust them via update_nodes if needed.",
   "inputSchema": {"type": "object", "required": ["id"], "properties": {
@@ -1686,6 +1858,9 @@ json runTool(EditorState& ed, const std::string& name, const json& args) {
         if (name == "update_nodes") return toolUpdateNodes(ed, args);
         if (name == "delete_nodes") return toolDeleteNodes(ed, args);
         if (name == "duplicate_node") return toolDuplicateNode(ed, args);
+        if (name == "make_component") return toolMakeComponent(ed, args);
+        if (name == "create_instance") return toolCreateInstance(ed, args);
+        if (name == "sync_instances") return toolSyncInstances(ed, args);
         if (name == "move_node") return toolMoveNode(ed, args);
         if (name == "set_selection") return toolSetSelection(ed, args);
         if (name == "set_page") return toolSetPage(ed, args);

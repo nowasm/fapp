@@ -41,9 +41,13 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
 > `<dir>/app.json`（`figmaplay <dir>`，字段见 README "app 工程"）。下面是底层速查：
 
 1. **设计**：启动 `build\figmaedit.exe <file.fig>`，仓库根 `.mcp.json` 已配置
-   figmaedit 的 MCP（127.0.0.1:9223），用它的 18 个工具直接读改设计
+   figmaedit 的 MCP（127.0.0.1:9223），用它的 21 个工具直接读改设计
    （get_node_tree / create_node / update_nodes / import_image / import_svg /
-   audit_design / get_screenshot / save_document…）。插画支持两条路：
+   audit_design / make_component / create_instance / sync_instances /
+   get_screenshot / save_document…）。**复用**：把建好的卡片/按钮/列表行用
+   `make_component` 标成 master，再 `create_instance` 盖章复用（保持一致）；改完
+   master 调 `sync_instances` 把样子传播到所有实例（figo 实例无活链，按需同步；
+   同步会覆盖实例内容，逐实例的文案/颜色 override 需同步后重打）。插画支持两条路：
    - **位图**：`import_image`（base64 `data` 或本地 `path`）把 PNG/JPEG/WebP 收进文档
      （落在同级 `<doc>.assets/`，存进 .figo.json 后重开仍可解析），默认顺手建一个带
      IMAGE fill 的节点；也可给任意节点设 `fill:{type:"IMAGE",imageRef,scaleMode}`。

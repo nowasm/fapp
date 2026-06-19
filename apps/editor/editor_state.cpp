@@ -136,6 +136,7 @@ float uiMeasure(const char* text, int size) {
 NodeProps NodeProps::capture(Node* n) {
     NodeProps p;
     p.node = n;
+    p.type = n->type;
     p.transform = n->relativeTransform;
     p.width = n->width;
     p.height = n->height;
@@ -165,6 +166,7 @@ NodeProps NodeProps::capture(Node* n) {
 }
 
 void NodeProps::apply() const {
+    node->type = type;
     node->relativeTransform = transform;
     node->width = width;
     node->height = height;

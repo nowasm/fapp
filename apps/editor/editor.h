@@ -94,6 +94,7 @@ struct Camera2D2 {
 // of the touched nodes) and tree structure changes (remove/insert one node).
 struct NodeProps {
     Node* node = nullptr;
+    figo::NodeType type = figo::NodeType::Frame;
     Mat23 transform;
     float width = 0, height = 0;
     float opacity = 1;
