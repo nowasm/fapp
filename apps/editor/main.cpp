@@ -50,6 +50,16 @@ bool openFile(EditorState& ed, const std::string& path) {
         ed.filePath = path;
         ed.savePath = path + ".figo.json";
         ed.imageDir = ed.file.imageDirectory;
+        if (ed.imageDir.empty()) {
+            // Adopt the sibling "<doc>.assets" folder that import_image writes
+            // to, so IMAGE fills saved into a .figo.json still resolve on reopen
+            // — whether the user reopens the original input or the saved file.
+            std::error_code ec;
+            for (const std::string& base : {ed.savePath, ed.filePath}) {
+                const fs::path assets = fs::path(base).replace_extension(".assets");
+                if (fs::is_directory(assets, ec)) { ed.imageDir = assets.string(); break; }
+            }
+        }
         if (!ed.imageDir.empty()) ed.renderer.setImageDirectory(ed.imageDir);
         registerConventionFonts(ed, path);
         ed.undoStack.clear();

@@ -250,10 +250,12 @@ if(FIGO_BACKEND_RAYLIB AND FIGO_DESKTOP)
         apps/editor/editor_dialogs.cpp
         apps/editor/editor_mcp.cpp
         apps/editor/editor_mcp_net.cpp
+        apps/editor/svg_import.cpp
         backends/raylib/pinch_stub.cpp   # trackpad pinch source (empty on Apple)
     )
     target_include_directories(figmaedit PRIVATE
-        "${raygui_SOURCE_DIR}/src" third_party backends/raylib)
+        "${raygui_SOURCE_DIR}/src" third_party backends/raylib
+        "${CMAKE_CURRENT_SOURCE_DIR}/src")  # svg_import reuses src/svg_path.h
     target_link_libraries(figmaedit PRIVATE figo raylib)
     if(WIN32)
         target_link_libraries(figmaedit PRIVATE comdlg32 ws2_32)  # dialogs + MCP socket

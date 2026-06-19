@@ -17,6 +17,10 @@
 #include <cstdio>
 #include <cstring>
 #include <deque>
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -24,6 +28,7 @@
 #include <nlohmann/json.hpp>
 
 #include "editor_mcp_net.h"
+#include "svg_import.h"
 
 namespace figmaedit {
 
@@ -69,6 +74,58 @@ std::string base64(const unsigned char* data, size_t len) {
         out.push_back(i + 2 < len ? tbl[b2 & 63] : '=');
     }
     return out;
+}
+
+namespace fs = std::filesystem;
+
+// Decode standard base64 (tolerant of whitespace and an optional
+// "data:...;base64," prefix). Returns raw bytes as a std::string.
+std::string base64Decode(std::string in) {
+    const auto comma = in.find(',');
+    if (in.rfind("data:", 0) == 0 && comma != std::string::npos)
+        in = in.substr(comma + 1);
+    auto val = [](char c) -> int {
+        if (c >= 'A' && c <= 'Z') return c - 'A';
+        if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+        if (c >= '0' && c <= '9') return c - '0' + 52;
+        if (c == '+') return 62;
+        if (c == '/') return 63;
+        return -1;
+    };
+    std::string out;
+    int buf = 0, bits = 0;
+    for (char c : in) {
+        if (c == '=') break;
+        const int v = val(c);
+        if (v < 0) continue;  // skip newlines / stray whitespace
+        buf = (buf << 6) | v;
+        bits += 6;
+        if (bits >= 8) {
+            bits -= 8;
+            out.push_back(static_cast<char>((buf >> bits) & 0xFF));
+        }
+    }
+    return out;
+}
+
+// Sniff a supported raster format from magic bytes. Returns "" if unknown
+// or unsupported (the renderer only loads PNG/JPEG/WebP).
+std::string sniffImageExt(const std::string& b) {
+    auto eq = [&](size_t off, const char* sig, size_t n) {
+        return b.size() >= off + n && std::memcmp(b.data() + off, sig, n) == 0;
+    };
+    if (eq(0, "\x89PNG\r\n\x1a\n", 8)) return ".png";
+    if (eq(0, "\xFF\xD8\xFF", 3)) return ".jpg";
+    if (eq(0, "RIFF", 4) && eq(8, "WEBP", 4)) return ".webp";
+    return "";
+}
+
+std::string sanitizeStem(std::string s) {
+    for (char& c : s)
+        if (!std::isalnum(static_cast<unsigned char>(c)) && c != '-' && c != '_')
+            c = '_';
+    if (s.empty()) s = "image";
+    return s;
 }
 
 std::string colorToHex(const figo::Color& c) {
@@ -249,6 +306,15 @@ Paint paintFromJson(const json& v) {
         p.type = PaintType::Solid;
         if (!v.contains("color")) throw ToolError("solid paint needs \"color\"");
         p.color = parseColor(v["color"].get<std::string>());
+        return p;
+    }
+    if (t == "IMAGE") {
+        p.type = PaintType::Image;
+        p.imageRef = v.value("imageRef", v.value("ref", std::string()));
+        if (p.imageRef.empty())
+            throw ToolError("image paint needs \"imageRef\" (use import_image to add one)");
+        p.imageScaleMode =
+            upper(v.value("scaleMode", v.value("imageScaleMode", std::string("FILL"))));
         return p;
     }
     if (t == "GRADIENT_LINEAR") p.type = PaintType::GradientLinear;
@@ -769,6 +835,386 @@ json toolCreateNode(EditorState& ed, const json& a) {
     return toolText(nodeDetail(ed, *n).dump(2));
 }
 
+// Resolve (creating if needed) the directory IMAGE fills load from, and make
+// every live renderer aware of it. Files loaded from a .fig already have an
+// export dir; a fresh document gets a stable sibling "<save>.assets" folder.
+std::string ensureImageDir(EditorState& ed) {
+    if (ed.imageDir.empty()) {
+        fs::path base = !ed.savePath.empty()    ? fs::path(ed.savePath)
+                        : !ed.filePath.empty()  ? fs::path(ed.filePath)
+                                                : fs::path("untitled");
+        ed.imageDir = base.replace_extension(".assets").string();
+        ed.renderer.setImageDirectory(ed.imageDir);
+        for (auto& [node, entry] : ed.frameCache)
+            if (entry.renderer) entry.renderer->setImageDirectory(ed.imageDir);
+    }
+    std::error_code ec;
+    fs::create_directories(ed.imageDir, ec);
+    if (ec) throw ToolError("cannot create image dir '" + ed.imageDir + "': " + ec.message());
+    return ed.imageDir;
+}
+
+json toolImportImage(EditorState& ed, const json& a) {
+    requireDoc(ed);
+    const std::string dir = ensureImageDir(ed);
+
+    // 1. gather bytes from either base64 "data" or a local "path".
+    std::string bytes, srcName;
+    if (a.contains("data") && !a["data"].is_null()) {
+        bytes = base64Decode(a["data"].get<std::string>());
+        srcName = a.value("name", std::string());
+        if (bytes.empty()) throw ToolError("\"data\" decoded to 0 bytes");
+    } else if (a.contains("path") && !a["path"].is_null()) {
+        const std::string src = a["path"].get<std::string>();
+        std::ifstream f(src, std::ios::binary);
+        if (!f) throw ToolError("cannot read file: " + src);
+        bytes.assign(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
+        if (bytes.empty()) throw ToolError("file is empty: " + src);
+        srcName = a.value("name", fs::path(src).filename().string());
+    } else {
+        throw ToolError("import_image needs \"data\" (base64) or \"path\" (local file)");
+    }
+
+    // 2. pick a sanitized, unique <stem><ext> — sniff the format if the name
+    //    lacks a usable extension. The renderer only loads PNG/JPEG/WebP.
+    std::string ext = fs::path(srcName).extension().string();
+    for (char& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    if (ext != ".png" && ext != ".jpg" && ext != ".jpeg" && ext != ".webp")
+        ext = sniffImageExt(bytes);
+    if (ext.empty())
+        throw ToolError("unrecognized image format — want PNG, JPEG or WebP");
+    std::string stem = sanitizeStem(fs::path(srcName).stem().string());
+    std::string fname = stem + ext;
+    for (int k = 1; fs::exists(fs::path(dir) / fname); ++k)
+        fname = stem + "_" + std::to_string(k) + ext;
+
+    // 3. write it into the image dir.
+    const fs::path dest = fs::path(dir) / fname;
+    std::ofstream out(dest, std::ios::binary | std::ios::trunc);
+    if (!out) throw ToolError("cannot write: " + dest.string());
+    out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    out.close();
+    if (!out) throw ToolError("write failed: " + dest.string());
+
+    // 4. probe pixel dimensions for a sensible default node size.
+    int iw = 0, ih = 0;
+    {
+        Image img = LoadImage(dest.string().c_str());
+        if (img.data) { iw = img.width; ih = img.height; UnloadImage(img); }
+    }
+
+    const std::string scaleMode = upper(a.value("scaleMode", std::string("FILL")));
+
+    // 5. unless asked not to, drop a node carrying the image fill.
+    if (a.value("createNode", true)) {
+        json mk = json::object();
+        mk["type"] = a.value("nodeType", std::string("rectangle"));
+        if (a.contains("parentId")) mk["parentId"] = a["parentId"];
+        if (a.contains("x")) mk["x"] = a["x"];
+        if (a.contains("y")) mk["y"] = a["y"];
+        mk["width"] = a.value("width", static_cast<float>(iw > 0 ? iw : 100));
+        mk["height"] = a.value("height", static_cast<float>(ih > 0 ? ih : 100));
+        mk["name"] = a.value("name", stem);
+        mk["fill"] = json{{"type", "IMAGE"}, {"imageRef", fname}, {"scaleMode", scaleMode}};
+        json res = toolCreateNode(ed, mk);
+        ed.setStatus("MCP: imported image " + fname);
+        return res;
+    }
+
+    ed.setStatus("MCP: imported image " + fname);
+    return toolText(json{{"imageRef", fname},
+                         {"width", iw},
+                         {"height", ih},
+                         {"dir", dir},
+                         {"hint", "set a node fill to {type:'IMAGE', imageRef:'" + fname +
+                                      "', scaleMode:'FILL'}"}}
+                        .dump(2));
+}
+
+json toolImportSvg(EditorState& ed, const json& a) {
+    requireDoc(ed);
+
+    // SVG markup from inline "data" or a local "path".
+    std::string svg;
+    if (a.contains("data") && !a["data"].is_null()) {
+        svg = a["data"].get<std::string>();
+    } else if (a.contains("path") && !a["path"].is_null()) {
+        const std::string src = a["path"].get<std::string>();
+        std::ifstream f(src, std::ios::binary);
+        if (!f) throw ToolError("cannot read file: " + src);
+        svg.assign(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
+    } else {
+        throw ToolError("import_svg needs \"data\" (SVG markup) or \"path\" (local .svg file)");
+    }
+    if (svg.find_first_not_of(" \t\r\n") == std::string::npos) throw ToolError("SVG is empty");
+
+    SvgImportOptions opt;
+    opt.x = a.value("x", 0.0f);
+    opt.y = a.value("y", 0.0f);
+    opt.width = a.value("width", 0.0f);
+    opt.height = a.value("height", 0.0f);
+    opt.name = a.value("name", std::string());
+    opt.monochrome = a.value("monochrome", std::string());
+    if (a.contains("palette") && a["palette"].is_object()) {
+        for (auto it = a["palette"].begin(); it != a["palette"].end(); ++it) {
+            std::string from = it.key();
+            if (!from.empty() && from[0] == '#') from = from.substr(1);
+            for (char& c : from) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            opt.palette[from] = it.value().get<std::string>();
+        }
+    }
+
+    std::string err;
+    std::unique_ptr<Node> frame = importSvg(svg, opt, err);
+    if (!frame) throw ToolError("SVG import failed: " + err);
+
+    // Fresh ids for the whole subtree.
+    std::function<void(Node&)> assignIds = [&](Node& n) {
+        n.id = newId(ed);
+        for (auto& c : n.children) assignIds(*c);
+    };
+    assignIds(*frame);
+
+    Node* parent = a.contains("parentId") ? findNodeArg(ed, a, "parentId") : ed.page;
+    if (parent->type == NodeType::Text) throw ToolError("cannot nest nodes inside a TEXT node");
+
+    Node* frameRaw = frame.get();
+    frame->parent = parent;
+    const size_t at = parent->children.size();
+    parent->children.push_back(std::move(frame));
+
+    UndoEntry e;
+    TreeChange ch;
+    ch.isInsert = true;
+    ch.parent = parent;
+    ch.index = at;
+    ch.node = frameRaw;
+    e.tree.push_back(std::move(ch));
+    ed.undoStack.push_back(std::move(e));
+    ed.redoStack.clear();
+    ed.unsaved = true;
+    ed.markDocChanged();
+
+    size_t vectorCount = 0;
+    for (const auto& c : frameRaw->children) vectorCount += 1 + c->children.size();
+    ed.setStatus("MCP: imported SVG (" + std::to_string(vectorCount) + " shapes)");
+    return toolText(nodeTree(ed, *frameRaw, 2).dump(2));
+}
+
+// ---- design audit (token compliance + contrast) ----------------------------
+
+float srgbToLinear(float c) {
+    return c <= 0.03928f ? c / 12.92f : std::pow((c + 0.055f) / 1.055f, 2.4f);
+}
+float relLuminance(const figo::Color& c) {
+    return 0.2126f * srgbToLinear(c.r) + 0.7152f * srgbToLinear(c.g) + 0.0722f * srgbToLinear(c.b);
+}
+float contrastRatio(const figo::Color& a, const figo::Color& b) {
+    const float la = relLuminance(a), lb = relLuminance(b);
+    const float hi = std::max(la, lb), lo = std::min(la, lb);
+    return (hi + 0.05f) / (lo + 0.05f);
+}
+float colorDistance(const figo::Color& a, const figo::Color& b) {  // 0..441 over sRGB bytes
+    const float dr = (a.r - b.r) * 255, dg = (a.g - b.g) * 255, db = (a.b - b.b) * 255;
+    return std::sqrt(dr * dr + dg * dg + db * db);
+}
+
+struct TokenScale {
+    std::vector<std::pair<std::string, figo::Color>> colors;
+    std::vector<std::pair<std::string, float>> fontSizes;
+    std::vector<std::pair<std::string, float>> radii;
+};
+
+// Resolve a design-tokens.json into comparable sets. Handles var(--x) aliases
+// for colors; drops non-px / color-mix / rgba()-list values we can't compare.
+TokenScale loadTokenScale(const json& doc) {
+    TokenScale ts;
+    std::unordered_map<std::string, std::string> raw;
+    if (doc.contains("tokens") && doc["tokens"].is_array())
+        for (const auto& t : doc["tokens"])
+            if (t.contains("name") && t.contains("value") && t["value"].is_string())
+                raw[t["name"].get<std::string>()] = t["value"].get<std::string>();
+
+    std::function<std::string(std::string, int)> deref = [&](std::string v, int depth) -> std::string {
+        v = v.substr(v.find_first_not_of(" \t") == std::string::npos ? 0 : v.find_first_not_of(" \t"));
+        if (depth < 8 && v.rfind("var(", 0) == 0) {
+            const auto close = v.find(')');
+            std::string name = v.substr(4, close == std::string::npos ? std::string::npos : close - 4);
+            name = name.substr(0, name.find(','));  // var(--x, fallback)
+            // trim
+            while (!name.empty() && std::isspace(static_cast<unsigned char>(name.back()))) name.pop_back();
+            size_t a = name.find_first_not_of(" \t");
+            if (a != std::string::npos) name = name.substr(a);
+            const auto it = raw.find(name);
+            if (it != raw.end()) return deref(it->second, depth + 1);
+        }
+        return v;
+    };
+
+    if (doc.contains("tokens") && doc["tokens"].is_array()) {
+        for (const auto& t : doc["tokens"]) {
+            if (!t.contains("name") || !t.contains("type") || !t.contains("value")) continue;
+            const std::string name = t["name"].get<std::string>();
+            const std::string type = t["type"].get<std::string>();
+            if (type == "color") {
+                std::string v = t["value"].is_string() ? deref(t["value"].get<std::string>(), 0) : "";
+                if (v.size() >= 4 && v[0] == '#') {
+                    try { ts.colors.emplace_back(name, parseColor(v)); } catch (...) {}
+                }
+            } else if (type == "dimension" && t["value"].is_string()) {
+                const std::string v = t["value"].get<std::string>();
+                if (v.find("var(") != std::string::npos) continue;
+                const float px = std::strtof(v.c_str(), nullptr);
+                if (px <= 0) continue;
+                std::string ln = name;
+                for (char& c : ln) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                if (ln.find("text") != std::string::npos || ln.find("font") != std::string::npos)
+                    ts.fontSizes.emplace_back(name, px);
+                else if (ln.find("radius") != std::string::npos || ln.find("round") != std::string::npos)
+                    ts.radii.emplace_back(name, px);
+            }
+        }
+    }
+    return ts;
+}
+
+bool nearScale(const std::vector<std::pair<std::string, float>>& scale, float v, float tol,
+               std::string& nearestName, float& nearestVal) {
+    bool any = false;
+    float best = 1e9f;
+    for (const auto& s : scale) {
+        const float d = std::fabs(s.second - v);
+        if (d < best) { best = d; nearestName = s.first; nearestVal = s.second; }
+        any = true;
+    }
+    return any && best <= tol;
+}
+
+json toolAuditDesign(EditorState& ed, const json& a) {
+    requireDoc(ed);
+    const std::string path = a.value("tokensPath", std::string());
+    if (path.empty()) throw ToolError("audit_design needs \"tokensPath\" (a design-tokens.json)");
+    std::ifstream f(path, std::ios::binary);
+    if (!f) throw ToolError("cannot read tokens file: " + path);
+    json doc = json::parse(f, nullptr, false);
+    if (doc.is_discarded()) throw ToolError("tokens file is not valid JSON: " + path);
+    const TokenScale ts = loadTokenScale(doc);
+    if (ts.colors.empty() && ts.fontSizes.empty())
+        throw ToolError("no comparable color/dimension tokens found in " + path);
+
+    const float colorTol = a.value("colorTolerance", 16.0f);  // sRGB distance
+    const size_t maxFindings = static_cast<size_t>(std::max(1, a.value("maxFindings", 60)));
+    Node* root = a.contains("nodeId") ? findNodeArg(ed, a, "nodeId") : ed.page;
+
+    json findings = json::array();
+    int offColor = 0, offFont = 0, offRadius = 0, lowContrast = 0, checked = 0;
+
+    auto nearestColor = [&](const figo::Color& c, std::string& name, float& dist) {
+        dist = 1e9f;
+        for (const auto& t : ts.colors) {
+            const float d = colorDistance(c, t.second);
+            if (d < dist) { dist = d; name = t.first; }
+        }
+    };
+    auto bgOf = [&](Node* n) -> figo::Color {
+        for (Node* p = n->parent; p; p = p->parent)
+            for (const auto& fl : p->fills)
+                if (fl.visible && fl.type == PaintType::Solid && fl.color.a > 0.5f) return fl.color;
+        return figo::Color{1, 1, 1, 1};  // assume white page
+    };
+    auto add = [&](const char* cat, const char* sev, Node* n, const std::string& detail,
+                   const std::string& suggestion) {
+        if (findings.size() >= maxFindings) return;
+        findings.push_back({{"category", cat},
+                            {"severity", sev},
+                            {"nodeId", n->id},
+                            {"name", n->name},
+                            {"detail", detail},
+                            {"suggestion", suggestion}});
+    };
+
+    std::function<void(Node*)> visit = [&](Node* n) {
+        if (n->visible && n->opacity > 0.02f) {
+            ++checked;
+            auto checkPaint = [&](const Paint& p, const char* what) {
+                if (!p.visible || p.type != PaintType::Solid || p.color.a < 0.05f) return;
+                if (ts.colors.empty()) return;
+                std::string name;
+                float dist;
+                nearestColor(p.color, name, dist);
+                if (dist > colorTol) {
+                    ++offColor;
+                    add("off-palette", "warn", n,
+                        std::string(what) + " " + colorToHex(p.color) + " is off-palette (nearest " +
+                            name + ", Δ" + std::to_string(static_cast<int>(dist)) + ")",
+                        "snap to a palette token or justify the custom shade");
+                }
+            };
+            for (const auto& p : n->fills) checkPaint(p, "fill");
+            for (const auto& p : n->strokes) checkPaint(p, "stroke");
+
+            if (n->cornerRadius > 0 && !ts.radii.empty()) {
+                std::string nm; float nv;
+                if (!nearScale(ts.radii, n->cornerRadius, 1.5f, nm, nv)) {
+                    ++offRadius;
+                    add("off-radius", "info", n,
+                        "cornerRadius " + std::to_string(static_cast<int>(n->cornerRadius)) +
+                            " not on the radius scale (nearest " + nm + "=" +
+                            std::to_string(static_cast<int>(nv)) + ")",
+                        "use cornerRadius " + std::to_string(static_cast<int>(nv)));
+                }
+            }
+
+            if (n->type == NodeType::Text) {
+                const float fs = n->textStyle.fontSize;
+                if (!ts.fontSizes.empty()) {
+                    std::string nm; float nv;
+                    if (!nearScale(ts.fontSizes, fs, 0.6f, nm, nv)) {
+                        ++offFont;
+                        add("off-typescale", "warn", n,
+                            "fontSize " + std::to_string(static_cast<int>(fs)) +
+                                " not on the type scale (nearest " + nm + "=" +
+                                std::to_string(static_cast<int>(nv)) + ")",
+                            "use fontSize " + std::to_string(static_cast<int>(nv)));
+                    }
+                }
+                // contrast: first solid text fill vs nearest opaque ancestor bg
+                for (const auto& p : n->fills) {
+                    if (!p.visible || p.type != PaintType::Solid || p.color.a < 0.5f) continue;
+                    const float ratio = contrastRatio(p.color, bgOf(n));
+                    const bool large = fs >= 24.0f || (fs >= 18.66f && n->textStyle.fontWeight >= 600);
+                    const float need = large ? 3.0f : 4.5f;
+                    if (ratio < need) {
+                        ++lowContrast;
+                        char buf[16];
+                        std::snprintf(buf, sizeof(buf), "%.2f", ratio);
+                        add("low-contrast", "error", n,
+                            std::string("text contrast ") + buf + ":1 below WCAG AA (" +
+                                (large ? "3.0" : "4.5") + ":1 for this size)",
+                            "darken/lighten the text or its background");
+                    }
+                    break;
+                }
+            }
+        }
+        for (auto& c : n->children) visit(c.get());
+    };
+    visit(root);
+
+    json summary = {{"nodesChecked", checked},
+                    {"offPalette", offColor},
+                    {"offTypeScale", offFont},
+                    {"offRadius", offRadius},
+                    {"lowContrast", lowContrast},
+                    {"tokenColors", ts.colors.size()},
+                    {"tokenFontSizes", ts.fontSizes.size()}};
+    if (findings.size() >= maxFindings)
+        summary["truncated"] = "findings capped at " + std::to_string(maxFindings);
+    ed.setStatus("MCP: audited " + std::to_string(checked) + " nodes, " +
+                 std::to_string(offColor + offFont + offRadius + lowContrast) + " findings");
+    return toolText(json{{"summary", summary}, {"findings", findings}}.dump(2));
+}
+
 json toolUpdateNodes(EditorState& ed, const json& a) {
     requireDoc(ed);
     const auto& updates = a.at("updates");
@@ -1096,7 +1542,7 @@ const json& toolsJson() {
     "name": {"type": "string"},
     "x": {"type": "number"}, "y": {"type": "number"},
     "width": {"type": "number"}, "height": {"type": "number"},
-    "fill": {"description": "color string or paint object {type:SOLID|GRADIENT_LINEAR|...,color,stops,handles}"},
+    "fill": {"description": "color string or paint object {type:SOLID|GRADIENT_LINEAR|IMAGE|...,color,stops,handles; IMAGE needs imageRef from import_image + scaleMode FILL|FIT|TILE|STRETCH}"},
     "stroke": {"description": "color string or paint object"},
     "strokeWeight": {"type": "number"},
     "cornerRadius": {"type": "number"},
@@ -1117,6 +1563,35 @@ const json& toolsJson() {
   "inputSchema": {"type": "object", "required": ["updates"], "properties": {
     "updates": {"type": "array", "items": {"type": "object", "required": ["id"],
       "properties": {"id": {"type": "string"}}}}
+  }}
+},
+{
+  "name": "import_image",
+  "description": "Bring a raster image (PNG/JPEG/WebP) into the document so it can be used as an IMAGE fill. Supply the bytes via 'data' (base64, optionally a data: URL) or 'path' (a local file to copy in). The image is stored alongside the document and referenced by the returned imageRef. By default a node is created carrying the image as a FILL fill, sized to the image's pixels; set createNode=false to only store the file and then reference imageRef from a fill yourself. Use this for photos, textures, and AI-generated illustrations.",
+  "inputSchema": {"type": "object", "properties": {
+    "data": {"type": "string", "description": "base64 image bytes (or a data: URL)"},
+    "path": {"type": "string", "description": "local image file to copy into the document"},
+    "name": {"type": "string", "description": "preferred file/node name (extension optional)"},
+    "scaleMode": {"type": "string", "enum": ["FILL","FIT","TILE","STRETCH"]},
+    "createNode": {"type": "boolean", "description": "place a node with the image fill (default true)"},
+    "nodeType": {"type": "string", "description": "node type when createNode (default rectangle)"},
+    "parentId": {"type": "string"},
+    "x": {"type": "number"}, "y": {"type": "number"},
+    "width": {"type": "number"}, "height": {"type": "number"}
+  }}
+},
+{
+  "name": "import_svg",
+  "description": "Import SVG markup as editable vector nodes — a FRAME holding one VECTOR per shape (path/rect/circle/ellipse/line/polygon, with transforms, solid fills/strokes and best-effort linear/radial gradients). Supply 'data' (the SVG text) or 'path' (a local .svg file). Sizes to the viewBox unless width/height are given. Use 'monochrome' to force every fill to one color (great for icons), or 'palette' {\"oldhex\":\"#NEWHEX\"} to remap specific colors to your design tokens. Stays vector — scalable, recolorable, and clean to export. Not supported: text, embedded <image>, <use>, clipPath/mask/filter.",
+  "inputSchema": {"type": "object", "properties": {
+    "data": {"type": "string", "description": "SVG markup"},
+    "path": {"type": "string", "description": "local .svg file"},
+    "name": {"type": "string"},
+    "parentId": {"type": "string"},
+    "x": {"type": "number"}, "y": {"type": "number"},
+    "width": {"type": "number"}, "height": {"type": "number"},
+    "monochrome": {"type": "string", "description": "#RRGGBB applied to every solid fill/stroke"},
+    "palette": {"type": "object", "description": "map of source hex (rrggbb) to replacement #RRGGBB"}
   }}
 },
 {
@@ -1153,6 +1628,16 @@ const json& toolsJson() {
   "description": "Switch the current page by index (see get_editor_state).",
   "inputSchema": {"type": "object", "required": ["index"], "properties": {
     "index": {"type": "integer"}
+  }}
+},
+{
+  "name": "audit_design",
+  "description": "Check the design against a design system's tokens and report concrete, deterministic findings the eye misses: off-palette fills/strokes (sRGB distance to the nearest token color), font sizes off the type scale, corner radii off the radius scale, and text with WCAG-AA contrast below 4.5:1 (3:1 for large text). Point tokensPath at a design-systems/<name>/design-tokens.json. Pair with get_screenshot for the visual half of a review. Returns {summary, findings:[{category,severity,nodeId,name,detail,suggestion}]} — fix via update_nodes and re-run to verify.",
+  "inputSchema": {"type": "object", "required": ["tokensPath"], "properties": {
+    "tokensPath": {"type": "string", "description": "path to design-tokens.json"},
+    "nodeId": {"type": "string", "description": "scope the audit to one subtree (default: whole page)"},
+    "colorTolerance": {"type": "number", "description": "sRGB distance below which a color counts as on-token (default 16)"},
+    "maxFindings": {"type": "integer"}
   }}
 },
 {
@@ -1195,6 +1680,9 @@ json runTool(EditorState& ed, const std::string& name, const json& args) {
         if (name == "get_node_tree") return toolGetNodeTree(ed, args);
         if (name == "get_node") return toolGetNode(ed, args);
         if (name == "create_node") return toolCreateNode(ed, args);
+        if (name == "import_image") return toolImportImage(ed, args);
+        if (name == "import_svg") return toolImportSvg(ed, args);
+        if (name == "audit_design") return toolAuditDesign(ed, args);
         if (name == "update_nodes") return toolUpdateNodes(ed, args);
         if (name == "delete_nodes") return toolDeleteNodes(ed, args);
         if (name == "duplicate_node") return toolDuplicateNode(ed, args);

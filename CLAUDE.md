@@ -41,8 +41,17 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
 > `<dir>/app.json`（`figmaplay <dir>`，字段见 README "app 工程"）。下面是底层速查：
 
 1. **设计**：启动 `build\figmaedit.exe <file.fig>`，仓库根 `.mcp.json` 已配置
-   figmaedit 的 MCP（127.0.0.1:9223），用它的 15 个工具直接读改设计
-   （get_node_tree / create_node / update_nodes / get_screenshot / save_document…）。
+   figmaedit 的 MCP（127.0.0.1:9223），用它的 18 个工具直接读改设计
+   （get_node_tree / create_node / update_nodes / import_image / import_svg /
+   audit_design / get_screenshot / save_document…）。插画支持两条路：
+   - **位图**：`import_image`（base64 `data` 或本地 `path`）把 PNG/JPEG/WebP 收进文档
+     （落在同级 `<doc>.assets/`，存进 .figo.json 后重开仍可解析），默认顺手建一个带
+     IMAGE fill 的节点；也可给任意节点设 `fill:{type:"IMAGE",imageRef,scaleMode}`。
+   - **矢量**：`import_svg`（`data` 是 SVG 文本或 `path` 指 .svg）把 SVG 拆成一个 FRAME +
+     每个图形一个 VECTOR（支持 path/rect/circle/ellipse/line/polygon、transform、实色
+     填充/描边、尽力而为的线性/径向渐变）。`monochrome:"#RRGGBB"` 把所有实色填充统一
+     成一色（适合图标）；`palette:{"oldhex":"#NEW"}` 按色值改色对接设计 token。保持矢量、
+     可缩放可改色，导引擎更干净。不支持 text/`<image>`/`<use>`/clipPath/mask/filter。
 2. **逻辑**：写 `app.js`。完整 JS API 见 `include/figo/script.h` 头部注释。速查：
    - `ui.onClick/onHover/onUpdate`、`ui.navigateTo(name, "slideLeft", 0.3)` / `navigateBack`
    - `ui.bindList(name, count, (item, i) => …)`，节点：`.find/.child/.parent/.index/.text/.type`
@@ -54,6 +63,10 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
    交互验证参考 `examples/scripts/wallet.js` 的 SELFDRIVE 模式（`ui.tap` 合成点击 +
    `--selfdrive` 前缀截图）。figmaplay 运行中改 .js 会热重载，脚本需可重入
    （重跑一遍应幂等）。
+4. **设计质量评审**：走 **`/design-critic` skill**（`.claude/skills/design-critic/`）——
+   截图(看) + figmaedit MCP 的 `audit_design`(量：离色板填充、不在字阶的字号、低于 WCAG AA
+   的对比度) → 给具体修改项 → `update_nodes` 改 → 重审/重截图验证。`audit_design` 的
+   `tokensPath` 指向 `design-systems/<name>/design-tokens.json`。
 
 ## 关键约定与坑
 
