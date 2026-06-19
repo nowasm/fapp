@@ -56,6 +56,9 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
      填充/描边、尽力而为的线性/径向渐变）。`monochrome:"#RRGGBB"` 把所有实色填充统一
      成一色（适合图标）；`palette:{"oldhex":"#NEW"}` 按色值改色对接设计 token。保持矢量、
      可缩放可改色，导引擎更干净。不支持 text/`<image>`/`<use>`/clipPath/mask/filter。
+     **开箱图标**：`design-systems/icons/`（35 个 Lucide 描边图标，ISC）——
+     `import_svg {path:"design-systems/icons/<name>.svg", monochrome:"<token色>"}` 即可，
+     清单与加图标方法见该目录 README。
 2. **逻辑**：写 `app.js`。完整 JS API 见 `include/figo/script.h` 头部注释。速查：
    - `ui.onClick/onHover/onUpdate`、`ui.navigateTo(name, "slideLeft", 0.3)` / `navigateBack`
    - `ui.bindList(name, count, (item, i) => …)`，节点：`.find/.child/.parent/.index/.text/.type`

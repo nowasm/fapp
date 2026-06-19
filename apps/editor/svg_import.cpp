@@ -432,7 +432,8 @@ bool pathBounds(const std::string& d, float& x, float& y, float& w, float& h) {
     bool ok = figo::appendSvgPath(*s, d.c_str());
     if (ok) ok = s->bounds(&x, &y, &w, &h) == tvg::Result::Success;
     tvg::Paint::rel(s);
-    return ok && w > 0 && h > 0;
+    // Accept lines (zero extent on one axis); reject only degenerate points.
+    return ok && (w > 0 || h > 0);
 }
 
 // ---- gradients -------------------------------------------------------------

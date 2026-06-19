@@ -28,13 +28,20 @@ python tools/figmanew.py <dir> -t <template> -n "<App Name>" -d <design-system>
 ```
 build\figmaedit.exe <dir>\design.json
 ```
-用 15 个 MCP 工具改设计（都在主线程帧间执行，与用户共享 undo）：
+用 21 个 MCP 工具改设计（都在主线程帧间执行，与用户共享 undo）：
 - **读**：`get_node_tree` / `get_node` / `get_editor_state`、`get_screenshot`（AI 的眼睛）
 - **写**：`create_node` / `update_nodes`（批量=一次 undo）/ `delete_nodes` /
   `duplicate_node` / `move_node`
+- **插画**：`import_image`（位图）/ `import_svg`（矢量，含 monochrome/palette 改色）
+- **复用**：`make_component` / `create_instance` / `sync_instances`
+- **审计**：`audit_design`（token 合规 + 对比度）
 - **联动/存**：`set_selection` / `set_page` / `save_document` / `undo` / `redo`
 
 要点：
+- **别让 UI 光秃**：图标用 `design-systems/icons/`（35 个 Lucide，`import_svg`
+  `{path, monochrome:"<token色>"}`），插画用 `import_svg`/`import_image`。
+- **重复元素用组件**：卡片/按钮/列表行先做好一个 → `make_component` → `create_instance`
+  盖章；改 master 后 `sync_instances` 传播。一致性和返工都省。
 - **套设计系统 token**：建节点前读 `design-systems/<sys>/design-tokens.json` +
   `DESIGN.md` 的 "Agent Prompt Guide"，按 `design-systems/TOKEN_MAPPING.md` 把
   token 折算成 figmaedit 属性（`fill` 用 `#RRGGBB`、`cornerRadius`、文本 `fontFamily`
