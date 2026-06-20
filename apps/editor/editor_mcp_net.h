@@ -7,7 +7,7 @@
 #include <functional>
 #include <string>
 
-namespace figmaedit {
+namespace figoedit {
 namespace net {
 
 struct HttpResponse {
@@ -25,4 +25,4 @@ bool serverStart(int port, HttpHandler handler);
 void serverStop();  // closes the socket and joins the thread
 
 }  // namespace net
-}  // namespace figmaedit
+}  // namespace figoedit

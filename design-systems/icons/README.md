@@ -2,14 +2,14 @@
 
 35 个最常用的 UI 图标，取自 [Lucide](https://lucide.dev)（lucide-static **v1.21.0**，ISC
 许可，见 `LICENSE`）。每个都是 24×24、`stroke="currentColor"` 的描边图标——干净、可缩放、
-**可改色**，正好喂给 figmaedit MCP 的 `import_svg`。
+**可改色**，正好喂给 figoedit MCP 的 `import_svg`。
 
 ## 怎么用
 
 按名导入，并用 `monochrome` 把描边色统一成当前设计系统的前景/强调 token：
 
 ```jsonc
-// figmaedit MCP: import_svg
+// figoedit MCP: import_svg
 { "path": "design-systems/icons/search.svg",
   "name": "icon-search", "parentId": "<容器>", "x": 12, "y": 12,
   "width": 20, "height": 20,

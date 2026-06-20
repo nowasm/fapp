@@ -49,7 +49,7 @@ if(EMSCRIPTEN)
 endif()
 
 # Android: everything links into one shared library (the NativeActivity
-# loads libfigmaplay.so), so every static archive must be PIC.
+# loads libfigoplay.so), so every static archive must be PIC.
 if(ANDROID)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
@@ -177,26 +177,26 @@ if(FIGO_DESKTOP)
     target_include_directories(figo2godot PRIVATE third_party)  # nlohmann (manifest, later)
 endif()
 
-# ---- figmaplay: the generic script player (an app = .fig + .js) ----
+# ---- figoplay: the generic script player (an app = .fig + .js) ----
 if(FIGO_SCRIPTING AND FIGO_BACKEND_RAYLIB)
     if(ANDROID)
-        # The NativeActivity loads libfigmaplay.so; keep the glue's entry
+        # The NativeActivity loads libfigoplay.so; keep the glue's entry
         # point alive (raylib only sets that flag in its own scope).
-        add_library(figmaplay SHARED apps/figmaplay/main.cpp)
-        target_include_directories(figmaplay PRIVATE
+        add_library(figoplay SHARED apps/figoplay/main.cpp)
+        target_include_directories(figoplay PRIVATE
             "${ANDROID_NDK}/sources/android/native_app_glue")
-        target_link_options(figmaplay PRIVATE "SHELL:-u ANativeActivity_onCreate")
-        target_link_libraries(figmaplay PRIVATE android log)
+        target_link_options(figoplay PRIVATE "SHELL:-u ANativeActivity_onCreate")
+        target_link_libraries(figoplay PRIVATE android log)
     else()
-        add_executable(figmaplay apps/figmaplay/main.cpp)
+        add_executable(figoplay apps/figoplay/main.cpp)
     endif()
-    target_link_libraries(figmaplay PRIVATE figo_raylib figo_script)
-    target_include_directories(figmaplay PRIVATE third_party)  # nlohmann (app.json)
-    target_compile_definitions(figmaplay PRIVATE
+    target_link_libraries(figoplay PRIVATE figo_raylib figo_script)
+    target_include_directories(figoplay PRIVATE third_party)  # nlohmann (app.json)
+    target_compile_definitions(figoplay PRIVATE
         EXAMPLES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples")
     if(EMSCRIPTEN)
-        set_target_properties(figmaplay PROPERTIES SUFFIX ".html")
-        target_link_options(figmaplay PRIVATE
+        set_target_properties(figoplay PROPERTIES SUFFIX ".html")
+        target_link_options(figoplay PRIVATE
             "-sUSE_GLFW=3"
             "-sALLOW_MEMORY_GROWTH=1"
             "-sSTACK_SIZE=2097152"
@@ -209,7 +209,7 @@ if(FIGO_SCRIPTING AND FIGO_BACKEND_RAYLIB)
         set(FIGO_WEB_APP_DIR "" CACHE PATH "Packaged app dir preloaded at /app")
         if(FIGO_WEB_APP_DIR)
             # SHELL: keeps each flag+arg pair intact (CMake de-dups bare flags)
-            target_link_options(figmaplay PRIVATE
+            target_link_options(figoplay PRIVATE
                 "SHELL:--preload-file ${FIGO_WEB_APP_DIR}@/app")
         else()
             # Default: the bundled wallet demo. The design ships pre-converted
@@ -217,19 +217,19 @@ if(FIGO_SCRIPTING AND FIGO_BACKEND_RAYLIB)
             set(FIGO_WEB_DESIGN_DIR
                 "${CMAKE_CURRENT_SOURCE_DIR}/../fig2psd/test/figma/wallet.fig.export"
                 CACHE PATH "Design dir (canvas.json + images) preloaded into the web FS")
-            target_link_options(figmaplay PRIVATE
+            target_link_options(figoplay PRIVATE
                 "SHELL:--preload-file ${FIGO_WEB_DESIGN_DIR}@/assets/wallet"
                 "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/examples/scripts/wallet.js@/scripts/wallet.js"
                 "SHELL:--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/examples/assets/fonts@/fonts")
         endif()
     endif()
     if(WIN32 AND NOT EMSCRIPTEN AND NOT ANDROID)
-        # figmapack sets this per app to embed the app's icon into figmaplay.exe.
-        set(FIGO_WIN_ICON "" CACHE FILEPATH "A .ico embedded into figmaplay.exe")
+        # figmapack sets this per app to embed the app's icon into figoplay.exe.
+        set(FIGO_WIN_ICON "" CACHE FILEPATH "A .ico embedded into figoplay.exe")
         if(FIGO_WIN_ICON)
-            set(_figmaplay_rc "${CMAKE_CURRENT_BINARY_DIR}/figmaplay_icon.rc")
-            file(WRITE "${_figmaplay_rc}" "IDI_ICON1 ICON \"${FIGO_WIN_ICON}\"\n")
-            target_sources(figmaplay PRIVATE "${_figmaplay_rc}")
+            set(_figoplay_rc "${CMAKE_CURRENT_BINARY_DIR}/figoplay_icon.rc")
+            file(WRITE "${_figoplay_rc}" "IDI_ICON1 ICON \"${FIGO_WIN_ICON}\"\n")
+            target_sources(figoplay PRIVATE "${_figoplay_rc}")
         endif()
     endif()
 endif()
@@ -241,7 +241,7 @@ if(FIGO_BACKEND_RAYLIB AND FIGO_DESKTOP)
     )
     FetchContent_MakeAvailable(raygui)
 
-    add_executable(figmaedit
+    add_executable(figoedit
         apps/editor/main.cpp
         apps/editor/editor_state.cpp
         apps/editor/editor_canvas.cpp
@@ -253,19 +253,19 @@ if(FIGO_BACKEND_RAYLIB AND FIGO_DESKTOP)
         apps/editor/svg_import.cpp
         backends/raylib/pinch_stub.cpp   # trackpad pinch source (empty on Apple)
     )
-    target_include_directories(figmaedit PRIVATE
+    target_include_directories(figoedit PRIVATE
         "${raygui_SOURCE_DIR}/src" third_party backends/raylib
         "${CMAKE_CURRENT_SOURCE_DIR}/src")  # svg_import reuses src/svg_path.h
-    target_link_libraries(figmaedit PRIVATE figo raylib)
+    target_link_libraries(figoedit PRIVATE figo raylib)
     if(WIN32)
-        target_link_libraries(figmaedit PRIVATE comdlg32 ws2_32)  # dialogs + MCP socket
+        target_link_libraries(figoedit PRIVATE comdlg32 ws2_32)  # dialogs + MCP socket
     endif()
     if(APPLE)
         # Two-finger pinch zoom: a Cocoa NSEventMaskMagnify monitor that GLFW
         # does not expose (see backends/raylib/pinch_macos.mm).
-        target_sources(figmaedit PRIVATE backends/raylib/pinch_macos.mm)
-        target_link_libraries(figmaedit PRIVATE "-framework Cocoa")
+        target_sources(figoedit PRIVATE backends/raylib/pinch_macos.mm)
+        target_link_libraries(figoedit PRIVATE "-framework Cocoa")
     endif()
-    target_compile_definitions(figmaedit PRIVATE
+    target_compile_definitions(figoedit PRIVATE
         ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/examples/assets")
 endif()

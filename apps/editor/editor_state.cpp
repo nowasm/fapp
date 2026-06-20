@@ -4,7 +4,7 @@
 
 #include "editor.h"
 
-namespace figmaedit {
+namespace figoedit {
 
 float gUiScale = 1.0f;
 int kToolbarH = 44;
@@ -17,7 +17,7 @@ void initUiScale() {
     gUiScale = std::max(
         1.0f, static_cast<float>(GetMonitorWidth(GetCurrentMonitor())) / 1920.0f);
     gUiScale = std::min(gUiScale, 3.0f);
-    if (const char* env = std::getenv("FIGMAEDIT_SCALE"); env && *env) {
+    if (const char* env = std::getenv("FIGOEDIT_SCALE"); env && *env) {
         gUiScale = std::max(0.5f, std::min(4.0f, static_cast<float>(std::atof(env))));
     }
     kToolbarH = static_cast<int>(44 * gUiScale);
@@ -571,4 +571,4 @@ void EditorState::updateAbsoluteTransforms() {
     for (auto& c : page->children) updateAbs(*c, Mat23::identity());
 }
 
-}  // namespace figmaedit
+}  // namespace figoedit

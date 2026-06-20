@@ -9,7 +9,7 @@
 #include "editor.h"
 #include "pinch_gesture.h"  // macOS trackpad pinch (no-op elsewhere)
 
-namespace figmaedit {
+namespace figoedit {
 
 namespace {
 
@@ -608,9 +608,9 @@ void drawCanvas(EditorState& ed) {
         uiText(label, static_cast<int>(lx), static_cast<int>(ly), fontS(), WHITE);
     }
 
-    // debug readout (FIGMAEDIT_DEBUG=1)
+    // debug readout (FIGOEDIT_DEBUG=1)
     static const bool dbg = []() {
-        const char* e = std::getenv("FIGMAEDIT_DEBUG");
+        const char* e = std::getenv("FIGOEDIT_DEBUG");
         return e && *e == '1';
     }();
     if (dbg) {
@@ -641,4 +641,4 @@ void drawCanvas(EditorState& ed) {
     EndScissorMode();
 }
 
-}  // namespace figmaedit
+}  // namespace figoedit

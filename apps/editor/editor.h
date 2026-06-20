@@ -1,5 +1,5 @@
 #pragma once
-// figmaedit — a Figma-style editor on top of figo.
+// figoedit — a Figma-style editor on top of figo.
 // Interaction semantics intentionally mirror Figma: scope-based selection
 // (click = top-level under cursor, double-click drills in, Ctrl+click deep
 // selects, Esc pops out), space/middle-drag pan, Ctrl+wheel or two-finger
@@ -16,7 +16,7 @@
 
 #include <raylib.h>
 
-namespace figmaedit {
+namespace figoedit {
 
 using figo::Document;
 using figo::Mat23;
@@ -33,7 +33,7 @@ inline int fontS() { return static_cast<int>(13 * gUiScale); }
 inline int fontM() { return static_cast<int>(15 * gUiScale); }
 inline float ui(float v) { return v * gUiScale; }
 
-// ---- theme (designed in Figma: figmaedit UI Design) -------------------------
+// ---- theme (designed in Figma: figoedit UI Design) -------------------------
 inline constexpr ::Color kThemeCanvas{30, 30, 30, 255};     // #1E1E1E
 inline constexpr ::Color kThemePanel{44, 44, 44, 255};      // #2C2C2C
 inline constexpr ::Color kThemeField{36, 36, 36, 255};      // #242424 inputs
@@ -272,4 +272,4 @@ bool openFile(EditorState& ed, const std::string& path);
 void saveFile(EditorState& ed);
 void saveFileAs(EditorState& ed);
 
-}  // namespace figmaedit
+}  // namespace figoedit

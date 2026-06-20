@@ -1,4 +1,4 @@
-// figmaedit MCP server — JSON-RPC dispatch + design tools.
+// figoedit MCP server — JSON-RPC dispatch + design tools.
 //
 // Threading model: the net thread (editor_mcp_net) answers protocol-only
 // requests (initialize / ping / tools/list) inline; every tools/call is
@@ -30,7 +30,7 @@
 #include "editor_mcp_net.h"
 #include "svg_import.h"
 
-namespace figmaedit {
+namespace figoedit {
 
 namespace {
 
@@ -1662,7 +1662,7 @@ const json& toolsJson() {
     static const json tools = json::parse(R"JSON([
 {
   "name": "get_editor_state",
-  "description": "Current file, pages, selection and viewport of the running figmaedit editor. Call this first to orient yourself.",
+  "description": "Current file, pages, selection and viewport of the running figoedit editor. Call this first to orient yourself.",
   "inputSchema": {"type": "object", "properties": {}}
 },
 {
@@ -1823,7 +1823,7 @@ const json& toolsJson() {
 },
 {
   "name": "save_document",
-  "description": "Save to the editor's save path (<original>.figo.json) or an explicit path. The saved JSON reloads losslessly in figo/figmaedit.",
+  "description": "Save to the editor's save path (<original>.figo.json) or an explicit path. The saved JSON reloads losslessly in figo/figoedit.",
   "inputSchema": {"type": "object", "properties": {"path": {"type": "string"}}}
 },
 {
@@ -1907,9 +1907,9 @@ json handleRpc(EditorState& ed, const json& msg) {
         return rpcResult(
             id, json{{"protocolVersion", ver},
                      {"capabilities", {{"tools", json::object()}}},
-                     {"serverInfo", {{"name", "figmaedit"}, {"version", kServerVersion}}},
+                     {"serverInfo", {{"name", "figoedit"}, {"version", kServerVersion}}},
                      {"instructions",
-                      "figmaedit is a live Figma-style design editor. Workflow: "
+                      "figoedit is a live Figma-style design editor. Workflow: "
                       "get_editor_state -> get_node_tree / get_screenshot to see the "
                       "design -> create_node / update_nodes to edit -> get_screenshot "
                       "to verify visually. Every edit is undoable by the user (Ctrl+Z). "
@@ -2054,4 +2054,4 @@ std::string mcpHandleMessageForTest(EditorState& ed, const std::string& body) {
     return resp.is_null() ? std::string() : resp.dump();
 }
 
-}  // namespace figmaedit
+}  // namespace figoedit

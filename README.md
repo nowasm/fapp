@@ -42,23 +42,23 @@ ThorVG scene graph ──SwCanvas──▶ RGBA8888 pixel buffer (straight alpha
 include/figo/   public API (document / parser / renderer / ui / script)
 src/                parser, SVG path parsing, ThorVG scene building, fonts, renderer, script host
 backends/raylib/    raylib backend (reference template for other engine backends, ~200 lines)
-apps/editor/        figmaedit — a Figma-style visual editor (raylib + raygui + MCP)
-apps/figmaplay/     figmaplay — a generic script player (app = .fig + .js, hot-reload)
+apps/editor/        figoedit — a Figma-style visual editor (raylib + raygui + MCP)
+apps/figoplay/     figoplay — a generic script player (app = .fig + .js, hot-reload)
 apps/figo2godot/    figo2godot — canvas.json → a Godot 4 project (.tscn + sprites)
 examples/           demo_raylib / demo_wallet demos, example scripts and design files
   assets/           Figma JSON and .fig used for tests/demos
-  scripts/          figmaplay example scripts (wallet.js)
+  scripts/          figoplay example scripts (wallet.js)
 tools/              figmanew / figmapack / gen_templates (Python), web2canvas (Node)
   web2canvas/       React/HTML → canvas.json (Playwright driving a real browser)
 tests/              render_test (offscreen render self-check), layout_test (layout-math self-test)
 third_party/        nlohmann/json single header
 ```
 
-## figmaedit editor
+## figoedit editor
 
 ```
-build\figmaedit.exe [design.fig | canvas.json | file.json]   # or drag-and-drop a file onto the window
-build\figmaedit.exe --selftest [file]                        # headless logic self-test
+build\figoedit.exe [design.fig | canvas.json | file.json]   # or drag-and-drop a file onto the window
+build\figoedit.exe --selftest [file]                        # headless logic self-test
 ```
 
 Interactions mirror Figma:
@@ -78,26 +78,26 @@ inspector on the right (X/Y/W/H, opacity, corner radius, fill color, text
 content), and a toolbar on top (tools, page switch, zoom level). Saving writes
 `<original>.figo.json` (REST format, directly re-loadable by figo, never
 overwriting the original .fig). HiDPI scaling is auto-detected and overridable
-via the `FIGMAEDIT_SCALE` environment variable.
+via the `FIGOEDIT_SCALE` environment variable.
 
 ### MCP server (AI designs directly inside the editor)
 
-figmaedit embeds an MCP server on startup (Streamable HTTP, bound to localhost
+figoedit embeds an MCP server on startup (Streamable HTTP, bound to localhost
 `127.0.0.1:9223` only, endpoint `/mcp`). Once an AI client connects it can read
 the layer tree, add/edit/delete nodes, and screenshot to self-check — all edits
 share the user's single undo history (Ctrl+Z undoes any AI edit).
 
 ```
-build\figmaedit.exe --mcp-port 9300 design.fig    # change port
-build\figmaedit.exe --no-mcp design.fig           # disable MCP
-set FIGMAEDIT_MCP_PORT=9300                        # same via env var
+build\figoedit.exe --mcp-port 9300 design.fig    # change port
+build\figoedit.exe --no-mcp design.fig           # disable MCP
+set FIGOEDIT_MCP_PORT=9300                        # same via env var
 ```
 
 Connecting from Claude Code (a `.mcp.json` ships at the repo root and is
 auto-discovered inside this project):
 
 ```
-claude mcp add --transport http figmaedit http://127.0.0.1:9223/mcp
+claude mcp add --transport http figoedit http://127.0.0.1:9223/mcp
 ```
 
 Tools: `get_editor_state` / `get_node_tree` / `get_node` (read);
@@ -177,10 +177,10 @@ while (!WindowShouldClose()) {
 
 You can build an app without writing C++: **the design is a .fig, the logic is
 a .js**. `figo_script` binds the FigmaUI API into QuickJS (quickjs-ng,
-fetched by CMake), and `figmaplay` is the generic player:
+fetched by CMake), and `figoplay` is the generic player:
 
 ```
-figmaplay wallet.fig wallet.js
+figoplay wallet.fig wallet.js
 ```
 
 ```js
@@ -206,10 +206,10 @@ patching). The host only loads the two files and runs the frame loop
 
 Beyond loose files, an app can be **a directory + `app.json`** — gathering the
 design, logic, viewport, fonts, design system and packaging metadata into one
-project you hand directly to figmaplay:
+project you hand directly to figoplay:
 
 ```
-figmaplay examples/apps/sample            # reads sample/app.json
+figoplay examples/apps/sample            # reads sample/app.json
 ```
 
 ```jsonc
@@ -243,7 +243,7 @@ from a **working app** and edit, rather than generate from zero:
 python tools/figmanew.py --list                       # list templates
 python tools/figmanew.py myapp --template list-detail  # create myapp/
 python tools/figmanew.py myapp -t tab-shell -n "My App" -d revolut
-figmaplay myapp                                        # run it
+figoplay myapp                                        # run it
 ```
 
 | Template | Structure | Palette from |
@@ -444,7 +444,7 @@ python tools/figmapack.py examples/apps/sample -t all
 ```
 
 Output lands in `<out>/<app-slug>/<target>/`:
-- **win**: `figmaplay.exe` + `app/` + `run.cmd` (double-click to run)
+- **win**: `figoplay.exe` + `app/` + `run.cmd` (double-click to run)
 - **web**: `index.html` + wasm/js/data (serve with `python -m http.server`)
 - **android**: a signed `<app>.apk` (`adb install -r`)
 
@@ -453,7 +453,7 @@ Packaging metadata comes from app.json's `package` section:
   name / web title.
 - `icon` (square PNG) → web favicon + apple-touch-icon, android per-density
   `mipmap/ic_launcher`, and on **win the icon is embedded into the exe** (via
-  a .rc relink of figmaplay, requiring a configured `build/` + VS environment;
+  a .rc relink of figoplay, requiring a configured `build/` + VS environment;
   the `VCVARS` env var can override the path).
 - `splashColor` (`#rrggbb`, optional) + `icon` → a **splash screen**: web
   injects a branded loading overlay (icon + app name + spinner, fading out after
@@ -485,8 +485,8 @@ WebGL presentation):
 
 ```
 tools\build_thorvg_wasm.cmd    # ThorVG wasm static lib (sw engine, no threads, no lottie)
-tools\build_web.cmd            # produces build_web\figmaplay.{html,js,wasm,data}
-python -m http.server 8123 -d build_web   # open http://localhost:8123/figmaplay.html
+tools\build_web.cmd            # produces build_web\figoplay.{html,js,wasm,data}
+python -m http.server 8123 -d build_web   # open http://localhost:8123/figoplay.html
 ```
 
 emsdk defaults to `D:\devlib\emsdk` (override with `EMSDK_HOME`). The design is
@@ -501,13 +501,13 @@ on desktop only.
 
 ## Android build (no gradle)
 
-A NativeActivity (`hasCode=false`) loads libfigmaplay.so directly, with aapt
+A NativeActivity (`hasCode=false`) loads libfigoplay.so directly, with aapt
 packaging by hand:
 
 ```
 tools\build_thorvg_android.cmd      # ThorVG arm64-v8a + x86_64 static libs
-powershell tools\build_android.ps1  # NDK dual-ABI compile → build_android\figmaplay.apk
-adb install -r build_android\figmaplay.apk
+powershell tools\build_android.ps1  # NDK dual-ABI compile → build_android\figoplay.apk
+adb install -r build_android\figoplay.apk
 adb shell am start -n com.figo.play/android.app.NativeActivity
 ```
 

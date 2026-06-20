@@ -15,7 +15,7 @@
 
 #include <figo/document.h>
 
-namespace figmaedit {
+namespace figoedit {
 
 struct SvgImportOptions {
     float x = 0, y = 0;          // where the frame sits in its parent
@@ -31,4 +31,4 @@ struct SvgImportOptions {
 std::unique_ptr<figo::Node> importSvg(const std::string& svg,
                                       const SvgImportOptions& opt, std::string& err);
 
-}  // namespace figmaedit
+}  // namespace figoedit

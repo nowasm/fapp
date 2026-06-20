@@ -1,5 +1,5 @@
 #pragma once
-// figmaedit MCP server — lets an AI client (Claude Code, etc.) design directly
+// figoedit MCP server — lets an AI client (Claude Code, etc.) design directly
 // in the running editor.
 //
 // Transport: MCP "Streamable HTTP" on 127.0.0.1:<port>, endpoint /mcp.
@@ -10,13 +10,13 @@
 // can Ctrl+Z any AI edit).
 //
 // Connect from Claude Code:
-//   claude mcp add --transport http figmaedit http://127.0.0.1:9223/mcp
+//   claude mcp add --transport http figoedit http://127.0.0.1:9223/mcp
 
 #include <string>
 
 #include "editor.h"
 
-namespace figmaedit {
+namespace figoedit {
 
 // Start listening (background thread). Returns false if the port is taken.
 bool mcpStart(EditorState& ed, int port);
@@ -31,4 +31,4 @@ int mcpPort();  // 0 when not running
 // thread (no sockets). Returns the JSON response ("" for notifications).
 std::string mcpHandleMessageForTest(EditorState& ed, const std::string& body);
 
-}  // namespace figmaedit
+}  // namespace figoedit

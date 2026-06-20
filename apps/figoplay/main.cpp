@@ -1,6 +1,6 @@
-// figmaplay: the generic script player — an app is <design.fig> + <logic.js>.
+// figoplay: the generic script player — an app is <design.fig> + <logic.js>.
 //
-//   figmaplay [design.fig] [logic.js] [--selfdrive prefix]
+//   figoplay [design.fig] [logic.js] [--selfdrive prefix]
 //             [--shot out.png] [--frames N]
 //
 // All behavior lives in the script (see figo/script.h for the JS API);
@@ -18,7 +18,7 @@
 //
 // Web build (emscripten): the design ships pre-converted (canvas.json +
 // images) in the preloaded FS together with the script and fonts — see the
-// EMSCRIPTEN defaults below and the figmaplay target in CMakeLists.txt.
+// EMSCRIPTEN defaults below and the figoplay target in CMakeLists.txt.
 
 #include <cstdio>
 #include <cstdlib>
@@ -128,14 +128,14 @@ struct Player {
         std::ifstream in(manifestPath);
         nlohmann::json m;
         if (!in) {
-            std::printf("[figmaplay] no app.json at %s\n", manifestPath.c_str());
+            std::printf("[figoplay] no app.json at %s\n", manifestPath.c_str());
             design.clear();
             return;
         }
         try {
             in >> m;
         } catch (const std::exception& e) {
-            std::printf("[figmaplay] bad app.json: %s\n", e.what());
+            std::printf("[figoplay] bad app.json: %s\n", e.what());
             design.clear();
             return;
         }
@@ -153,7 +153,7 @@ struct Player {
         }
         if (m.contains("entryFrame")) entryFrame = m["entryFrame"].get<std::string>();
         appInject = "globalThis.APP = " + m.dump() + ";";
-        std::printf("[figmaplay] app '%s' (%s)\n",
+        std::printf("[figoplay] app '%s' (%s)\n",
                     m.value("name", std::string("app")).c_str(), dir.c_str());
     }
 
@@ -177,7 +177,7 @@ struct Player {
             const auto now = std::filesystem::last_write_time(script, fsEc);
             if (!fsEc && now != scriptStamp) {
                 scriptStamp = now;
-                std::printf("[figmaplay] reloading %s\n", script.c_str());
+                std::printf("[figoplay] reloading %s\n", script.c_str());
                 std::fflush(stdout);
                 loadScript();
             }
@@ -198,7 +198,7 @@ struct Player {
         if (!shotPath.empty()) {
             if (++frame >= shotFrames) {
                 TakeScreenshot(shotPath.c_str());
-                std::printf("[figmaplay] screenshot -> %s\n", shotPath.c_str());
+                std::printf("[figoplay] screenshot -> %s\n", shotPath.c_str());
                 done = true;
             }
         } else if (drivePrefix) {
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
     }
     if (p->script.empty()) p->script = std::string(EXAMPLES_DIR) + "/scripts/wallet.js";
     if (p->design.empty()) {
-        std::printf("usage: figmaplay [app-dir | design.fig] [logic.js] "
+        std::printf("usage: figoplay [app-dir | design.fig] [logic.js] "
                     "[--selfdrive prefix] [--shot out.png] [--frames N]\n");
         return 1;
     }
@@ -277,7 +277,7 @@ int main(int argc, char** argv) {
 #else
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
 #endif
-    InitWindow(p->winW, p->winH, "figmaplay — design.fig + logic.js");
+    InitWindow(p->winW, p->winH, "figoplay — design.fig + logic.js");
 
 #ifdef __ANDROID__
     // The window is up → the activity (and its asset manager) is live.

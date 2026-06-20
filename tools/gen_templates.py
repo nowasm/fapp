@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the figmaplay app templates' design.json from design-system tokens.
+"""Generate the figoplay app templates' design.json from design-system tokens.
 
 Each template is a standard app project (templates/<name>/{app.json, app.js,
 design.json}). This script only (re)builds the design.json files — the app.json

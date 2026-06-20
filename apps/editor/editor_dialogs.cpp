@@ -9,7 +9,7 @@
 #include <commdlg.h>
 #endif
 
-namespace figmaedit {
+namespace figoedit {
 
 #ifdef _WIN32
 
@@ -95,4 +95,4 @@ std::string showSaveFileDialog(const std::string&) { return {}; }
 
 #endif
 
-}  // namespace figmaedit
+}  // namespace figoedit

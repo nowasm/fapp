@@ -12,7 +12,7 @@
 
 #include <raygui.h>
 
-namespace figmaedit {
+namespace figoedit {
 
 namespace {
 
@@ -818,4 +818,4 @@ void drawInspector(EditorState& ed) {
     ed.inspectorScroll = std::min(ed.inspectorScroll, maxScroll);
 }
 
-}  // namespace figmaedit
+}  // namespace figoedit

@@ -11,7 +11,7 @@
 #define RAYGUI_IMPLEMENTATION
 #include <raygui.h>
 
-namespace figmaedit {
+namespace figoedit {
 
 void applyEditorTheme() {
     auto pack = [](::Color c) { return ColorToInt(c); };
@@ -300,4 +300,4 @@ void drawLayersPanel(EditorState& ed) {
 }
 
 
-}  // namespace figmaedit
+}  // namespace figoedit

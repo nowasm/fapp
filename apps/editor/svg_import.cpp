@@ -12,7 +12,7 @@
 
 #include "svg_path.h"  // figo::appendSvgPath — reused for accurate bbox
 
-namespace figmaedit {
+namespace figoedit {
 namespace {
 
 using figo::Color;
@@ -732,4 +732,4 @@ std::unique_ptr<Node> importSvg(const std::string& svg, const SvgImportOptions& 
     return frame;
 }
 
-}  // namespace figmaedit
+}  // namespace figoedit

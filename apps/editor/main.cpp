@@ -1,6 +1,6 @@
-// figmaedit — Figma-style editor built on figo + raylib + raygui.
+// figoedit — Figma-style editor built on figo + raylib + raygui.
 //
-//   figmaedit [file.fig | canvas.json | file.json]
+//   figoedit [file.fig | canvas.json | file.json]
 //
 // Drag & drop a file onto the window to open it. Ctrl+S saves a figo
 // JSON next to the original (never overwrites the .fig).
@@ -23,7 +23,7 @@
 #endif
 
 namespace fs = std::filesystem;
-using namespace figmaedit;
+using namespace figoedit;
 
 namespace {
 
@@ -40,7 +40,7 @@ void registerConventionFonts(EditorState& ed, const std::string& inputPath) {
 
 }  // namespace
 
-namespace figmaedit {
+namespace figoedit {
 
 bool openFile(EditorState& ed, const std::string& path) {
     try {
@@ -75,7 +75,7 @@ bool openFile(EditorState& ed, const std::string& path) {
         ed.setStatus("Opened " + path);
         return true;
     } catch (const std::exception& e) {
-        std::fprintf(stderr, "figmaedit: %s\n", e.what());
+        std::fprintf(stderr, "figoedit: %s\n", e.what());
         ed.setStatus(std::string("Open failed: ") + e.what(), 5);
         return false;
     }
@@ -99,10 +99,10 @@ void saveFileAs(EditorState& ed) {
     saveFile(ed);
 }
 
-}  // namespace figmaedit
+}  // namespace figoedit
 
 // Headless logic check: document mutations, undo/redo, tree ops, save
-// round-trip — everything below the mouse wiring. Run: figmaedit --selftest [file]
+// round-trip — everything below the mouse wiring. Run: figoedit --selftest [file]
 static int selftest(const std::string& path) {
     int failures = 0;
     auto expect = [&](bool ok, const char* what) {
@@ -196,7 +196,7 @@ static int selftest(const std::string& path) {
                       {{"protocolVersion", "2025-03-26"},
                        {"capabilities", json::object()},
                        {"clientInfo", {{"name", "selftest"}, {"version", "0"}}}}}});
-    expect(init["result"]["serverInfo"]["name"] == "figmaedit", "mcp initialize");
+    expect(init["result"]["serverInfo"]["name"] == "figoedit", "mcp initialize");
     json tools = rpc({{"jsonrpc", "2.0"}, {"id", 2}, {"method", "tools/list"}});
     expect(tools["result"]["tools"].is_array() && tools["result"]["tools"].size() >= 15,
            "mcp tools/list");
@@ -270,9 +270,9 @@ static int selftest(const std::string& path) {
 
 int main(int argc, char** argv) {
     // MCP flags can appear anywhere; strip them before positional parsing.
-    // Default: serve MCP on 127.0.0.1:9223 (FIGMAEDIT_MCP_PORT overrides).
+    // Default: serve MCP on 127.0.0.1:9223 (FIGOEDIT_MCP_PORT overrides).
     int mcpPortWanted = 9223;
-    if (const char* env = std::getenv("FIGMAEDIT_MCP_PORT"); env && *env)
+    if (const char* env = std::getenv("FIGOEDIT_MCP_PORT"); env && *env)
         mcpPortWanted = std::atoi(env);
     std::vector<char*> args;
     args.push_back(argv[0]);
@@ -306,14 +306,14 @@ int main(int argc, char** argv) {
     // the flag desyncs raylib's internal scale matrix after SetWindowSize,
     // pushing the right-hand panels outside the framebuffer.
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
-    InitWindow(1440, 900, "figmaedit");
+    InitWindow(1440, 900, "figoedit");
     SetExitKey(0);  // Esc is a selection command, not quit
     SetTargetFPS(120);
-    figmaedit::initUiScale();
-    figmaedit::initUiFont();
-    figmaedit::applyEditorTheme();
-    GuiSetFont(figmaedit::gUiFont);
-    GuiSetStyle(DEFAULT, TEXT_SIZE, figmaedit::fontM());
+    figoedit::initUiScale();
+    figoedit::initUiFont();
+    figoedit::applyEditorTheme();
+    GuiSetFont(figoedit::gUiFont);
+    GuiSetStyle(DEFAULT, TEXT_SIZE, figoedit::fontM());
     // Make the window comfortable on the current monitor.
     {
         const int mon = GetCurrentMonitor();
@@ -334,7 +334,7 @@ int main(int argc, char** argv) {
         ed.setStatus("Drop a .fig / .json file to open", 10);
     }
     // Test hook: select the first frame at startup (screenshot automation).
-    const char* autoSel = std::getenv("FIGMAEDIT_AUTOSELECT");
+    const char* autoSel = std::getenv("FIGOEDIT_AUTOSELECT");
     if ((!shotPath.empty() || (autoSel && *autoSel == '1')) && ed.page &&
         !ed.page->children.empty()) {
         ed.selection = {ed.page->children.front().get()};
@@ -342,7 +342,7 @@ int main(int argc, char** argv) {
 
     // MCP server: lets an AI client design directly in this editor session.
     if (mcpPortWanted > 0) {
-        if (figmaedit::mcpStart(ed, mcpPortWanted)) {
+        if (figoedit::mcpStart(ed, mcpPortWanted)) {
             std::fprintf(stderr, "[mcp] listening on http://127.0.0.1:%d/mcp\n",
                          mcpPortWanted);
             ed.setStatus("MCP on http://127.0.0.1:" + std::to_string(mcpPortWanted) +
@@ -387,7 +387,7 @@ int main(int argc, char** argv) {
             if (!path.empty()) openFile(ed, path);
         }
 
-        figmaedit::mcpPump(ed);  // run queued AI tool calls on the main thread
+        figoedit::mcpPump(ed);  // run queued AI tool calls on the main thread
 
         if (ed.file.document && ed.page) updateCanvas(ed);
 
@@ -400,7 +400,7 @@ int main(int argc, char** argv) {
         EndDrawing();
     }
 
-    figmaedit::mcpStop();
+    figoedit::mcpStop();
     ed.invalidateCache();
     CloseWindow();
     return 0;

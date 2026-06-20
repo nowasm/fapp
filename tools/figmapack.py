@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""figmapack — one command, multiple platform packages for a figmaplay app.
+"""figmapack — one command, multiple platform packages for a figoplay app.
 
 An app is a standard app project dir (app.json + design + app.js [+ fonts/];
 see the README "app 工程" section). This stages it and builds packages for the
@@ -175,8 +175,8 @@ def cmd_wrapper(lines):
 
 
 def embed_win_icon(ico):
-    """Relink figmaplay.exe with the app icon as a resource (reuses build/ — only
-    figmaplay relinks, seconds), then clear the cache var so the dev build is
+    """Relink figoplay.exe with the app icon as a resource (reuses build/ — only
+    figoplay relinks, seconds), then clear the cache var so the dev build is
     unaffected. Returns True on success."""
     build = os.path.join(ROOT, "build")
     if not os.path.isfile(os.path.join(build, "CMakeCache.txt")):
@@ -187,7 +187,7 @@ def embed_win_icon(ico):
         f'call "{VCVARS}" >nul 2>&1',
         f'cd /d "{build}"',
         f'cmake -DFIGO_WIN_ICON={icop} . >nul',
-        'cmake --build . --config Release --target figmaplay',
+        'cmake --build . --config Release --target figoplay',
     ])
     cmd_wrapper([  # restore: drop the icon resource from the dev build's cache
         f'call "{VCVARS}" >nul 2>&1',
@@ -199,24 +199,24 @@ def embed_win_icon(ico):
 
 # ----------------------------------------------------------------------- win --
 def pack_win(stage, m, out, icon):
-    exe = os.path.join(ROOT, "build", "figmaplay.exe")
+    exe = os.path.join(ROOT, "build", "figoplay.exe")
     if icon:  # embed the icon into the exe (else ship it alongside as icon.png)
         ico = os.path.join(os.path.dirname(stage), "app.ico")
         make_ico(icon, ico)
         if not embed_win_icon(ico):
             log("win icon: embed failed — shipping icon.png alongside")
     if not os.path.isfile(exe):
-        die("build/figmaplay.exe missing — build the desktop target first "
-            "(cmake --build build --target figmaplay)")
+        die("build/figoplay.exe missing — build the desktop target first "
+            "(cmake --build build --target figoplay)")
     dst = os.path.join(out, "win")
     os.makedirs(dst, exist_ok=True)
-    shutil.copy(exe, os.path.join(dst, "figmaplay.exe"))
+    shutil.copy(exe, os.path.join(dst, "figoplay.exe"))
     app_dst = os.path.join(dst, "app")
     if os.path.isdir(app_dst):
         shutil.rmtree(app_dst)
     shutil.copytree(stage, app_dst)
     with open(os.path.join(dst, "run.cmd"), "w", encoding="ascii") as f:
-        f.write('@echo off\r\n"%~dp0figmaplay.exe" "%~dp0app"\r\n')
+        f.write('@echo off\r\n"%~dp0figoplay.exe" "%~dp0app"\r\n')
     if icon:
         resize_png(icon, os.path.join(dst, "icon.png"), 256)
     log(f"win -> {os.path.relpath(dst, os.getcwd())}  (run.cmd)")
@@ -238,15 +238,15 @@ def pack_web(stage, m, out, icon):
         f'call emcmake cmake -B build_web -G Ninja -DCMAKE_BUILD_TYPE=Release '
         f'-DFIGO_WEB_APP_DIR={app}{extra}',
         'if errorlevel 1 exit /b 1',
-        'ninja -C build_web figmaplay',
+        'ninja -C build_web figoplay',
     ])
     if rc:
         die("web build failed")
     dst = os.path.join(out, "web")
     os.makedirs(dst, exist_ok=True)
-    for ext, name in (("html", "index.html"), ("js", "figmaplay.js"),
-                      ("wasm", "figmaplay.wasm"), ("data", "figmaplay.data")):
-        src = os.path.join(build_web, f"figmaplay.{ext}")
+    for ext, name in (("html", "index.html"), ("js", "figoplay.js"),
+                      ("wasm", "figoplay.wasm"), ("data", "figoplay.data")):
+        src = os.path.join(build_web, f"figoplay.{ext}")
         if os.path.isfile(src):
             shutil.copy(src, os.path.join(dst, name))
     # Page title + favicon / apple-touch-icon.
@@ -336,7 +336,7 @@ TARGETS = {"win": pack_win, "web": pack_web, "android": pack_android}
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Package a figmaplay app for win/web/android.")
+    ap = argparse.ArgumentParser(description="Package a figoplay app for win/web/android.")
     ap.add_argument("app_dir", help="app project directory (with app.json)")
     ap.add_argument("--target", "-t", default="all",
                     help="win | web | android | all (comma-separated ok)")

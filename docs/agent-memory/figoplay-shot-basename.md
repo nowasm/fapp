@@ -1,13 +1,13 @@
 ---
-name: figmaplay-shot-basename
-description: "figmaplay --shot saves the screenshot to cwd using only the path's basename"
+name: figoplay-shot-basename
+description: "figoplay --shot saves the screenshot to cwd using only the path's basename"
 metadata: 
   node_type: memory
   type: project
   originSessionId: 40190ae3-fbc7-471c-ac02-7c0b8fecc623
 ---
 
-`figmaplay.exe <appdir> --shot <out.png>` (and `--selfdrive`) ignore the
+`figoplay.exe <appdir> --shot <out.png>` (and `--selfdrive`) ignore the
 directory part of the output path — raylib's `TakeScreenshot` writes
 `<basename>` into the **current working directory**, not the path you pass.
 

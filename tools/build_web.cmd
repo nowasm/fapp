@@ -1,5 +1,5 @@
 @echo off
-rem Web build: figmaplay.html (wallet demo) into build_web\.
+rem Web build: figoplay.html (wallet demo) into build_web\.
 rem Prereqs: emsdk (default D:\devlib\emsdk, override with EMSDK_HOME) and
 rem the ThorVG wasm build (tools\build_thorvg_wasm.cmd).
 setlocal enabledelayedexpansion
@@ -14,4 +14,4 @@ if not exist build_web\build.ninja (
     call emcmake cmake -B build_web -G Ninja -DCMAKE_BUILD_TYPE=Release !EXTRA!
     if errorlevel 1 exit /b 1
 )
-ninja -C build_web figmaplay
+ninja -C build_web figoplay

@@ -1,5 +1,5 @@
 // wallet.js — the demo_wallet app expressed as pure script.
-// Run with: figmaplay wallet.fig wallet.js   (see figo/script.h for the API)
+// Run with: figoplay wallet.fig wallet.js   (see figo/script.h for the API)
 
 const portfolio = [
     { symbol: "ETH", change: "+ 2.56", usd: "$4.240,50", amount: "25 ETH", rate: "$420,50" },
@@ -89,7 +89,7 @@ if (greeting) {
 
 console.log("wallet.js ready —", ui.frameNames().length, "frames");
 
-// ---- unattended tour (figmaplay --selfdrive) ----
+// ---- unattended tour (figoplay --selfdrive) ----
 if (globalThis.SELFDRIVE) {
     let frames = 0;  // count frames, not dt: the first dt includes file loading
     ui.onUpdate(() => {

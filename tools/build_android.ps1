@@ -1,15 +1,15 @@
-# Builds a figmaplay APK (no gradle): NDK cross-compile both ABIs, stage
+# Builds a figoplay APK (no gradle): NDK cross-compile both ABIs, stage
 # assets, aapt package + zipalign + apksigner (debug key).
 # Prereqs: tools\build_thorvg_android.cmd, Android SDK at D:\devlib\android\sdk.
 #
-# No args -> the wallet demo (build_android\figmaplay.apk), as before.
+# No args -> the wallet demo (build_android\figoplay.apk), as before.
 # Driven by figmapack: -AppDir points at a staged standard app dir (app.json +
 # design + app.js + fonts), preloaded into the APK at assets/app and read by the
 # runtime; -PackageId/-AppName/-VersionName/-VersionCode/-OutApk set metadata.
 param(
     [string]$AppDir = "",
     [string]$PackageId = "com.figo.play",
-    [string]$AppName = "figmaplay",
+    [string]$AppName = "figoplay",
     [string]$VersionName = "1.0",
     [int]$VersionCode = 1,
     [string]$OutApk = "",
@@ -27,7 +27,7 @@ if (-not $NINJA) { $NINJA = "C:\WINDOWS\ninja.exe" }
 $REPO = Split-Path $PSScriptRoot -Parent
 $DESIGN = "$REPO\..\fig2psd\test\figma\wallet.fig.export"
 $OUT = "$REPO\build_android"
-if (-not $OutApk) { $OutApk = "$OUT\figmaplay.apk" }
+if (-not $OutApk) { $OutApk = "$OUT\figoplay.apk" }
 
 # 1) Native libs per ABI.
 $abis = @{ "arm64-v8a" = "arm64"; "x86_64" = "x64" }
@@ -39,7 +39,7 @@ foreach ($abi in $abis.Keys) {
         cmd /c "`"$CMAKE`" -B `"$bdir`" -S `"$REPO`" -G Ninja -DCMAKE_TOOLCHAIN_FILE=`"$NDK\build\cmake\android.toolchain.cmake`" -DANDROID_ABI=$abi -DANDROID_PLATFORM=android-28 -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=`"$NINJA`" -DFETCHCONTENT_SOURCE_DIR_RAYLIB=`"$REPO\build\_deps\raylib-src`" -DFETCHCONTENT_SOURCE_DIR_QUICKJS=`"$REPO\build\_deps\quickjs-src`" 2>&1"
         if ($LASTEXITCODE) { throw "cmake configure failed ($abi)" }
     }
-    cmd /c "`"$NINJA`" -C `"$bdir`" figmaplay 2>&1"
+    cmd /c "`"$NINJA`" -C `"$bdir`" figoplay 2>&1"
     if ($LASTEXITCODE) { throw "build failed ($abi)" }
 }
 
@@ -48,7 +48,7 @@ $stage = "$OUT\stage"
 Remove-Item $stage -Recurse -Force -ErrorAction SilentlyContinue
 foreach ($abi in $abis.Keys) {
     New-Item -ItemType Directory -Force "$stage\lib\$abi" | Out-Null
-    Copy-Item "$OUT\native-$($abis[$abi])\libfigmaplay.so" "$stage\lib\$abi\"
+    Copy-Item "$OUT\native-$($abis[$abi])\libfigoplay.so" "$stage\lib\$abi\"
 }
 $assetRoot = "$stage\assets"
 New-Item -ItemType Directory -Force $assetRoot | Out-Null
@@ -79,7 +79,7 @@ $manifestXml = @"
   <application android:label="$AppName"$iconAttr android:hasCode="false" android:extractNativeLibs="true">
     <activity android:name="android.app.NativeActivity" android:exported="true"$themeAttr
               android:configChanges="orientation|keyboardHidden|screenSize">
-      <meta-data android:name="android.app.lib_name" android:value="figmaplay"/>
+      <meta-data android:name="android.app.lib_name" android:value="figoplay"/>
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>
@@ -89,7 +89,7 @@ $manifestXml = @"
 </manifest>
 "@
 # aapt requires the -M file to be literally named AndroidManifest.xml; write the
-# generated one into a dedicated dir (not the source apps/figmaplay/android one).
+# generated one into a dedicated dir (not the source apps/figoplay/android one).
 # UTF-8 *without* BOM — aapt fails ("No AndroidManifest.xml file found") on a BOM.
 $genDir = "$OUT\gen"
 New-Item -ItemType Directory -Force $genDir | Out-Null
@@ -97,15 +97,15 @@ $manifestPath = "$genDir\AndroidManifest.xml"
 [System.IO.File]::WriteAllText($manifestPath, $manifestXml, (New-Object System.Text.UTF8Encoding $false))
 
 # 3) Package: aapt (manifest + assets), aapt add (libs), align, sign.
-$unsigned = "$OUT\figmaplay-unsigned.apk"
-$aligned = "$OUT\figmaplay-aligned.apk"
+$unsigned = "$OUT\figoplay-unsigned.apk"
+$aligned = "$OUT\figoplay-aligned.apk"
 Remove-Item $unsigned, $aligned, $OutApk -ErrorAction SilentlyContinue
 $aaptArgs = @("package", "-f", "-F", $unsigned, "-M", $manifestPath, "-I", $JAR, "-A", $assetRoot)
 if ($ResDir) { $aaptArgs += @("-S", $ResDir) }
 & "$BT\aapt.exe" @aaptArgs
 if ($LASTEXITCODE) { throw "aapt package failed" }
 Push-Location $stage
-& "$BT\aapt.exe" add $unsigned "lib/arm64-v8a/libfigmaplay.so" "lib/x86_64/libfigmaplay.so" | Out-Null
+& "$BT\aapt.exe" add $unsigned "lib/arm64-v8a/libfigoplay.so" "lib/x86_64/libfigoplay.so" | Out-Null
 if ($LASTEXITCODE) { Pop-Location; throw "aapt add libs failed" }
 Pop-Location
 & "$BT\zipalign.exe" -f -p 4 $unsigned $aligned

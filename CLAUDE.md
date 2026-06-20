@@ -29,19 +29,19 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
 - `layout_test` — 布局数学自测
 - `demo_wallet --selfdrive sd` — 全功能巡演（滚动/惯性/选区/转场/固定 tab 栏），
   产出 `sd_*.png` 截图用 Read 工具目检
-- `figmaplay <fig> <js> --shot out.png [--frames N]` — 渲 N 帧截图退出
+- `figoplay <fig> <js> --shot out.png [--frames N]` — 渲 N 帧截图退出
 
 链接失败（Windows LNK1104 / macOS 占用）= exe 正在运行，先结束进程。临时截图用完即删。
 
 ## AI 开发 app 的闭环
 
 > 从零做一个 app 走 **`/new-app` skill**（`.claude/skills/new-app/`）——脚手架
-> (`tools/figmanew.py`) → 设计（figmaedit MCP，套 `design-systems/` 的审美 token）
+> (`tools/figmanew.py`) → 设计（figoedit MCP，套 `design-systems/` 的审美 token）
 > → 写 app.js → `--shot` 自验 → 迭代。一个 app 也可是标准目录
-> `<dir>/app.json`（`figmaplay <dir>`，字段见 README "app 工程"）。下面是底层速查：
+> `<dir>/app.json`（`figoplay <dir>`，字段见 README "app 工程"）。下面是底层速查：
 
-1. **设计**：启动 `build\figmaedit.exe <file.fig>`，仓库根 `.mcp.json` 已配置
-   figmaedit 的 MCP（127.0.0.1:9223），用它的 21 个工具直接读改设计
+1. **设计**：启动 `build\figoedit.exe <file.fig>`，仓库根 `.mcp.json` 已配置
+   figoedit 的 MCP（127.0.0.1:9223），用它的 21 个工具直接读改设计
    （get_node_tree / create_node / update_nodes / import_image / import_svg /
    audit_design / make_component / create_instance / sync_instances /
    get_screenshot / save_document…）。**复用**：把建好的卡片/按钮/列表行用
@@ -66,12 +66,12 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
    - `ui.find/findAll/tap(nameOrNode)`、`ui.setResizeMode("reflow")`
    - `setTimeout/setInterval`（app 时间）、`fetch()`（Promise）、`localStorage`（持久化到
      `<script>.storage.json`）
-3. **验证**：`figmaplay.exe design.fig app.js --shot out.png` 后 Read 截图；
+3. **验证**：`figoplay.exe design.fig app.js --shot out.png` 后 Read 截图；
    交互验证参考 `examples/scripts/wallet.js` 的 SELFDRIVE 模式（`ui.tap` 合成点击 +
-   `--selfdrive` 前缀截图）。figmaplay 运行中改 .js 会热重载，脚本需可重入
+   `--selfdrive` 前缀截图）。figoplay 运行中改 .js 会热重载，脚本需可重入
    （重跑一遍应幂等）。
 4. **设计质量评审**：走 **`/design-critic` skill**（`.claude/skills/design-critic/`）——
-   截图(看) + figmaedit MCP 的 `audit_design`(量：离色板填充、不在字阶的字号、低于 WCAG AA
+   截图(看) + figoedit MCP 的 `audit_design`(量：离色板填充、不在字阶的字号、低于 WCAG AA
    的对比度) → 给具体修改项 → `update_nodes` 改 → 重审/重截图验证。`audit_design` 的
    `tokensPath` 指向 `design-systems/<name>/design-tokens.json`。
 

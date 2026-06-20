@@ -57,7 +57,7 @@ public:
     bool eval(const std::string& source, const std::string& filename = "<eval>");
 
     // Where localStorage persists (a small JSON file, created on first
-    // setItem). Set it before runFile; figmaplay uses "<script>.storage.json".
+    // setItem). Set it before runFile; figoplay uses "<script>.storage.json".
     void setStoragePath(const std::string& path);
 
     // Call once per host frame: fires ui.onUpdate handlers and drains the

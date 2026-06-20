@@ -1,7 +1,7 @@
 // Among Us — a space-werewolf game UI demo (figo test case).
 // An app = design + logic. 5 frames wired into a game flow:
 //   MainMenu -> Lobby -> RoleReveal -> GameHUD <-> Meeting (voting)
-// The script is idempotent so figmaplay hot-reload re-runs cleanly.
+// The script is idempotent so figoplay hot-reload re-runs cleanly.
 
 ui.selectFrame(APP.entryFrame || "MainMenu");
 

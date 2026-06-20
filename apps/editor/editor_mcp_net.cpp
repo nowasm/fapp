@@ -27,7 +27,7 @@ static constexpr SockT kBadSock = -1;
 static void closeSock(SockT s) { ::close(s); }
 #endif
 
-namespace figmaedit {
+namespace figoedit {
 namespace net {
 
 namespace {
@@ -190,4 +190,4 @@ void serverStop() {
 }
 
 }  // namespace net
-}  // namespace figmaedit
+}  // namespace figoedit

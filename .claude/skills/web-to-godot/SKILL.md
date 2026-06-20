@@ -98,7 +98,7 @@ node tools/web2canvas/html2godot.js "<...>/html_ui_export/app/HUD C.html" --out 
 ```
 
 > 只要 canvas.json 不要 Godot：`node tools/web2canvas/index.js <input> -o out.canvas.json [同上参数]`。
-> 该 canvas.json 还能喂 figo 原生链（`render_test` 自验、figmaedit、figmaplay）。
+> 该 canvas.json 还能喂 figo 原生链（`render_test` 自验、figoedit、figoplay）。
 
 ## 3. 自验（必做）
 按可用性从高到低：

@@ -21,7 +21,7 @@ a browser, so those runtime pieces do not apply here.
 Modifications by figo (per Apache-2.0 §4.b, "carry prominent notices"):
   - Files copied verbatim; no edits to the upstream DESIGN.md / *.json content.
   - README.md and TOKEN_MAPPING.md in this directory are original figo work
-    that adapts the upstream token schema to figo's figmaedit MCP pipeline.
+    that adapts the upstream token schema to figo's figoedit MCP pipeline.
 
 Some skills are themselves curated from third parties; their own upstreams are
 recorded in each skill's SKILL.md frontmatter (e.g. design-review is curated

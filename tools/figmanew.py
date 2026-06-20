@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""figmanew — scaffold a new figmaplay app project from a template.
+"""figmanew — scaffold a new figoplay app project from a template.
 
 An app is a directory of {app.json, design.json, app.js} (see the README's
 "app 工程" section). This copies a template and personalizes its app.json, so
@@ -10,7 +10,7 @@ AI / humans start from a working app and edit, rather than generate from zero.
         --design-system revolut
     python tools/figmanew.py --list
 
-Then run it:  figmaplay myapp
+Then run it:  figoplay myapp
 """
 import argparse
 import json
@@ -37,7 +37,7 @@ def slug(name):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Scaffold a figmaplay app project.")
+    ap = argparse.ArgumentParser(description="Scaffold a figoplay app project.")
     ap.add_argument("dest", nargs="?", help="new app directory to create")
     ap.add_argument("--template", "-t", help="template name (see --list)")
     ap.add_argument("--name", "-n", help="app display name (default: dest basename)")
@@ -78,8 +78,8 @@ def main():
 
     rel = os.path.relpath(dest, os.getcwd())
     print(f"created '{name}' from template '{args.template}' at {rel}")
-    print(f"  run:  figmaplay {rel}")
-    print(f"  edit: {rel}/app.js  +  the design via figmaedit "
+    print(f"  run:  figoplay {rel}")
+    print(f"  edit: {rel}/app.js  +  the design via figoedit "
           f"(designSystem: {m.get('designSystem','-')})")
     return 0
 
