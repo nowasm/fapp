@@ -45,6 +45,7 @@ backends/raylib/    raylib backend (reference template for other engine backends
 apps/editor/        figoedit — a Figma-style visual editor (raylib + raygui + MCP)
 apps/figoplay/     figoplay — a generic script player (app = .fig + .js, hot-reload)
 apps/figo2godot/    figo2godot — canvas.json → a Godot 4 project (.tscn + sprites)
+apps/figo2cocos/    figo2cocos — canvas.json → Cocos Creator 3.x prefabs (.prefab + textures)
 examples/           demo_raylib / demo_wallet demos, example scripts and design files
   assets/           Figma JSON and .fig used for tests/demos
   scripts/          figoplay example scripts (wallet.js)
@@ -405,6 +406,28 @@ figo2godot <input.canvas.json|.fig|REST.json> [outDir] [--fonts DIR] [--prefabs]
 `--prefabs`: extract repeated components (cards/buttons/rows) into
 `components/*.tscn` (PackedScenes), instancing each occurrence with per-instance
 text overrides — real prefab reuse rather than inlined copies.
+
+### figo2cocos (`apps/figo2cocos/`, C++)
+
+Converts a canvas.json into Cocos Creator 3.x assets: each top-level frame → one
+self-contained `.prefab` (a JSON array of `__id__`-linked engine objects:
+`cc.Prefab`/`cc.Node`/`cc.UITransform`/`cc.Sprite`/`cc.Label`…, the format
+ported from psd2prefab), plus a shared `textures/` folder of deduplicated PNG
+sprites each with a `.meta` sprite-frame. Node mapping: TEXT→Label, solid
+rect/container bg→Sprite over a shared 1×1 `white.png` tinted via `_color`,
+ellipse/vector/gradient/image/stroke/effect/rounded→Sprite + baked PNG (9-slice
+when large & stretchable). Coordinate flip: anchor `(0,1)`, `_lpos=(relX,-relY)`,
+UITransform size = the figo box. Sprites are rendered by `Renderer::renderOverlay`,
+pixel-identical to the runtime; UUIDs are content-derived so reruns are stable.
+
+```
+figo2cocos <input.canvas.json|.fig|REST.json> [outDir] [--frame NAME] [--scale N]
+```
+
+Drop `outDir` (prefabs + `.meta` + `textures/`) into a Cocos Creator 3.x
+project's `assets/`. v1 inlines everything (no nested-prefab extraction), uses
+system fonts, and is axis-aligned — matching psd2prefab's output shape. Driven
+by the **`/figo2cocos` skill** (`.claude/skills/figo2cocos/`).
 
 ### One command (html2godot)
 

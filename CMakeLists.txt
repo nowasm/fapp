@@ -177,6 +177,13 @@ if(FIGO_DESKTOP)
     target_include_directories(figo2godot PRIVATE third_party)  # nlohmann (manifest, later)
 endif()
 
+# ---- figo2cocos: design (.fig / canvas.json / REST) -> Cocos Creator .prefab ----
+if(FIGO_DESKTOP)
+    add_executable(figo2cocos apps/figo2cocos/main.cpp)
+    target_link_libraries(figo2cocos PRIVATE figo)
+    target_include_directories(figo2cocos PRIVATE third_party)  # nlohmann (prefab JSON)
+endif()
+
 # ---- figoplay: the generic script player (an app = .fig + .js) ----
 if(FIGO_SCRIPTING AND FIGO_BACKEND_RAYLIB)
     if(ANDROID)
