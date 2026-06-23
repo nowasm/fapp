@@ -97,6 +97,42 @@ PY
 人工目检重点：层级顺序、文字位置（Label 锚点左上 + 顶对齐时短文本可能偏上）、
 9 宫格面板拉伸是否走样。
 
+### 真机自验：cocos-cli MCP（已端到端验证）
+
+`cocos-cli`（官方 CLI，`/Users/t5/cocosProjs/cocos/cocos-cli`）带一个 `start-mcp-server`
+命令，能用**真实引擎**加载工程并通过 MCP 程序化校验——比结构自检强得多，能确认 prefab
+真的反序列化成活节点。已用 sample_ui 跑通：prefab 导入为 `cc.Prefab`、贴图导入为
+sprite-frame、引用全部解析、层级/组件/属性（Label 文案字号色、UITransform 锚点 (0,1)、
+Y 翻转坐标）全对、可实例化进场景并保存。
+
+```bash
+# 一次性：构建 cocos-cli（首次 ~10min，详见其 README：npm run init && npm install && npm run build）
+# 起服务（Streamable HTTP，无状态，协议版本必须 2025-06-18）
+node <cocos-cli>/dist/cli.js start-mcp-server --project <cocosProj> --port 9527
+# 等日志出现 "Server is running on: http://localhost:9527/mcp"
+```
+
+调用约定（curl JSON-RPC）：`POST /mcp`，头
+`Content-Type: application/json` + `Accept: application/json, text/event-stream`，
+先 `initialize`（`protocolVersion:"2025-06-18"`，否则 400），无状态不需 session-id。
+关键工具：`assets-refresh {dir}` 导入 → `assets-query-asset-info {urlOrUUIDOrPath}`
+确认 `type:"cc.Prefab", invalid:false` → `scene-open {options:{dbURLOrUUID, includeChildren,
+includeComponents}}` 直接打开 prefab 看活节点树 → `scene-query-component {component:{path}}`
+读 Label/UITransform/Sprite 的真实属性 → `scene-create` + `scene-create-node-by-asset
+{options:{dbURL, canvasRequired:true}}` + `scene-save` 验证实例化落地。共 51 个工具
+（scene/prefab/asset/builder/file）。注意 cocos-cli 引擎是 4.0-alpha，能读我们的 3.8 格式。
+
+> 文本位置/对齐（已修）：早期 Label 一律 `overflow=NONE`，Cocos 会把节点缩成文字大小、
+> 丢掉作者设的文本框，导致居中标题塌到框左上角（anchor 0,1）——"文字位置不对、没对齐
+> 设计稿"。现按 figo `autoResize` 映射 `_overflow`：`WIDTH_AND_HEIGHT`→NONE(贴合文字)、
+> `HEIGHT`→RESIZE_HEIGHT(定宽换行增高)、`NONE`/`TRUNCATE`→**CLAMP**(锁住文本框、框内对齐、
+> 超出裁剪)，文字即按设计稿在框内对齐定位。
+>
+> 排查时注意 cocos MCP 的两个怪癖：(1) 同一节点 `scene-query-node` 用场景实例路径
+> `Canvas/<prefab>/...`，`scene-query-component` 在 prefab 实例里常 404/500——位置用
+> query-node 验，属性值优先直接读导出的 .prefab JSON；(2) 工具返回是**双层包裹**
+> （`content[0].text` 里又是一层 `{"result":{"data":...}}`），解析要再剥一层。
+
 ## 关键约定与坑
 
 - **只产 v3.4.2+ 格式**（单一代码路径）。要兼容 Cocos 2.4.x 需另加 `_trs`/直挂

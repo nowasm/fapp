@@ -651,8 +651,22 @@ struct Converter {
         c["_fontSize"] = (int)(n.textStyle.fontSize + 0.5f);
         const float lineH = n.textStyle.lineHeightPx > 0 ? n.textStyle.lineHeightPx : n.textStyle.fontSize * 1.2f;
         c["_lineHeight"] = rnd(lineH);
+        // Map figo autoResize -> Cocos Label overflow. NONE (0) makes the Label
+        // shrink the node down to the text, which DISCARDS the authored box and
+        // breaks alignment — a centered title collapses to the box's top-left
+        // corner (anchor 0,1), so text no longer sits where the design put it.
+        // Keep the box so _horizontalAlign/_verticalAlign place text as designed:
+        //   WIDTH_AND_HEIGHT (hug both) -> NONE          (node == text)
+        //   HEIGHT (fixed width, grow)  -> RESIZE_HEIGHT (keep width, wrap+grow)
+        //   NONE / TRUNCATE (fixed box) -> CLAMP         (keep box, align, clip)
         const bool multiline = lineH > 0 && n.height > lineH * 1.8f;
-        c["_enableWrapText"] = multiline;
+        const std::string& ar = n.textStyle.autoResize;
+        int overflow;
+        bool wrap;
+        if (ar == "WIDTH_AND_HEIGHT") { overflow = 0; wrap = false; }
+        else if (ar == "HEIGHT")      { overflow = 3; wrap = true; }
+        else                          { overflow = 1; wrap = multiline; }
+        c["_enableWrapText"] = wrap;
         c["_isSystemFontUsed"] = true;
         c["_spacingX"] = 0;
         c["_underlineHeight"] = 0;
@@ -661,7 +675,7 @@ struct Converter {
         figo::Color col{0, 0, 0, 1};
         if (const auto* f = solidFill(n)) { col = f->color; col.a *= f->opacity; }
         c["_color"] = ccColor(col);
-        c["_overflow"] = 0;  // NONE
+        c["_overflow"] = overflow;
         c["_cacheMode"] = 0;
         int ha = 1;  // CENTER
         switch (n.textStyle.alignH) {
