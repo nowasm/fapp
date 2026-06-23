@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="figo">
+  <defs>
+    <radialGradient id="figFlesh" cx="0.5" cy="0.6" r="0.62">
+      <stop offset="0" stop-color="#FFD2AC"/>
+      <stop offset="0.5" stop-color="#F4647F"/>
+      <stop offset="1" stop-color="#E0426C"/>
+    </radialGradient>
+  </defs>
+  <!-- stem + leaf -->
+  <path d="M64 28 L63 17" stroke="#4E9A4E" stroke-width="5" stroke-linecap="round"/>
+  <path d="M65 24 C73 12 88 11 96 15 C90 28 74 31 65 24 Z" fill="#56C06E"/>
+  <!-- fig body: violet skin + cream pith -->
+  <path d="M64 28 C55 30 45 42 40 58 C34 76 30 92 44 106 C50 112 57 116 64 116 C71 116 78 112 84 106 C98 92 94 76 88 58 C83 42 73 30 64 28 Z" fill="#FBE2D2" stroke="#6D54F2" stroke-width="7"/>
+  <!-- pink flesh -->
+  <path d="M64 40 C57 42 49 52 45 65 C40 79 37 91 48 102 C53 108 58 111 64 111 C70 111 75 108 80 102 C91 91 88 79 83 65 C79 52 71 42 64 40 Z" fill="url(#figFlesh)"/>
+  <!-- seeds -->
+  <g fill="#B82C56">
+    <circle cx="58" cy="70" r="1.9"/><circle cx="66" cy="68" r="1.9"/><circle cx="62" cy="77" r="1.9"/>
+    <circle cx="54" cy="83" r="1.9"/><circle cx="70" cy="80" r="1.9"/><circle cx="60" cy="89" r="1.9"/>
+    <circle cx="68" cy="91" r="1.9"/><circle cx="64" cy="99" r="1.9"/><circle cx="56" cy="95" r="1.9"/>
+    <circle cx="72" cy="73" r="1.9"/><circle cx="51" cy="75" r="1.9"/><circle cx="74" cy="89" r="1.9"/>
+  </g>
+</svg>

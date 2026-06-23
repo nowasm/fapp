@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140" role="img" aria-label="figo">
+  <defs>
+    <radialGradient id="figFlesh" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#FFD2AC"/><stop offset="0.5" stop-color="#F4647F"/><stop offset="1" stop-color="#E0426C"/>
+    </radialGradient>
+  </defs>
+  <rect width="200" height="140" fill="#14141C"/>
+  <text x="28" y="104" font-family="Helvetica,Arial,sans-serif" font-size="96" font-weight="700" letter-spacing="-3" fill="#FFFFFF">fig</text>
+  <g transform="translate(150,79)">
+    <circle cx="0" cy="0" r="20" fill="none" stroke="#7E68FF" stroke-width="10"/>
+    <circle cx="0" cy="0" r="14" fill="url(#figFlesh)"/>
+    <g fill="#B82C56">
+      <circle cx="-6" cy="-3" r="1.7"/><circle cx="4" cy="-5" r="1.7"/><circle cx="-2" cy="3" r="1.7"/>
+      <circle cx="7" cy="2" r="1.7"/><circle cx="-7" cy="5" r="1.7"/><circle cx="2" cy="8" r="1.7"/>
+    </g>
+    <path d="M0 -25 L0 -33" stroke="#56C06E" stroke-width="4" stroke-linecap="round"/>
+    <path d="M1 -30 C7 -38 17 -38 21 -35 C18 -27 7 -27 1 -30 Z" fill="#5ED07E"/>
+  </g>
+</svg>
