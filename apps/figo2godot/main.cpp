@@ -814,14 +814,7 @@ struct Converter {
             case figo::TextStyle::AlignH::Justified: ha = 3; break;
             default: break;
         }
-        int va = 0;
-        switch (n.textStyle.alignV) {
-            case figo::TextStyle::AlignV::Center: va = 1; break;
-            case figo::TextStyle::AlignV::Bottom: va = 2; break;
-            default: break;
-        }
         if (ha) body += "horizontal_alignment = " + std::to_string(ha) + "\n";
-        if (va) body += "vertical_alignment = " + std::to_string(va) + "\n";
         // Figma textAutoResize: NONE/HEIGHT keep a fixed width and may wrap.
         // Only turn on wrapping when the box is clearly tall enough for more
         // than one line — Godot DROPS a wrapped line entirely when the single
@@ -836,6 +829,20 @@ struct Converter {
         const float lineH = n.textStyle.lineHeightPx > 0 ? n.textStyle.lineHeightPx
                                                          : n.textStyle.fontSize * 1.3f;
         const bool multiline = !truncate && lineH > 0 && n.height > lineH * 1.8f;
+        // Vertical alignment. Figma's text box is sized tight to the glyphs, so a
+        // single-line label (icon-as-emoji, button caption…) must center in its
+        // box — Godot's default is TOP, which makes short text hug the top and
+        // look off-center, and emoji metrics differ between the measuring engine
+        // and Godot's rasterizer, widening the gap. Honor an explicit Center/
+        // Bottom; otherwise default single-line text to center, leave multi-line
+        // top-aligned so wrapped paragraphs flow downward as authored.
+        int va = 0;
+        switch (n.textStyle.alignV) {
+            case figo::TextStyle::AlignV::Center: va = 1; break;
+            case figo::TextStyle::AlignV::Bottom: va = 2; break;
+            default: va = multiline ? 0 : 1; break;
+        }
+        if (va) body += "vertical_alignment = " + std::to_string(va) + "\n";
         if (multiline) body += "autowrap_mode = 3\n";        // WORD_SMART
         if (truncate) body += "text_overrun_behavior = 3\n";  // single-line ellipsis
     }
