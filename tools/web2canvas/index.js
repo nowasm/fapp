@@ -460,6 +460,25 @@ function collectorFn({ rootSelector, aiName }) {
     return { runs, text: runs.map(r => r.text).join('').replace(/\s+/g, ' ').trim(), rect: { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } };
   }
 
+  // An <input>/<textarea> paints its value/placeholder itself (not as child text
+  // nodes), so measureDirectText misses it and it gets baked into the box sprite.
+  // Synthesize a text run from the value (else placeholder) at the content box,
+  // left-aligned and vertically centred, with the placeholder's lighter color.
+  function inputText(el, cs, r, ox, oy) {
+    const text = ((el.value || '').trim()) || ((el.getAttribute('placeholder') || '').trim());
+    if (!text) return null;
+    const isPlaceholder = !(el.value || '').trim();
+    const fs = parseFloat(cs.fontSize) || 13;
+    ncx.font = `${cs.fontStyle || 'normal'} ${cs.fontWeight || 400} ${fs}px ${cs.fontFamily || 'sans-serif'}`;
+    const padL = parseFloat(cs.paddingLeft) || 0, bL = parseFloat(cs.borderLeftWidth) || 0;
+    const lh = /px/.test(cs.lineHeight) ? parseFloat(cs.lineHeight) : fs * 1.3;
+    const w = Math.min(ncx.measureText(text).width, r.width - padL - bL - 2);
+    const rect = { x: r.left + bL + padL - ox, y: r.top + (r.height - lh) / 2 - oy, w, h: lh };
+    let color = cs.color;
+    if (isPlaceholder) { try { const pc = getComputedStyle(el, '::placeholder').color; if (pc) color = pc; } catch (e) {} }
+    return { runs: [{ text, rect }], text, rect, color };
+  }
+
   function node(el, ox, oy, depth) {
     const cs = getComputedStyle(el);
     if (!visible(el, cs)) return null;
@@ -470,7 +489,12 @@ function collectorFn({ rootSelector, aiName }) {
     // background is a <div> (kept); small media like the minimap is far under the
     // threshold (kept). svg/canvas (icons/charts) are never dropped here.
     if ((tag === 'img' || tag === 'video') && r.width * r.height >= rootArea * 0.85) return null;
-    const ti = measureDirectText(el, ox, oy);
+    let ti = measureDirectText(el, ox, oy);
+    let inputColor = null;
+    if (!ti && (tag === 'input' || tag === 'textarea')) {
+      const it = inputText(el, cs, r, ox, oy);
+      if (it) { ti = { runs: it.runs, text: it.text, rect: it.rect }; inputColor = it.color; }
+    }
 
     const wholeRaster = (tag === 'img' || tag === 'svg' || tag === 'canvas' || tag === 'video') || isTransformed(cs);
     const clipped = cs.clipPath && cs.clipPath !== 'none';
@@ -513,7 +537,7 @@ function collectorFn({ rootSelector, aiName }) {
       opacity: parseFloat(cs.opacity),
       transform: cs.transform,
       overflow: cs.overflow,
-      color: norm(cs.color),
+      color: norm(inputColor || cs.color),
       fontFamily: cs.fontFamily,
       fontSize: parseFloat(cs.fontSize) || 0,
       fontWeight: cs.fontWeight,
@@ -619,14 +643,23 @@ function setBgOnlyFn({ id, on, hideKids }) {
     const el = document.querySelector(`[data-w2c="${id}"]`);
     if (!el) return;
     el.style.visibility = 'visible';
-    if (hideKids) { el.setAttribute('data-w2c-c', el.style.color || '~'); el.style.color = 'transparent'; }
+    if (hideKids) {
+      el.setAttribute('data-w2c-c', el.style.color || '~'); el.style.color = 'transparent';
+      // <input>/<textarea> paint their value/placeholder themselves; color:
+      // transparent hides the value but not the ::placeholder, so clear it too —
+      // else "输入消息…" bakes into the box sprite (it's emitted as a TEXT node).
+      if ('placeholder' in el && el.placeholder) { el.setAttribute('data-w2c-ph', el.placeholder); el.placeholder = ''; }
+    }
     else el.querySelectorAll('*').forEach(d => { d.style.visibility = 'visible'; });
   } else {
     document.documentElement.style.background = '';
     document.body.style.background = '';
     for (const e of all) e.style.visibility = '';
     const el = document.querySelector(`[data-w2c="${id}"]`);
-    if (el) { const s = el.getAttribute('data-w2c-c'); if (s != null) { el.style.color = (s === '~' ? '' : s); el.removeAttribute('data-w2c-c'); } }
+    if (el) {
+      const s = el.getAttribute('data-w2c-c'); if (s != null) { el.style.color = (s === '~' ? '' : s); el.removeAttribute('data-w2c-c'); }
+      const ph = el.getAttribute('data-w2c-ph'); if (ph != null) { el.placeholder = ph; el.removeAttribute('data-w2c-ph'); }
+    }
   }
 }
 
