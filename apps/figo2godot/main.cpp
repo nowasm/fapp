@@ -37,6 +37,8 @@
 namespace fs = std::filesystem;
 using figo::Node;
 using figo::NodeType;
+using figo::NodeAnim;
+using figo::AnimKey;
 using nlohmann::json;
 
 // ===================== PNG encoder (RGBA8, self-contained) ==================
@@ -524,6 +526,8 @@ struct Converter {
     };
     std::map<std::string, std::string> frameExtId;  // resPath -> ExtResource id
     std::vector<Ext> frameExt;                       // declaration order
+    std::vector<std::string> frameSub;               // [sub_resource ...] blocks (animations)
+    int subId = 0;                                   // unique sub_resource id counter, per file
     json frameNodes;
 
     struct Baked {
@@ -849,6 +853,77 @@ struct Converter {
 
     // Emit node `n` (already named `name`, unique among siblings) under parentAttr.
     // pw/ph are the parent's logical size, for constraint -> anchor mapping.
+    // Replay a node's CSS animation (opacity + 2D scale) as a child
+    // AnimationPlayer. The player's root_node defaults to its parent (this
+    // node), so tracks target "." . Must be called while `body`'s last [node]
+    // is still this node (before any child [node] is written) so pivot_offset
+    // attaches here. selfPath is the node's own .tscn path (its children's parent).
+    void emitAnim(const Node& n, const std::string& selfPath) {
+        if (!n.anim) return;
+        const NodeAnim& a = *n.anim;
+        bool anyScale = false, anyOpacity = false;
+        for (const auto& k : a.keys) { anyScale |= k.hasScale; anyOpacity |= k.hasOpacity; }
+        if (!anyScale && !anyOpacity) return;
+
+        // Scale pivots about transform-origin → set pivot_offset on this node.
+        if (anyScale && n.width > 0 && n.height > 0)
+            body += "pivot_offset = Vector2(" + num(a.pivotX * n.width) + ", " +
+                    num(a.pivotY * n.height) + ")\n";
+
+        // ease-* → cubic(2), linear → linear(1), step* → constant(0).
+        const int interp = a.ease.find("step") != std::string::npos ? 0
+                         : a.ease.find("linear") != std::string::npos ? 1 : 2;
+
+        const std::string animRes = "Anim_" + std::to_string(subId);
+        const std::string libRes = "AnimLib_" + std::to_string(subId);
+        ++subId;
+
+        std::string s = "[sub_resource type=\"Animation\" id=\"" + animRes + "\"]\n";
+        s += "resource_name = \"a\"\n";
+        s += "length = " + num(a.dur > 0 ? a.dur : 1.0f) + "\n";
+        s += "loop_mode = " + std::string(a.iter == 0 ? "1" : "0") + "\n";
+        int tn = 0;
+        auto track = [&](const char* prop, const std::function<bool(const AnimKey&)>& has,
+                         const std::function<std::string(const AnimKey&)>& val) {
+            std::vector<const AnimKey*> ks;
+            for (const auto& k : a.keys) if (has(k)) ks.push_back(&k);
+            if (ks.size() < 2) return;
+            std::string times, vals, trans;
+            for (size_t i = 0; i < ks.size(); ++i) {
+                if (i) { times += ", "; vals += ", "; trans += ", "; }
+                times += num(ks[i]->t * a.dur);
+                vals += val(*ks[i]);
+                trans += "1";
+            }
+            s += "tracks/" + std::to_string(tn) + "/type = \"value\"\n";
+            s += "tracks/" + std::to_string(tn) + "/imported = false\n";
+            s += "tracks/" + std::to_string(tn) + "/enabled = true\n";
+            s += "tracks/" + std::to_string(tn) + "/path = NodePath(\".:" + prop + "\")\n";
+            s += "tracks/" + std::to_string(tn) + "/interp = " + std::to_string(interp) + "\n";
+            s += "tracks/" + std::to_string(tn) + "/loop_wrap = true\n";
+            s += "tracks/" + std::to_string(tn) + "/keys = {\n";
+            s += "\"times\": PackedFloat32Array(" + times + "),\n";
+            s += "\"transitions\": PackedFloat32Array(" + trans + "),\n";
+            s += "\"update\": 0,\n";
+            s += "\"values\": [" + vals + "]\n";
+            s += "}\n";
+            ++tn;
+        };
+        track("modulate:a", [](const AnimKey& k) { return k.hasOpacity; },
+              [](const AnimKey& k) { return num(k.opacity); });
+        track("scale", [](const AnimKey& k) { return k.hasScale; },
+              [](const AnimKey& k) { return std::string("Vector2(") + num(k.sx) + ", " + num(k.sy) + ")"; });
+        if (tn == 0) return;  // nothing replayable
+
+        s += "\n[sub_resource type=\"AnimationLibrary\" id=\"" + libRes + "\"]\n";
+        s += "_data = {\n\"a\": SubResource(\"" + animRes + "\")\n}\n";
+        frameSub.push_back(s);
+
+        body += "\n[node name=\"AnimPlayer\" type=\"AnimationPlayer\" parent=\"" + selfPath + "\"]\n";
+        body += "libraries = {\n\"\": SubResource(\"" + libRes + "\")\n}\n";
+        body += "autoplay = \"a\"\n";
+    }
+
     void emit(Node& n, const std::string& parentAttr, const std::string& name, float pw, float ph) {
         if (n.type == NodeType::Slice) return;
 
@@ -916,6 +991,7 @@ struct Converter {
                 nodeJson["type"] = "Control";
             }
             frameNodes.push_back(nodeJson);
+            emitAnim(n, childAttr);
             return;  // do not recurse into the flattened subtree
         } else if (isContainer) {
             header(name, "Control", parentAttr);
@@ -975,6 +1051,7 @@ struct Converter {
         }
 
         frameNodes.push_back(nodeJson);
+        emitAnim(n, childAttr);
 
         // Children anchor within this node's rect; names unique among siblings.
         std::map<std::string, int> used;
@@ -1134,16 +1211,18 @@ struct Converter {
         ui->selectFrame(comp.frame->name);
         ui->render();
 
-        body.clear(); frameExtId.clear(); frameExt.clear(); frameNodes = json::array();
+        body.clear(); frameExtId.clear(); frameExt.clear(); frameSub.clear();
+        subId = 0; frameNodes = json::array();
         inComponent = true;
         const uint32_t w = (uint32_t)std::ceil(std::max(1.0f, comp.canon->width));
         const uint32_t h = (uint32_t)std::ceil(std::max(1.0f, comp.canon->height));
         emit(*const_cast<Node*>(comp.canon), "", comp.name, (float)w, (float)h);
         inComponent = false;
 
-        std::string head = "[gd_scene load_steps=" + std::to_string(frameExt.size() + 1) + " format=3]\n";
+        std::string head = "[gd_scene load_steps=" + std::to_string(frameExt.size() + frameSub.size() + 1) + " format=3]\n";
         for (auto& e : frameExt)
             head += "\n[ext_resource type=\"" + e.type + "\" path=\"" + e.path + "\" id=\"" + e.id + "\"]\n";
+        for (auto& s : frameSub) head += "\n" + s;
         fs::create_directories(outDir / "components");
         std::ofstream f(outDir / "components" / (comp.name + ".tscn"), std::ios::binary);
         f << head << body;
@@ -1162,16 +1241,19 @@ struct Converter {
         body.clear();
         frameExtId.clear();
         frameExt.clear();
+        frameSub.clear();
+        subId = 0;
         frameNodes = json::array();
 
         std::string rootName = sanitizeName(frame->name, "Frame");
         emit(*frame, "", rootName, (float)curW, (float)curH);
 
         std::string head = "[gd_scene load_steps=" +
-                           std::to_string(frameExt.size() + 1) + " format=3]\n";
+                           std::to_string(frameExt.size() + frameSub.size() + 1) + " format=3]\n";
         for (auto& e : frameExt)
             head += "\n[ext_resource type=\"" + e.type + "\" path=\"" + e.path +
                     "\" id=\"" + e.id + "\"]\n";
+        for (auto& s : frameSub) head += "\n" + s;
 
         fs::path scenePath = outDir / (rootName + ".tscn");
         std::ofstream f(scenePath, std::ios::binary);

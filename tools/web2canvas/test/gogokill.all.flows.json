@@ -29,6 +29,8 @@
   { "name": "game_bad_roleinfo","nav": "game", "side": "bad", "do": ["click:[title=\"查看职业说明\"]"] },
   { "name": "game_bad_armory",  "nav": "game", "side": "bad", "do": ["click:[title=\"打开军火库\"]"] },
 
+  { "name": "meeting_call",     "nav": "game", "settle": 1100, "do": ["click:[title^=\"调试\"]", "click:text=召开紧急会议"] },
+
   { "name": "meeting_intro",    "nav": "meeting" },
   { "name": "meeting_discuss",  "nav": "meeting", "do": ["click:text=进入会议"] },
   { "name": "meeting_vote",     "nav": "meeting", "do": ["click:text=进入会议", "click:text=进入投票"] },

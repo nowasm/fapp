@@ -241,6 +241,38 @@ void parseLayout(const json& j, Node& node) {
     node.maxWidth = jfloat(j, "maxWidth");
     node.minHeight = jfloat(j, "minHeight");
     node.maxHeight = jfloat(j, "maxHeight");
+
+    // CSS animation (web2canvas): opacity + 2D scale keyframes. Replayed by
+    // figo2godot; ignored everywhere else.
+    if (auto it = j.find("anim"); it != j.end() && it->is_object()) {
+        NodeAnim a;
+        a.dur = jfloat(*it, "dur", 0);
+        a.delay = jfloat(*it, "delay", 0);
+        a.iter = static_cast<int>(jfloat(*it, "iter", 1));
+        a.ease = jstr(*it, "ease", "linear");
+        if (auto p = it->find("pivot"); p != it->end() && p->is_array() && p->size() >= 2) {
+            a.pivotX = (*p)[0].get<float>();
+            a.pivotY = (*p)[1].get<float>();
+        }
+        if (auto ks = it->find("keys"); ks != it->end() && ks->is_array()) {
+            for (const auto& kj : *ks) {
+                if (!kj.is_object()) continue;
+                AnimKey k;
+                k.t = jfloat(kj, "t", 0);
+                if (kj.contains("opacity") && kj["opacity"].is_number()) {
+                    k.hasOpacity = true;
+                    k.opacity = kj["opacity"].get<float>();
+                }
+                if (auto sc = kj.find("scale"); sc != kj.end() && sc->is_array() && sc->size() >= 2) {
+                    k.hasScale = true;
+                    k.sx = (*sc)[0].get<float>();
+                    k.sy = (*sc)[1].get<float>();
+                }
+                a.keys.push_back(k);
+            }
+        }
+        if (a.dur > 0 && a.keys.size() >= 2) node.anim = std::move(a);
+    }
 }
 
 // REST rich text: characterStyleOverrides lists a style id per UTF-16 code

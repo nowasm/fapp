@@ -179,6 +179,29 @@ struct TextRun {
     std::optional<Color> color;  // overrides the node's fill for this run
 };
 
+// One CSS @keyframes stop, reduced to the properties we can replay in an engine
+// AnimationPlayer: normalized time t∈[0,1] plus optional opacity / 2D scale.
+struct AnimKey {
+    float t = 0;
+    bool hasOpacity = false;
+    float opacity = 1.0f;
+    bool hasScale = false;
+    float sx = 1.0f, sy = 1.0f;
+};
+
+// A node's CSS animation, captured by web2canvas (animation-* + the resolved
+// @keyframes). Minimal subset: opacity + transform:scale, looping/finite, with
+// a transform-origin pivot. Consumed by figo2godot to emit an AnimationPlayer.
+struct NodeAnim {
+    float dur = 0;          // seconds (animation-duration)
+    float delay = 0;        // seconds (animation-delay)
+    int iter = 1;           // animation-iteration-count; 0 = infinite
+    float pivotX = 0.5f;    // transform-origin as a fraction of the box
+    float pivotY = 0.5f;
+    std::string ease;       // animation-timing-function (first value)
+    std::vector<AnimKey> keys;
+};
+
 // All value state of a node, split out so nodes can be cloned with a plain
 // member-wise copy (see cloneNode) — new fields added here are picked up by
 // clone/serialize automatically; only parent/children need special handling.
@@ -267,6 +290,10 @@ struct NodeData {
     // Selection anchor (set on press, caret follows the drag); together with
     // caretByte it spans the highlighted range. -1 → no selection.
     int selAnchorByte = -1;
+
+    // CSS animation (web2canvas only); absent for static nodes. The renderer
+    // ignores it — only figo2godot replays it as a Godot AnimationPlayer.
+    std::optional<NodeAnim> anim;
 };
 
 struct Node : NodeData {

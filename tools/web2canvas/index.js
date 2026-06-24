@@ -98,6 +98,117 @@ function collectorFn({ rootSelector, aiName }) {
   const rootRect = root.getBoundingClientRect();
   const rootArea = rootRect.width * rootRect.height;
   let rid = 0, candId = 0;
+
+  // ── CSS animation capture (opacity + 2D scale only) ──────────────────────────
+  // Index every @keyframes rule by name so an animated element's resolved frames
+  // can be read. Static-snapshot caveat: only looping/transform-scale/opacity
+  // animations replay in the engine; height/clip-path/color morphs do not.
+  const kfMap = {};
+  (function indexRules(rules) {
+    if (!rules) return;
+    for (const r of rules) {
+      if (r.type === 7 /* CSSKeyframesRule */) kfMap[r.name] = r;
+      else if (r.cssRules) indexRules(r.cssRules);  // recurse @media / @supports
+    }
+  })((() => { const out = []; for (const ss of document.styleSheets) {
+      try { if (ss.cssRules) for (const r of ss.cssRules) out.push(r); } catch (e) {} }
+      return out; })());
+  function parseScale(tf) {
+    if (!tf || tf === 'none') return null;
+    let m;
+    if ((m = /scale\(\s*([-\d.]+)\s*(?:,\s*([-\d.]+)\s*)?\)/.exec(tf)))
+      return [parseFloat(m[1]), m[2] !== undefined ? parseFloat(m[2]) : parseFloat(m[1])];
+    if ((m = /scaleX\(\s*([-\d.]+)\s*\)/.exec(tf))) return [parseFloat(m[1]), 1];
+    if ((m = /scaleY\(\s*([-\d.]+)\s*\)/.exec(tf))) return [1, parseFloat(m[1])];
+    return null;  // translate/rotate/matrix: not in the minimal subset
+  }
+  function animOf(cs, r) {
+    const name = (cs.animationName || 'none').split(',')[0].trim();
+    if (name === 'none' || !kfMap[name]) return null;
+    const dur = parseFloat(cs.animationDuration) || 0;       // "1.1s" → 1.1
+    if (dur <= 0) return null;
+    const iterRaw = (cs.animationIterationCount || '1').split(',')[0].trim();
+    const iter = iterRaw === 'infinite' ? 0 : (parseInt(iterRaw, 10) || 1);
+    // transform-origin is computed to px relative to the element box.
+    let pivot = [0.5, 0.5];
+    const to = (cs.transformOrigin || '').split(' ').map(parseFloat);
+    if (to.length >= 2 && r.width > 0 && r.height > 0 && isFinite(to[0]) && isFinite(to[1]))
+      pivot = [to[0] / r.width, to[1] / r.height];
+    const keys = [];
+    let sawOpacity = false, sawScale = false, sawHeight = false;
+    for (const rule of kfMap[name].cssRules) {
+      if (!rule.keyText) continue;
+      for (const kt of rule.keyText.split(',')) {
+        const s = kt.trim();
+        const t = s === 'from' ? 0 : s === 'to' ? 1 : parseFloat(s) / 100;
+        if (!isFinite(t)) continue;
+        const k = { t };
+        if (rule.style.opacity !== '') { k.opacity = parseFloat(rule.style.opacity); sawOpacity = true; }
+        const sc = parseScale(rule.style.transform);
+        if (sc) { k.scale = sc; sawScale = true; }
+        // height keyframes (equalizer/voiceprint bars) → scaleY about the
+        // element's CAPTURED box height, so the absolute px land correctly
+        // regardless of which animation phase the snapshot caught.
+        const h = rule.style.height;
+        if (h && h.endsWith('px') && r.height > 0) {
+          const sy = parseFloat(h) / r.height;
+          if (k.scale) k.scale[1] = sy; else k.scale = [1, sy];
+          sawScale = true; sawHeight = true;
+        }
+        if ('opacity' in k || 'scale' in k) keys.push(k);
+      }
+    }
+    if (!keys.length) return null;
+    // A height-grow (bar) animation rises from its baseline, so pivot at the
+    // bottom edge; a transform-origin (if any) still wins for transform scales.
+    if (sawHeight && (cs.transformOrigin || '').indexOf('px') < 0) pivot = [0.5, 1];
+    else if (sawHeight) pivot = [pivot[0], 1];
+    // CSS fills missing 0%/100% from the element's resting value (opacity 1,
+    // scale 1). Synthesize endpoints so the engine track spans the full length.
+    const ensure = (tt) => {
+      if (keys.some(k => Math.abs(k.t - tt) < 1e-4)) return;
+      const e = { t: tt };
+      if (sawOpacity) e.opacity = 1;
+      if (sawScale) e.scale = [1, 1];
+      keys.push(e);
+    };
+    ensure(0); ensure(1);
+    keys.sort((a, b) => a.t - b.t);
+
+    const delay = parseFloat(cs.animationDelay) || 0;
+    // animation-delay on an infinite loop is a phase offset (the staggered
+    // voiceprint bars). Engine players all autoplay at t=0, so bake the phase
+    // into the keyframes by resampling the (periodic) curve shifted by -delay.
+    let outKeys = keys;
+    const sFrac = ((((delay % dur) / dur) % 1) + 1) % 1;
+    if (iter === 0 && sFrac > 1e-4) {
+      const lerpV = (a, b, u) => Array.isArray(a) ? a.map((av, i) => av + (b[i] - av) * u) : a + (b - a) * u;
+      const sample = (field, phase) => {
+        const ks = keys.filter(k => field in k);
+        if (!ks.length) return undefined;
+        if (ks.length === 1) return ks[0][field];
+        const p = ((phase % 1) + 1) % 1;
+        for (let i = 0; i < ks.length; i++) {
+          const a = ks[i], b = ks[(i + 1) % ks.length];
+          const t0 = a.t, t1 = i === ks.length - 1 ? b.t + 1 : b.t;
+          const pp = i === ks.length - 1 && p < a.t ? p + 1 : p;
+          if (pp >= t0 && pp <= t1) return lerpV(a[field], b[field], t1 > t0 ? (pp - t0) / (t1 - t0) : 0);
+        }
+        return ks[0][field];
+      };
+      const phases = new Set([0, 1]);
+      for (const k of keys) phases.add(((((k.t + sFrac) % 1) + 1) % 1));
+      outKeys = [...phases].sort((x, y) => x - y).map(t => {
+        const src = ((((t - sFrac) % 1) + 1) % 1);
+        const o = { t: +t.toFixed(4) };
+        if (sawOpacity) { const v = sample('opacity', src); if (v !== undefined) o.opacity = +v.toFixed(4); }
+        if (sawScale)   { const v = sample('scale', src);   if (v !== undefined) o.scale = v.map(x => +x.toFixed(4)); }
+        return o;
+      });
+    }
+    return { dur, delay, iter, pivot,
+             ease: (cs.animationTimingFunction || 'linear').split(',')[0].trim(), keys: outKeys };
+  }
   // Normalize any CSS color (incl. oklch/oklab/color-mix, which getComputedStyle
   // and canvas fillStyle preserve as-is) to plain rgba by rasterizing one pixel
   // and reading it back — forces the browser's own sRGB conversion.
@@ -370,8 +481,13 @@ function collectorFn({ rootSelector, aiName }) {
       textRect: ti ? ti.rect : null,
       textRuns: ti ? ti.runs : null,
       bg: norm(cs.backgroundColor),
+      // Resolve percentage corner radii to px (Edge returns "50%" unresolved):
+      // a 50% radius is a circle (half the box), not 50px — otherwise a baked
+      // ring/avatar comes out as a squircle.
       radius: [cs.borderTopLeftRadius, cs.borderTopRightRadius,
-               cs.borderBottomRightRadius, cs.borderBottomLeftRadius].map(v => parseFloat(v) || 0),
+               cs.borderBottomRightRadius, cs.borderBottomLeftRadius]
+              .map(v => { const s = String(v).trim();
+                          return s.endsWith('%') ? (parseFloat(s) || 0) / 100 * r.width : (parseFloat(s) || 0); }),
       borderW: parseFloat(cs.borderTopWidth) || 0,
       borderColor: norm(cs.borderTopColor),
       borderStyle: cs.borderTopStyle,
@@ -394,6 +510,8 @@ function collectorFn({ rootSelector, aiName }) {
       nearAvatar: ti ? nearAvatar(el) : false,
       kids: [],
     };
+    const an = animOf(cs, r);
+    if (an) out.anim = an;
     if (!rasterWhole) {
       const pairs = [];
       for (const child of el.children) {
@@ -629,6 +747,7 @@ function mapNode(n, parent) {
   if (parent && hasText && !boxVisual && kids.length === 0 && singleRun) {
     const t = makeTextNode(n, base);
     if (n.opacity < 0.999) t.opacity = n.opacity;
+    if (n.anim) t.anim = n.anim;
     return t;
   }
 
@@ -671,6 +790,7 @@ function mapNode(n, parent) {
   }
   node.frameMaskDisabled = !(n.overflow && n.overflow !== 'visible');
   if (n.opacity < 0.999) node.opacity = n.opacity;
+  if (n.anim) node.anim = n.anim;
 
   const children = [];
   if (hasText) for (const t of textNodes(n, n.rect)) children.push(t);  // one per run
@@ -700,6 +820,10 @@ function buildCaptures(a) {
       nav: (c.nav !== undefined ? c.nav : null),
       side: c.side || null,            // 'good' | 'bad' — set before the screen mounts
       steps: c.steps || c.do || [],
+      // Per-capture post-step settle (ms). Override the global --wait when a step
+      // opens a self-dismissing overlay (e.g. the meeting-call演出 auto-advances at
+      // 2400ms): a shorter settle collects the overlay before it tears itself down.
+      settle: (typeof c.settle === 'number' ? c.settle : null),
     }));
   }
   if (a.states) {
@@ -867,6 +991,10 @@ async function aiNamePass(page, records, dir) {
   console.log(`launching ${a.browser} ...`);
   const browser = await chromium.launch({ channel: a.browser, headless: true });
   const page = await browser.newPage({ viewport: { width: a.vw, height: a.vh }, deviceScaleFactor: a.scale });
+  // Many UIs gate animations behind @media (prefers-reduced-motion: no-preference);
+  // headless can default to 'reduce', which strips animation-* off the elements so
+  // none would be captured. Force motion on.
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   await setupCdnRoutes(page);
 
   let server = null, pageUrl, fontsCssUrl = null;
@@ -943,19 +1071,29 @@ async function aiNamePass(page, records, dir) {
     const hasSteps = cap.steps && cap.steps.length;
     if (hasSteps) await page.evaluate(() => document.querySelectorAll('*').forEach(e => e.setAttribute('data-w2c-pre', '1')));
     try {
-      for (const step of (cap.steps || [])) await runStep(page, step, a.navFn, a.wait);
+      const settle = cap.settle != null ? cap.settle : a.wait;
+      for (const step of (cap.steps || [])) await runStep(page, step, a.navFn, settle);
     } catch (e) { console.error(`  WARN: step failed for ${cap.name}: ${e.message.split('\n')[0]}`); }
     if (hasSteps) {
       const ovl = await page.evaluate((rootSel) => {
         const root = document.querySelector(rootSel) || document.body;
         const rr = root.getBoundingClientRect(), rootArea = rr.width * rr.height;
         let best = null, bestArea = 0;
+        // All boundary roots (a new element whose parent already existed). A modal
+        // is ONE such subtree (its dim/backdrop wrapper). A full-screen STATE change
+        // (e.g. the meeting intro→discuss stage, which mounts the header, the stage,
+        // the skills bar and the chat panel as separate siblings) yields SEVERAL —
+        // grouped under one pre-existing parent. Track them so a multi-subtree state
+        // change captures the shared parent (whole screen) instead of just the
+        // largest sibling, which would drop the rest.
+        const boundary = [];
         for (const e of document.querySelectorAll(':not([data-w2c-pre])')) {
           const p = e.parentElement;                                 // boundary = parent already existed
           if (p && !p.hasAttribute('data-w2c-pre') && p !== document.body && p !== document.documentElement) continue;
           const cs = getComputedStyle(e);
           if (cs.display === 'none' || cs.visibility === 'hidden') continue;
           const r = e.getBoundingClientRect(), area = r.width * r.height;
+          if (area >= 64) boundary.push({ e, p, area });
           const positioned = cs.position === 'fixed' || cs.position === 'absolute';
           // a full-screen positioned overlay, OR an inline panel that's a real
           // chunk but not a whole-screen re-render
@@ -963,11 +1101,45 @@ async function aiNamePass(page, records, dir) {
                      (area >= rootArea * 0.02 && area <= rootArea * 0.90);
           if (ok && area > bestArea) { best = e; bestArea = area; }
         }
+        // Several new sibling subtrees under one parent (inside root) → a screen-wide
+        // state change: capture the common parent so all the new panels come along.
+        if (best) {
+          const groups = new Map();
+          for (const b of boundary) {
+            if (!b.p) continue;
+            const g = groups.get(b.p) || { n: 0, max: 0 };
+            g.n++; g.max = Math.max(g.max, b.area); groups.set(b.p, g);
+          }
+          for (const [parent, g] of groups) {
+            if (g.n >= 2 && g.max >= rootArea * 0.25 && parent !== root && root.contains(parent)) {
+              parent.setAttribute('data-w2c-ovl', '1');
+              return true;
+            }
+          }
+        }
         if (best) { best.setAttribute('data-w2c-ovl', '1'); return true; }
         return false;
       }, a.root);
       if (ovl) captureRoot = '[data-w2c-ovl]';
     }
+    // Animated elements are mid-flight at capture: their live transform/opacity
+    // would be frozen into BOTH the geometry and the baked sprite, and then the
+    // emitted animation track would apply them a SECOND time — double scale,
+    // double-dim, and (worst) a transparent ring with a live transform bakes as a
+    // whole raster that captures the dark backdrop through its hole as a square.
+    // Neutralize transform+opacity to the resting state so the box/sprite are
+    // clean and the track animates from a correct base. animation-driven LAYOUT
+    // (the voiceprint bars' height) uses neither, so it's left running.
+    await page.evaluate(() => {
+      for (const el of document.querySelectorAll('*')) {
+        const an = getComputedStyle(el).animationName;
+        if (an && an !== 'none') {
+          el.style.setProperty('transform', 'none', 'important');
+          el.style.setProperty('opacity', '1', 'important');
+        }
+      }
+    });
+
     if (si === 0) await page.screenshot({ path: out.replace(/\.canvas\.json$|\.json$/, '') + '.web.png' }).catch(() => {});
 
     const res = await page.evaluate(collectorFn, { rootSelector: captureRoot, aiName: a.aiName });
