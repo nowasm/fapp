@@ -317,6 +317,14 @@ static std::string normFamily(const std::string& s) {
     return out;
 }
 
+// Count Unicode codepoints in a UTF-8 string (lead bytes != 10xxxxxx).
+static size_t utf8Count(const std::string& s) {
+    size_t n = 0;
+    for (unsigned char c : s)
+        if ((c & 0xC0) != 0x80) ++n;
+    return n;
+}
+
 static uint16_t be16(const std::vector<uint8_t>& b, size_t o) {
     return o + 1 < b.size() ? (uint16_t)((b[o] << 8) | b[o + 1]) : 0;
 }
@@ -711,8 +719,8 @@ struct Converter {
 
     // Best font file for a (family, weight, italic): exact, then nearest weight
     // in the family, then any in the family.
-    const FontEntry* matchFont(const std::string& family, int weight, bool italic) {
-        std::string fam = normFamily(family);
+    // Nearest-weight entry within one normalized family (null if absent).
+    const FontEntry* bestInFamily(const std::string& fam, int weight, bool italic) {
         const FontEntry* best = nullptr;
         int bestScore = 1 << 30;
         for (const auto& fe : fonts) {
@@ -724,6 +732,27 @@ struct Converter {
             }
         }
         return best;
+    }
+
+    const FontEntry* matchFont(const std::string& family, int weight, bool italic) {
+        if (const FontEntry* fe = bestInFamily(normFamily(family), weight, italic))
+            return fe;
+        // No bundled file for this family (Arial/Helvetica/system-ui/generic
+        // sans…). Without an override Godot falls back to its default font plus
+        // OS glyph substitution, whose metrics & coverage are unpredictable — a
+        // "☺" becomes a system emoji, CJK shows tofu, and a glyph-tight Label
+        // box no longer centers. Route to a bundled Unicode-broad sans (Noto
+        // Sans covers Latin + CJK + common symbols) so glyphs stay consistent.
+        // Prefix-match because a variable font's default instance reports a
+        // named family like "Noto Sans SC Thin" (norm "notosansscthin").
+        const FontEntry* fb = nullptr;
+        int fbScore = 1 << 30;
+        for (const auto& fe : fonts) {
+            if (fe.familyNorm.rfind("notosans", 0) != 0) continue;
+            int score = std::abs(fe.weight - weight) + (fe.italic == italic ? 0 : 1000);
+            if (score < fbScore) { fbScore = score; fb = &fe; }
+        }
+        return fb;
     }
 
     // ---- anchors / responsive placement ----
@@ -940,6 +969,23 @@ struct Converter {
         const float pay = n.parent ? n.parent->absoluteTransform.m12 : 0.0f;
         const bool isRoot = parentAttr.empty();
         const bool isContainer = !n.children.empty();
+        // Scroll analysis: a frame becomes a ScrollContainer only when it is
+        // marked scrollable AND its content actually exceeds its box on that
+        // axis (CSS overflow:auto shows a scrollbar only when overflowing). This
+        // keeps full-screen frames — which carry a blanket scrollDirection but
+        // whose content exactly fills them — as plain clipped containers.
+        using SD = figo::ScrollDirection;
+        float scrollCW = 0.0f, scrollCH = 0.0f;
+        if (isContainer && n.scrolls())
+            for (auto& c : n.children) {
+                scrollCW = std::max(scrollCW, c->relativeTransform.m02 + c->width);
+                scrollCH = std::max(scrollCH, c->relativeTransform.m12 + c->height);
+            }
+        const bool scrollV = isContainer && n.scrolls() &&
+            (n.scrollDirection == SD::Vertical || n.scrollDirection == SD::Both) && scrollCH > n.height + 1.0f;
+        const bool scrollH = isContainer && n.scrolls() &&
+            (n.scrollDirection == SD::Horizontal || n.scrollDirection == SD::Both) && scrollCW > n.width + 1.0f;
+        const bool scrollFrame = scrollV || scrollH;
         const std::string childAttr =
             isRoot ? "." : (parentAttr == "." ? name : parentAttr + "/" + name);
 
@@ -973,7 +1019,27 @@ struct Converter {
 
         if (n.type == NodeType::Text) {
             header(name, "Label", parentAttr);
-            placeNode(lx, ly, n.width, n.height);
+            // Icon-glyph centering: a short glyph (emoji/symbol button icon) is
+            // measured in the source font as a tight ink box. After font
+            // substitution in Godot the glyph's advance/baseline differ, so
+            // re-centering it inside that tiny box drifts off-center. When the
+            // glyph already sits centered in its parent (equal margins on both
+            // axes), expand the Label to fill that parent and center — the full
+            // box has the slack to absorb metric differences. Gated tight to
+            // avoid moving glyphs that are deliberately offset within a large
+            // container (a resize handle pinned to the right of an input row):
+            // ≤2 codepoints, center-aligned, smaller than the parent, AND
+            // symmetric margins on both axes.
+            const float marginTol = 4.0f;
+            const float lM = lx, rM = pw - (lx + n.width);
+            const float tM = ly, bM = ph - (ly + n.height);
+            const bool iconGlyph =
+                !isRoot && n.textStyle.alignH == figo::TextStyle::AlignH::Center &&
+                pw > 1 && ph > 1 && n.width < pw - 1 && n.height < ph - 1 &&
+                utf8Count(n.characters) <= 2 &&
+                std::fabs(lM - rM) <= marginTol && std::fabs(tM - bM) <= marginTol;
+            if (iconGlyph) rect(0, 0, pw, ph);
+            else placeNode(lx, ly, n.width, n.height);
             commonProps(n, isRoot);
             textProps(n);
             nodeJson["type"] = "Label";
@@ -999,6 +1065,42 @@ struct Converter {
             frameNodes.push_back(nodeJson);
             emitAnim(n, childAttr);
             return;  // do not recurse into the flattened subtree
+        } else if (scrollFrame) {
+            // overflow:auto/scroll frame whose content overflows -> Godot
+            // ScrollContainer. The container clips + shows a scrollbar (AUTO) on
+            // the overflowing axis; its single content child "__scroll" holds the
+            // absolutely-placed children and carries custom_minimum_size = the
+            // content extent, which is what tells the container how far to
+            // scroll. A uniform-solid background would scroll invisibly and a
+            // baked/gradient bg can't ride along, so a scroll frame keeps only
+            // its content (its panel chrome lives on an ancestor, as in the chat
+            // log inside its bordered panel).
+            header(name, "ScrollContainer", parentAttr);
+            placeNode(lx, ly, n.width, n.height);
+            commonProps(n, isRoot);
+            body += "horizontal_scroll_mode = " + std::string(scrollH ? "1" : "0") + "\n";  // 1=auto, 0=disabled
+            body += "vertical_scroll_mode = "   + std::string(scrollV ? "1" : "0") + "\n";
+            nodeJson["type"] = "ScrollContainer";
+            frameNodes.push_back(nodeJson);
+            emitAnim(n, childAttr);
+
+            const std::string contentAttr = (childAttr == ".") ? "__scroll" : childAttr + "/__scroll";
+            header("__scroll", "Control", childAttr);
+            // Only the overflowing axis gets an explicit extent; the cross axis
+            // is left at 0 so the container fits the content to its own size.
+            body += "custom_minimum_size = Vector2(" + num(scrollH ? scrollCW : 0.0f) + ", " +
+                    num(scrollV ? scrollCH : 0.0f) + ")\n";
+            std::map<std::string, int> usedS;
+            int idxS = 0;
+            for (auto& child : n.children) {
+                std::string fb = "Node" + std::to_string(idxS++);
+                std::string base = sanitizeName(child->name, fb.c_str());
+                std::string uniq = base; int k = 2;
+                while (usedS.count(uniq)) uniq = base + "_" + std::to_string(k++);
+                usedS[uniq] = 1;
+                emit(*child, contentAttr, uniq, scrollH ? scrollCW : n.width, scrollV ? scrollCH : n.height);
+            }
+            return;
         } else if (isContainer) {
             header(name, "Control", parentAttr);
             placeNode(lx, ly, n.width, n.height);

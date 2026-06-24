@@ -434,6 +434,31 @@ function collectorFn({ rootSelector, aiName }) {
            Math.abs(v[2]) > 0.01 || Math.abs(v[3] - 1) > 0.01;  // non-translation
   }
 
+  // A standalone symbol/pictograph glyph (⤢ maximize, ✕ close, ❯ chevron, an
+  // emoji…) has no reliable coverage in the bundled text fonts — JetBrains Mono,
+  // Noto Sans and Oswald all lack e.g. U+2922 (⤢). A Label would then fall back
+  // to an arbitrary OS glyph whose metrics differ from the browser's fallback,
+  // and the two arms of the arrow drift out of alignment. So rasterize such a
+  // glyph span and let Godot blit the exact browser pixels instead. Only fires
+  // when the element is a text LEAF whose ENTIRE text is symbols — mixed text
+  // like "🔒 加入" stays as a recolorable TEXT node. Basic arrows (U+2190–21FF)
+  // and geometric shapes (U+25xx) ARE covered by Noto, so they're left as text.
+  function isSymbolGlyphRun(s) {
+    if (!s) return false;
+    let sawSym = false;
+    for (const ch of s) {
+      const c = ch.codePointAt(0);
+      if (c === 0x20 || c === 0xFE0F || c === 0x200D) continue;  // space, VS16, ZWJ
+      const sym = (c >= 0x2300 && c <= 0x27BF) ||   // misc technical / symbols / dingbats
+                  (c >= 0x2900 && c <= 0x29FF) ||   // supplemental arrows-B / math-B
+                  (c >= 0x2B00 && c <= 0x2BFF) ||   // misc symbols and arrows
+                  (c >= 0x1F000 && c <= 0x1FAFF);   // emoji / pictographs
+      if (!sym) return false;   // any normal letter/digit/CJK/punct -> keep as text
+      sawSym = true;
+    }
+    return sawSym;
+  }
+
   // An element's own (non-whitespace) text, via a Range per direct text node.
   // Each text node is a RUN with its own rect: an element with inline siblings
   // (由 <span>name</span> rest) has its text split AROUND the span, so the runs
@@ -496,7 +521,12 @@ function collectorFn({ rootSelector, aiName }) {
       if (it) { ti = { runs: it.runs, text: it.text, rect: it.rect }; inputColor = it.color; }
     }
 
-    const wholeRaster = (tag === 'img' || tag === 'svg' || tag === 'canvas' || tag === 'video') || isTransformed(cs);
+    // A leaf span that is purely an unrenderable symbol glyph: bake it to a
+    // sprite (below) and drop its text so no mis-fonted Label is emitted.
+    const symbolGlyph = !!ti && el.children.length === 0 && isSymbolGlyphRun(ti.text);
+    if (symbolGlyph) { ti = null; inputColor = null; }
+
+    const wholeRaster = (tag === 'img' || tag === 'svg' || tag === 'canvas' || tag === 'video') || isTransformed(cs) || symbolGlyph;
     const clipped = cs.clipPath && cs.clipPath !== 'none';
     const bgRaster = hasRealBg(cs) || clipped || fancyBorder(cs);
     let raster = null, rasterWhole = false, rasterHideContent = false;
@@ -537,6 +567,8 @@ function collectorFn({ rootSelector, aiName }) {
       opacity: parseFloat(cs.opacity),
       transform: cs.transform,
       overflow: cs.overflow,
+      overflowX: cs.overflowX,
+      overflowY: cs.overflowY,
       color: norm(inputColor || cs.color),
       fontFamily: cs.fontFamily,
       fontSize: parseFloat(cs.fontSize) || 0,
@@ -616,6 +648,13 @@ function collectorFn({ rootSelector, aiName }) {
     return out;
   }
 
+  // A scrolled container (e.g. the chat log auto-scrolls to its latest message)
+  // reports its children at scroll-shifted — often negative — positions. Reset
+  // every scroll offset to 0 so children are measured at their natural top-left
+  // layout; the exported ScrollContainer then starts at the top with correct
+  // child offsets and the right content extent.
+  root.scrollTop = 0; root.scrollLeft = 0;
+  root.querySelectorAll('*').forEach(e => { e.scrollTop = 0; e.scrollLeft = 0; });
   const tree = node(root, rootRect.left, rootRect.top, 0);
   return { tree, rootW: rootRect.width, rootH: rootRect.height };
 }
@@ -840,6 +879,13 @@ function mapNode(n, parent) {
     }];
   }
   node.frameMaskDisabled = !(n.overflow && n.overflow !== 'visible');
+  // overflow:auto/scroll on an axis -> a scrolling frame (figo ScrollDirection).
+  // The browser only paints a scrollbar when content actually overflows; Godot's
+  // ScrollContainer AUTO mode replicates that, so mark the axis regardless and
+  // let overflow decide at runtime. overflow:hidden stays a plain clip (above).
+  const canScroll = v => v === 'auto' || v === 'scroll';
+  const sx = canScroll(n.overflowX), sy = canScroll(n.overflowY);
+  if (sx || sy) node.scrollDirection = sx && sy ? 'BOTH' : sx ? 'HORIZONTAL' : 'VERTICAL';
   if (n.opacity < 0.999) node.opacity = n.opacity;
   if (n.anim) node.anim = n.anim;
 
