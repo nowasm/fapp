@@ -418,7 +418,12 @@ struct FontProvider::Impl {
     // Loads the font file under `key` so tvg::Text::font(key) resolves.
     // Collections (.ttc) are repacked to the face matching the key's family.
     bool loadAs(const std::string& key, const std::string& path) {
-        if (auto it = loaded.find(key); it != loaded.end()) return it->second;
+        // Short-circuit only on a prior SUCCESS. A cached failure must not block
+        // a retry under the same key with a DIFFERENT path: fontKeyFor falls back
+        // (requested family → defaultFamily → Arial) reusing one key, so caching
+        // the first failed path as final would poison every later fallback and
+        // drop the text entirely.
+        if (auto it = loaded.find(key); it != loaded.end() && it->second) return true;
 
         std::ifstream f(path, std::ios::binary);
         bool ok = false;
