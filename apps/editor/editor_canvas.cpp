@@ -285,15 +285,20 @@ void updateCanvas(EditorState& ed) {
         ed.viewSettled = false;
     }
 
-    // ---- wheel ----
-    const float wheel = GetMouseWheelMove();
-    if (wheel != 0 && inViewport) {
+    // ---- wheel / trackpad ----
+    // Use the 2-axis variant so two-finger horizontal swipes pan X (the 1-axis
+    // GetMouseWheelMove only reports vertical, so trackpads could only move up/down).
+    const Vector2 wheel = GetMouseWheelMoveV();
+    if ((wheel.x != 0 || wheel.y != 0) && inViewport) {
+        constexpr float kPanStep = 30.0f;  // px per wheel unit
         if (ctrl) {
-            ed.cam.zoomAt(mx, my, std::exp(wheel * 0.18f));
+            ed.cam.zoomAt(mx, my, std::exp(wheel.y * 0.18f));
         } else if (shift) {
-            ed.cam.panX += wheel * 60.0f;
+            // Classic mouse: Shift forces the vertical wheel to pan horizontally.
+            ed.cam.panX += (wheel.x + wheel.y) * kPanStep;
         } else {
-            ed.cam.panY += wheel * 60.0f;
+            ed.cam.panX += wheel.x * kPanStep;
+            ed.cam.panY += wheel.y * kPanStep;
         }
         ed.lastViewChange = GetTime();
         ed.viewSettled = false;
