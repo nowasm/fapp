@@ -347,6 +347,7 @@ std::unique_ptr<Node> parseNode(const json& j, Node* parent) {
     node->parent = parent;
     node->id = jstr(j, "id");
     node->name = jstr(j, "name");
+    node->compType = jstr(j, "comp", "");  // hand-authored prefab tag (figo2godot --prefabs)
     node->type = parseNodeType(jstr(j, "type"));
     node->visible = jbool(j, "visible", true);
     node->opacity = jfloat(j, "opacity", 1.0f);
