@@ -26,3 +26,15 @@ Modifications by figo (per Apache-2.0 §4.b, "carry prominent notices"):
 Some skills are themselves curated from third parties; their own upstreams are
 recorded in each skill's SKILL.md frontmatter (e.g. design-review is curated
 from gstack by Garry Tan, https://github.com/garrytan/gstack).
+
+Separately vendored (NOT from Open Design, different license):
+  - skills/taste/ — an "anti-slop frontend" design-taste skill, vendored from
+    taste-skill (https://github.com/Leonxlnx/taste-skill), Copyright (c) 2026
+    Leonxlnx, MIT License (see skills/taste/LICENSE). A curated subset of the
+    upstream skills/ tree: the comprehensive main skill plus the portable
+    minimalist / soft / brutalist / redesign aesthetic variants, copied
+    verbatim. NOT taken: the upstream image-to-code / imagegen / brandkit /
+    stitch / gpt / output skills and the React/HTML/GSAP runtime pieces — figo
+    renders Figma nodes through ThorVG, not a browser. The framework-agnostic
+    taste principles are adapted to figo's figoedit MCP pipeline by the
+    .claude/skills/figo-design skill; see skills/taste/SOURCE.md.

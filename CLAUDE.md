@@ -39,7 +39,9 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
 > 从零做一个 app 走 **`/new-app` skill**（`.claude/skills/new-app/`）——脚手架
 > (`tools/figmanew.py`) → 设计（figoedit MCP，套 `design-systems/` 的审美 token）
 > → 写 app.js → `--shot` 自验 → 迭代。一个 app 也可是标准目录
-> `<dir>/app.json`（`figoplay <dir>`，字段见 README "app 工程"）。下面是底层速查：
+> `<dir>/app.json`（`figoplay <dir>`，字段见 README "app 工程"）。**要让设计不长成
+> AI 默认款，设计步骤套 `/figo-design` skill**（`.claude/skills/figo-design/`）——它默认
+> 加载 `design-systems/skills/taste/` 的反模板审美纪律并翻译到 figoedit 节点操作。下面是底层速查：
 
 1. **设计**：启动 `build\figoedit.exe <file.fig>`，仓库根 `.mcp.json` 已配置
    figoedit 的 MCP（127.0.0.1:9223），用它的 21 个工具直接读改设计
