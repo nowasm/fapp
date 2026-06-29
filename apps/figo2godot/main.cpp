@@ -403,8 +403,13 @@ struct Converter {
 
     // ---- prefab extraction (--prefabs) ----
     bool prefabs = false;
+    bool prefabAnon = false;   // --prefab-anon: also extract repeated ANONYMOUS
+                               // (no-compType) containers, not just source comps
     bool inComponent = false;  // true while emitting a component scene (no nesting-instances)
     std::set<std::string> noPrefab;  // compTypes never extracted (generic wrappers: HPanel…)
+    std::set<std::string> usedComps; // comp names actually instanced by a frame — only
+                                     // these get a .tscn (a comp used only NESTED inside
+                                     // another comp is inlined there, never instanced)
     struct Comp {
         std::string name;            // unique component name / file stem
         const Node* canon = nullptr; // canonical (superset) instance
@@ -531,6 +536,48 @@ struct Converter {
         return c;
     }
 
+    // A generic/auto-generated container name (div_12, span3, css-1abc, node5,
+    // wrapper, "") carries no semantic meaning — not worth using as a prefab name.
+    static bool genericName(const std::string& s) {
+        if (s.empty()) return true;
+        std::string l;
+        for (char c : s) l.push_back((char)std::tolower((unsigned char)c));
+        static const char* pre[] = {"div", "span", "css", "node", "wrapper", "container", "box", "group", "item"};
+        for (const char* p : pre) {
+            size_t n = std::strlen(p);
+            if (l.rfind(p, 0) != 0) continue;
+            bool g = true;  // prefix followed only by digits / - / _ -> generic
+            for (size_t i = n; i < l.size(); ++i) {
+                char c = l[i];
+                if (!(std::isdigit((unsigned char)c) || c == '-' || c == '_')) { g = false; break; }
+            }
+            if (g) return true;
+        }
+        return false;
+    }
+    // First non-empty text in a subtree (for naming an anonymous container).
+    static std::string firstText(const Node& n) {
+        if (n.type == NodeType::Text && !n.characters.empty()) return n.characters;
+        for (const auto& c : n.children) {
+            std::string s = firstText(*c);
+            if (!s.empty()) return s;
+        }
+        return "";
+    }
+    // A readable prefab name for an anonymous repeated container: its own name if
+    // meaningful, else a leading ASCII word of the first text in its subtree (CJK
+    // sanitizes to underscores downstream, so it falls through), else "Group".
+    static std::string genName(const Node& n) {
+        if (!genericName(n.name)) return n.name;
+        std::string out;
+        for (char c : firstText(n)) {
+            if (std::isalnum((unsigned char)c)) out.push_back(c);
+            else if (!out.empty()) break;  // stop at the first break after a word
+            if (out.size() >= 16) break;
+        }
+        return out.empty() ? "Group" : out;
+    }
+
     // Tally repeated component candidates across a frame's tree. Only containers
     // with real substance (>=3 descendants) so we extract meaningful components
     // (cards, buttons), not every 2-label sub-group.
@@ -538,15 +585,21 @@ struct Converter {
         std::function<void(Node&)> rec = [&](Node& n) {
             for (auto& c : n.children) {
                 Node& cn = *c;
-                // Only SOURCE components become prefabs (web2canvas compType from
-                // the React fiber) — not anonymous structural containers, which
-                // would extract as ugly div_N scenes. desc>=3 still gates trivia.
-                if (!cn.compType.empty() && !cn.children.empty() && cn.type != NodeType::Text &&
+                // SOURCE components (web2canvas compType from the React fiber)
+                // always become prefab candidates. With --prefab-anon, ANONYMOUS
+                // structural containers join too — grouped by their structural sig
+                // (groupKey), so any container repeated >1 deduplicates into a
+                // prefab (problem: "重复显示次数大于1的就应设为预制体"). desc>=3
+                // gates trivia; the poorFit guard later inlines bad merges, so a
+                // coincidental same-shape match never breaks a frame visually.
+                const bool isComp = !cn.compType.empty();
+                const bool anon = prefabAnon && cn.compType.empty();
+                if ((isComp || anon) && !cn.children.empty() && cn.type != NodeType::Text &&
                     !isVectorIcon(cn) && cn.width > 4 && cn.height > 4 && descendants(cn) >= 3) {
                     auto& comp = compBySig[groupKey(cn)];
                     comp.count++;
                     comp.insts.push_back({ &cn, frame });
-                    if (comp.name.empty()) comp.name = cn.compType;
+                    if (comp.name.empty()) comp.name = isComp ? cn.compType : genName(cn);
                 }
                 rec(cn);
             }
@@ -1042,6 +1095,7 @@ struct Converter {
         // Prefab reuse: a repeated component is instanced from its PackedScene,
         // with per-instance text overrides; its subtree is not re-emitted.
         if (const Comp* comp = extractedComponent(n)) {
+            usedComps.insert(comp->name);  // only referenced comps get a scene file
             std::string id = useExt("res://components/" + comp->name + ".tscn", "PackedScene", "scn_");
             body += "\n[node name=\"" + name + "\" parent=\"" + parentAttr +
                     "\" instance=ExtResource(\"" + id + "\")]\n";
@@ -1549,7 +1603,8 @@ static std::vector<FontEntry> loadFonts(const fs::path& fontsSrc, const fs::path
 
 int main(int argc, char** argv) {
     if (argc < 2) {
-        std::printf("usage: figo2godot <input> [outDir] [--frame NAME] [--fonts DIR] [--scale N]\n");
+        std::printf("usage: figo2godot <input> [outDir] [--frame NAME] [--fonts DIR] "
+                    "[--scale N] [--prefabs] [--prefab-anon] [--no-prefab T1,T2]\n");
         return 2;
     }
     const std::string input = argv[1];
@@ -1558,6 +1613,7 @@ int main(int argc, char** argv) {
     fs::path fontsDir;
     int scale = 2;
     bool prefabs = false;
+    bool prefabAnon = false;
     std::set<std::string> noPrefabArg;
     for (int i = 2; i < argc; ++i) {
         std::string a = argv[i];
@@ -1569,6 +1625,8 @@ int main(int argc, char** argv) {
             scale = std::max(1, atoi(argv[++i]));
         else if (a == "--prefabs")
             prefabs = true;
+        else if (a == "--prefab-anon")  // also extract repeated anonymous containers
+            prefabs = prefabAnon = true;
         else if (a == "--no-prefab" && i + 1 < argc) {
             std::string list = argv[++i], tok;
             for (char c : list) {
@@ -1608,6 +1666,7 @@ int main(int argc, char** argv) {
 
     Converter cv;
     cv.ui = ui.get();
+    cv.prefabAnon = prefabAnon;  // read by scanComponents (pre-pass) below
     cv.noPrefab = noPrefabArg;
     cv.outDir = outDir;
     cv.spritesDir = spritesDir;
@@ -1656,9 +1715,7 @@ int main(int argc, char** argv) {
             ++compCount;
         }
         cv.prefabs = true;
-        for (auto& kv : cv.compBySig)
-            if (kv.second.extracted) cv.emitComponentScene(kv.second);
-        std::printf("prefabs: %d component(s)\n", compCount);
+        std::printf("prefabs: %d candidate component(s)\n", compCount);
     }
 
     int n = 0;
@@ -1671,6 +1728,20 @@ int main(int argc, char** argv) {
             baseH = (uint32_t)std::ceil(std::max(1.0f, frame->height));
         }
         ++n;
+    }
+    // Emit only the component scenes a frame actually instanced. A comp used
+    // solely nested inside another comp was inlined there (inComponent disables
+    // nested instancing), so its .tscn would be a dead orphan — skip it. (Done
+    // after the frame loop, once usedComps is fully populated.)
+    if (prefabs) {
+        int emitted = 0, extracted = 0;
+        for (auto& kv : cv.compBySig) {
+            if (!kv.second.extracted) continue;
+            ++extracted;
+            if (cv.usedComps.count(kv.second.name)) { cv.emitComponentScene(kv.second); ++emitted; }
+        }
+        std::printf("prefabs: %d scene(s) emitted (%d orphan candidate(s) pruned)\n",
+                    emitted, extracted - emitted);
     }
     cv.writeManifest();
     writeProjectGodot(outDir, baseW ? baseW : 390, baseH ? baseH : 844);
