@@ -418,7 +418,14 @@ struct Converter {
         bool extracted = false;
         std::vector<std::pair<const Node*, Node*>> insts;  // (instance node, its frame)
     };
-    std::map<std::string, Comp> compBySig;  // component TYPE (compType) -> component
+    std::map<std::string, Comp> compBySig;  // groupKey (compType+size) -> all its instances
+    // Each group is partitioned into STRUCTURAL CLUSTERS: a component with
+    // incompatible variants (a slider vs a segmented SettingRow; a 2-state
+    // VoteCard) yields one prefab PER cluster, not one prefab plus inlined
+    // leftovers. variants owns the clusters (stable addresses); nodeComp maps an
+    // instance node to the cluster it was assigned to.
+    std::vector<std::unique_ptr<Comp>> variants;
+    std::map<const Node*, Comp*> nodeComp;
 
     // Structural signature: groups visually-identical components regardless of
     // text content / text box geometry (those become per-instance overrides).
@@ -637,13 +644,9 @@ struct Converter {
 
     const Comp* extractedComponent(const Node& n) {
         if (!prefabs || inComponent || n.children.empty() || n.type == NodeType::Text) return nullptr;
-        auto it = compBySig.find(groupKey(n));
-        if (it == compBySig.end() || !it->second.extracted) return nullptr;
-        // Match-quality guard: a variant that aligns poorly with the canon is
-        // emitted inline rather than forced onto the prefab (which would hide
-        // most of the prefab and stack this instance's mismatched children).
-        if (poorFit(*it->second.canon, n)) return nullptr;
-        return &it->second;
+        // Clustering (in main) already assigned this node to the prefab it fits.
+        auto it = nodeComp.find(&n);
+        return (it != nodeComp.end() && it->second->extracted) ? it->second : nullptr;
     }
 
     // per-frame state
@@ -1710,25 +1713,46 @@ int main(int argc, char** argv) {
             if (!onlyFrame.empty() && frame->name != onlyFrame) continue;
             cv.scanComponents(frame);
         }
+        // Partition each group into structural clusters. Order instances richest-
+        // first so each new cluster's canon is the SUPERSET of its members; an
+        // instance joins the first cluster whose canon it FITS (poorFit==false),
+        // else starts a new one. So incompatible variants become SEVERAL prefabs.
+        for (auto& kv : cv.compBySig) {
+            Converter::Comp& group = kv.second;
+            if (group.insts.empty()) continue;
+            std::sort(group.insts.begin(), group.insts.end(),
+                      [](const auto& a, const auto& b) {
+                          return Converter::descendants(*a.first) > Converter::descendants(*b.first);
+                      });
+            std::vector<Converter::Comp*> clusters;
+            for (auto& inst : group.insts) {
+                Converter::Comp* fit = nullptr;
+                for (Converter::Comp* c : clusters)
+                    if (!cv.poorFit(*c->canon, *inst.first)) { fit = c; break; }
+                if (!fit) {
+                    cv.variants.push_back(std::make_unique<Converter::Comp>());
+                    fit = cv.variants.back().get();
+                    fit->canon = inst.first;
+                    fit->frame = inst.second;
+                    fit->name = group.name;
+                    clusters.push_back(fit);
+                }
+                fit->count++;
+                cv.nodeComp[inst.first] = fit;
+            }
+        }
+        // Extract every cluster repeated >=2× (skip screen-sized containers and
+        // user-suppressed wrapper types); give each a unique scene name.
         std::set<std::string> usedNames;
         int compCount = 0;
-        for (auto& kv : cv.compBySig) {
-            Converter::Comp& comp = kv.second;
-            if (comp.count < 2 || comp.insts.empty()) continue;
-            // Canon = the SUPERSET instance (most descendants) so the prefab holds
-            // every conditional child; leaner instances hide what they lack.
-            auto best = comp.insts[0];
-            for (auto& it : comp.insts)
-                if (Converter::descendants(*it.first) > Converter::descendants(*best.first)) best = it;
-            comp.canon = best.first; comp.frame = best.second;
+        for (auto& up : cv.variants) {
+            Converter::Comp& comp = *up;
+            if (comp.count < 2) continue;
             // Screen-level guard: a component covering ~the whole frame is a SCREEN
-            // container (Lobby, RoomSearch, HudC…), not a reusable widget. Captured
-            // multiple times (one per popup flow) it would look "repeated" and
-            // swallow the real widgets inside it — never extract it.
+            // container (Lobby, HudC…), not a reusable widget — never extract it.
             if (comp.canon->width >= comp.frame->width * 0.9f &&
                 comp.canon->height >= comp.frame->height * 0.9f) continue;
-            // User-declared generic wrappers (e.g. --no-prefab HPanel,HRow): a
-            // layout primitive used for unrelated content — never extract it.
+            // User-declared generic wrappers (--no-prefab HPanel,HRow) never extract.
             if (cv.noPrefab.count(comp.canon->compType)) continue;
             std::string base;
             for (char c : sanitizeName(comp.name, "Comp"))
@@ -1743,7 +1767,7 @@ int main(int argc, char** argv) {
             ++compCount;
         }
         cv.prefabs = true;
-        std::printf("prefabs: %d candidate component(s)\n", compCount);
+        std::printf("prefabs: %d candidate cluster(s)\n", compCount);
     }
 
     int n = 0;
@@ -1763,10 +1787,10 @@ int main(int argc, char** argv) {
     // after the frame loop, once usedComps is fully populated.)
     if (prefabs) {
         int emitted = 0, extracted = 0;
-        for (auto& kv : cv.compBySig) {
-            if (!kv.second.extracted) continue;
+        for (auto& up : cv.variants) {
+            if (!up->extracted) continue;
             ++extracted;
-            if (cv.usedComps.count(kv.second.name)) { cv.emitComponentScene(kv.second); ++emitted; }
+            if (cv.usedComps.count(up->name)) { cv.emitComponentScene(*up); ++emitted; }
         }
         std::printf("prefabs: %d scene(s) emitted (%d orphan candidate(s) pruned)\n",
                     emitted, extracted - emitted);
