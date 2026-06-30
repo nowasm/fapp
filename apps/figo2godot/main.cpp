@@ -507,17 +507,17 @@ struct Converter {
     // variant and absent in another has a unique shape, so it matches only its
     // counterpart and otherwise hides. Sibling look-alikes (two dots) collide on
     // key but are consumed in order by the matcher below.
+    // A SHALLOW slot identity: own shape + IMMEDIATE children's bare types (depth
+    // 0), nothing deeper. So the same slot matches across deep state changes (a
+    // vote card whose voter list / badge differs a few nodes down) — those become
+    // recursive hide/add/override — while structurally different controls stay
+    // distinct: a SettingRow's slider wrapper {Control,Label} ≠ its segmented
+    // wrapper {Control,Control,Control}, so a segmented row hides the slider and
+    // adds the segments instead of mis-pairing slider textures onto segment
+    // labels. (Going fully type-only over-merges those; full-depth under-merges
+    // state variants.) matchInst's position tiebreak separates same-key siblings.
     std::string slotKey(const Node& n) const {
-        const std::string pre = n.compType.empty() ? "" : "c:" + n.compType + "|";
-        // A CONTAINER (has children) matches by role/type ALONE — its innards are
-        // aligned recursively and hidden/added, so the same slot matches across
-        // state changes (a vote card whose voter list / badge differs a few nodes
-        // down still maps to the prefab; differently-built segments don't get
-        // hide+added and overlap). Position (matchInst's tiebreak) disambiguates
-        // same-type siblings. A LEAF keeps its own shape so a plain vs highlighted
-        // segment bg, or an icon vs a label, stay distinct slots.
-        if (!n.children.empty()) return pre + "C" + std::to_string((int)n.type);
-        return pre + sig(n, true, 0);
+        return (n.compType.empty() ? "" : "c:" + n.compType + "|") + sig(n, true, 0);
     }
     // Match-quality gate: how well a state variant aligns with the prefab canon.
     // Counts canon children that find a same-slotKey instance child (the same
@@ -529,14 +529,24 @@ struct Converter {
     // onto the prefab, where mismatched children stack and overlap. The canon
     // matches itself fully, so it is never a poor fit.
     bool poorFit(const Node& canon, const Node& inst) const {
-        const size_t cc = canon.children.size(), ic = inst.children.size();
+        const Node* c = &canon;
+        const Node* i = &inst;
+        // Descend through 1:1 wrapper layers first: a variant that differs only a
+        // few nodes below an outer wrapper should be judged on its real content,
+        // not on a wrapper whose shallow shape happens to differ (which would make
+        // the binary 1-child ratio read 0%).
+        while (c->children.size() == 1 && i->children.size() == 1) {
+            c = c->children[0].get();
+            i = i->children[0].get();
+        }
+        const size_t cc = c->children.size(), ic = i->children.size();
         if (cc == 0) return false;
         std::vector<char> usedI(ic, 0);
         size_t matched = 0;
-        for (const auto& cch : canon.children) {
+        for (const auto& cch : c->children) {
             const std::string key = slotKey(*cch);
             for (size_t j = 0; j < ic; ++j)
-                if (!usedI[j] && slotKey(*inst.children[j]) == key) { usedI[j] = 1; ++matched; break; }
+                if (!usedI[j] && slotKey(*i->children[j]) == key) { usedI[j] = 1; ++matched; break; }
         }
         return matched * 5 < cc * 3 || (ic > 0 && matched * 5 < ic * 3);
     }
