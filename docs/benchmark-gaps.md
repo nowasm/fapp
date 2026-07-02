@@ -25,13 +25,14 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
 | G3 | 控件语义/值概念 | 7 | switch/slider/进度条/日期与时间选择器/下拉。现只有 `setVariant` 离散态整树替换，无连续值、无自动状态切换、无过渡 | `ui.cpp:1136-1195` |
 | G4 | 跨平台网络 | 6 | ~~Android fetch 直接返回 not supported、无超时~~ **部分修复(2026-07)**：Android 走 JNI→`HttpURLConnection`（后台线程，HTTPS 系统级支持），Windows/Android 均加 15s 连接/读超时；注入口 `figo::setAndroidJNI(vm, activity)` 是通用 JNI 通道（存 JavaVM* + activity 全局引用，G1/G2 复用），figoplay android_main 已注入。编译/打包已验证，**真机运行验证 pending（无 adb 设备）**。仍缺：二进制 body/ArrayBuffer、WebSocket | `script_host.cpp` fetchWorker（Android 分支）、`script.h` setAndroidJNI |
 | G5 | 手势与事件面 | 6 | ~~长按、swipe、onScroll、滚动位置读取、事件坐标~~ **部分修复(2026-07)**：`ui.onLongPress`（按住≥0.5s 不动，消费 click）、`ui.onSwipe`（水平 v1，"left"/"right"，位移≥60px 且 \|dx\|>2\|dy\| 且 <0.5s；被水平 drag-scroll 消费的不派发，垂直列表上的横扫仍算——滑动删除可做）、`ui.onScroll`（滚轮/拖拽/惯性/setScroll 全路径，同帧合并、每帧派发）；节点补 `scrollX/scrollY`（可读写）+ `maxScrollX/maxScrollY`；onClick/onHover/onLongPress 回调追加 viewport 坐标 `(node, x, y)`；测试原语 `ui.longPress` / `ui.pointerDown/Move/Up`。派发全走 structureRev/frame 守卫。回归基准 `examples/apps/_events_regress/`。**仍缺**：双击、捏合、多点触控、拖拽(drag&drop)、下拉刷新语义 | `ui.cpp` stepLongPress/maybeFireSwipe/dispatchScrollEvents；`figo_raylib.cpp:77-85` 仍只投单指针 |
-| G6 | 动态媒体 | 4 | 音频播放（raylib 有能力未接线）、视频、GIF 动图、Lottie（wasm sjlj 限制已知） | `scene_builder.cpp:250-292`；loaders 仅 svg,ttf,png,jpg,webp |
+| G6 | 动态媒体 | 4 | ~~音频播放（raylib 有能力未接线）~~ **音频已接线(2026-07, v1)**：`ui.playSound(path, volume?) -> bool`（wav/ogg/mp3，路径相对 app 目录）。宿主注入模式：`ScriptHost::setAudioPlayer(fn)`，figoplay 桌面/Android 注入 raylib 实现（LoadSound 按路径缓存 + SetSoundVolume/PlaySound），web 不注入=安静 no-op 返回 false；pomodoro Focus→Break 已接提示音。**仍缺**：视频、GIF 动图、Lottie（wasm sjlj 限制已知）、web 音频 | `script_host.cpp` ui_playSound、`apps/figoplay/main.cpp` playSound；`scene_builder.cpp:250-292`；loaders 仅 svg,ttf,png,jpg,webp |
 | G7 | JS 属性/查询面 | 横切 | ~~visible/opacity/primarySizing 只写不可读~~ **部分修复(2026-07)**：visible/opacity/primarySizing/primaryAlign 补了 getter，新增只读 width/height。仍缺：位置(x/y)、颜色/样式读写、建/删节点 | `script_host.cpp` nodeGet |
 | G8 | 运行时诊断 | 横切 | ~~布局溢出/文本截断/字体缺失无警告；无机器可读诊断通道~~ **v1 已实现(2026-07)**：`FigmaUI::diagnostics()` 按需遍历当前 frame，输出 `{kind, node, id, message}`——`font-fallback`（请求字族解析失败被静默替换，按渲染同一条 lookup 复算）、`text-overflow`（按渲染同一 wrap pass 复测，超出 >0.3 行才报；authored TRUNCATE/ellipsis 跳过）、`node-overflow`（可见子节点越出 clipsContent 父边界；滚动容器的滚动轴豁免）。JS 侧 `ui.diagnostics()`；figoplay `--shot` 顺带写 `<shot>.diagnostics.json`（空数组=干净）+ stderr 摘要。**仍归设计时 audit_design 管**：对比度/离色板/字阶检查 | `ui.cpp` diagnostics、`renderer.cpp` resolveFontFamily |
 | G9 | 数据层 | 横切 | localStorage 之外无结构化存储；无 BaaS 绑定（目标：`ui.bindList` 接远程数据源） | `script_host.cpp:807-834` |
 | G10 | 事件派发中改树 | 横切 | ~~onClick 处理器里调 bindList 是 UB~~ **已修复(2026-07)**：Impl 加 `structureRev`，bindList/setVariant 递增；`fireUp` 在结构变更后立即停止冒泡（同导航消费事件的语义），`pointerUp` 原型链走查与 `pointerMove` 悬空 hit 同步加守卫。注意：处理器**自己的 node 参数**在调 bindList 后仍失效（文档已有约定），需要时重新 find | `ui.cpp` fireUp/bindList/setVariant |
 | G11 | 名字寻址不跨页 | 横切 | ~~按名 mutation 只搜当前 frame~~ **已修复(2026-07)**：`findMutable` 与 `findNode` 对齐——当前 frame 优先、回落全文档，跨页 setText/setVisible 生效 | `ui.cpp` findMutable |
 | G12 | 文档承诺未兑现 | 横切 | ~~transitionProgress 未绑定 JS~~ **已修复(2026-07)**：`ui.transitionProgress()` 已绑定；语义=转场中 eased [0,1)、**空闲返回 1**，截图门控用 `>= 1` 判定就位（script.h 注释已同步） | `script_host.cpp` ui_transitionProgress |
+| G13 | bindList 强制 hug | 横切 | **bindList 无条件把容器 primarySizing 改成 Hug**（"列表随数据长"的初衷），覆盖掉设计里的 FIXED + overflowDirection——**可滚动的数据列表当前做不出来**：容器长到内容高、maxScrollY 恒 0（news 的列表滚动其实从未生效，recipes 实测确认，只能把行高凑到一屏装下）。修法：容器 authored 为 FIXED+scrolling 时保留固定高，内容溢出走滚动 | `ui.cpp` bindList 的 Hug 覆写（recipes app 实测，2026-07） |
 
 ## 20 个 benchmark app × 卡点矩阵
 
@@ -81,7 +82,7 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
    补自动状态（pressed/hover）与过渡，加 `ui.bindValue`（slider/switch 的
    连续值/布尔映射到变体或几何）。日期/时间选择器做成官方组件模板
    （design-systems 出设计 + 引擎出滚轮手势）。
-7. **G6 音频**（raylib 已有，接线即可）→ GIF → 视频/Lottie 后置。
+7. **G6 音频** ~~（raylib 已有，接线即可）~~ **已完成(2026-07, v1)** → GIF → 视频/Lottie 后置。
 8. **G2 系统桥**按 benchmark 命中顺序上：分享 → 通知 → 相册 → 相机 →
    定位；深链等 player 立项时一起做。
 9. **G9 BaaS 绑定**在 fetch 补齐后做，先出 `examples/` 级的 Supabase

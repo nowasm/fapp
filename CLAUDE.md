@@ -71,6 +71,8 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
    - `ui.bindList(name, count, (item, i) => …)`，节点：`.find/.child/.parent/.index/.text/.type`、
      `.scrollX/.scrollY`（可读写）、`.maxScrollX/.maxScrollY`
    - `ui.setText/setVisible/setOpacity/setVariant/setScroll/setEditable/focusText`
+   - `ui.playSound(path, volume?) -> bool`（wav/ogg/mp3，路径相对 app 目录；宿主未注入
+     音频（如 web）时安静返回 false 不报错）
    - `ui.find/findAll/tap/longPress(nameOrNode)`、`ui.pointerDown/Move/Up(x, y)`
      （合成手势，多 move 手势限一个 tick 内）、`ui.setResizeMode("reflow")`
    - `setTimeout/setInterval`（app 时间）、`fetch()`（Promise）、`localStorage`（持久化到

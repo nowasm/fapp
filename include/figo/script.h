@@ -37,6 +37,12 @@
 //     (requested family missing, silently substituted), "text-overflow"
 //     (laid-out text exceeds its box) or "node-overflow" (visible child
 //     clipped by a clipsContent parent; scroll axes exempt). [] = clean.
+//   ui.playSound(path, volume?) -> bool  // fire-and-forget audio (wav/ogg/
+//     mp3), volume 0..1 (default 1). Audio is a host capability injected via
+//     ScriptHost::setAudioPlayer (figoplay: raylib, path resolved relative to
+//     the app dir); without an injected player it is a quiet no-op returning
+//     false — never an error — so web/silent environments keep working.
+//     Returns whether the sound actually started (false on a bad path too).
 //   ui.tap(nameOrNode) -> bool         // synthesized click at the node center
 //   ui.longPress(nameOrNode) -> bool   // synthesized long press (one tick)
 //   ui.pointerDown/pointerMove/pointerUp(x, y)  // raw pointer feed for
@@ -73,6 +79,7 @@
 //     persisted as JSON at the host-provided path (see setStoragePath);
 //     without a path it works in memory only
 
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -109,6 +116,14 @@ public:
     // Where localStorage persists (a small JSON file, created on first
     // setItem). Set it before runFile; figoplay uses "<script>.storage.json".
     void setStoragePath(const std::string& path);
+
+    // Audio is a host capability (the core stays backend-agnostic): the host
+    // injects a player and ui.playSound(path, volume) forwards to it. The
+    // callback returns whether the sound actually started (load/decode
+    // failure -> false). Without injection ui.playSound is a quiet no-op
+    // returning false. figoplay injects a raylib LoadSound/PlaySound player
+    // on desktop/Android (not on the web build — v1 skips web audio).
+    void setAudioPlayer(std::function<bool(const std::string& path, float volume)> play);
 
     // Call once per host frame: fires ui.onUpdate handlers and drains the
     // JS job queue (promise reactions).

@@ -1,0 +1,2533 @@
+{
+ "name": "Recipes",
+ "document": {
+  "id": "30:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "30:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "30:39",
+      "name": "Recipes",
+      "type": "FRAME",
+      "visible": true,
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.9725490196078431,
+         "g": 0.9803921568627451,
+         "b": 0.9921568627450981,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "30:37",
+        "name": "Title",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 220,
+         "y": 32
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          56
+         ]
+        ],
+        "characters": "家常菜谱",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.12549019607843137,
+           "g": 0.12941176470588237,
+           "b": 0.1411764705882353,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 24,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:38",
+        "name": "FavCount",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 20
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          66
+         ]
+        ],
+        "characters": "已收藏 0",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.37254901960784315,
+           "g": 0.38823529411764707,
+           "b": 0.40784313725490196,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "RIGHT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:22",
+        "name": "ChipRow",
+        "type": "FRAME",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 36
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          108
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:6",
+          "name": "CatChip",
+          "type": "FRAME",
+          "visible": true,
+          "size": {
+           "x": 80,
+           "y": 36
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [],
+          "children": [
+           {
+            "id": "30:3",
+            "name": "ChipOn",
+            "type": "FRAME",
+            "visible": true,
+            "size": {
+             "x": 80,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.10196078431372549,
+               "g": 0.45098039215686275,
+               "b": 0.9098039215686274,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:2",
+              "name": "ChipOnLabel",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 80,
+               "y": 36
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "全部",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 600,
+               "fontSize": 14,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 999
+           },
+           {
+            "id": "30:5",
+            "name": "ChipOff",
+            "type": "FRAME",
+            "visible": false,
+            "size": {
+             "x": 80,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:4",
+              "name": "ChipOffLabel",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 80,
+               "y": 36
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "全部",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.23529411764705882,
+                 "g": 0.25098039215686274,
+                 "b": 0.2627450980392157,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 600,
+               "fontSize": 14,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 999,
+            "strokes": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8549019607843137,
+               "g": 0.8627450980392157,
+               "b": 0.8784313725490196,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokeWeight": 1
+           }
+          ]
+         },
+         {
+          "id": "30:11",
+          "name": "CatChip",
+          "type": "FRAME",
+          "visible": true,
+          "size": {
+           "x": 80,
+           "y": 36
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            90
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [],
+          "children": [
+           {
+            "id": "30:8",
+            "name": "ChipOn",
+            "type": "FRAME",
+            "visible": false,
+            "size": {
+             "x": 80,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.10196078431372549,
+               "g": 0.45098039215686275,
+               "b": 0.9098039215686274,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:7",
+              "name": "ChipOnLabel",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 80,
+               "y": 36
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "快手",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 600,
+               "fontSize": 14,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 999
+           },
+           {
+            "id": "30:10",
+            "name": "ChipOff",
+            "type": "FRAME",
+            "visible": true,
+            "size": {
+             "x": 80,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:9",
+              "name": "ChipOffLabel",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 80,
+               "y": 36
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "快手",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.23529411764705882,
+                 "g": 0.25098039215686274,
+                 "b": 0.2627450980392157,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 600,
+               "fontSize": 14,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 999,
+            "strokes": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8549019607843137,
+               "g": 0.8627450980392157,
+               "b": 0.8784313725490196,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokeWeight": 1
+           }
+          ]
+         },
+         {
+          "id": "30:16",
+          "name": "CatChip",
+          "type": "FRAME",
+          "visible": true,
+          "size": {
+           "x": 80,
+           "y": 36
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            180
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [],
+          "children": [
+           {
+            "id": "30:13",
+            "name": "ChipOn",
+            "type": "FRAME",
+            "visible": false,
+            "size": {
+             "x": 80,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.10196078431372549,
+               "g": 0.45098039215686275,
+               "b": 0.9098039215686274,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:12",
+              "name": "ChipOnLabel",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 80,
+               "y": 36
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "主食",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 600,
+               "fontSize": 14,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 999
+           },
+           {
+            "id": "30:15",
+            "name": "ChipOff",
+            "type": "FRAME",
+            "visible": true,
+            "size": {
+             "x": 80,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:14",
+              "name": "ChipOffLabel",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 80,
+               "y": 36
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "主食",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.23529411764705882,
+                 "g": 0.25098039215686274,
+                 "b": 0.2627450980392157,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 600,
+               "fontSize": 14,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 999,
+            "strokes": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8549019607843137,
+               "g": 0.8627450980392157,
+               "b": 0.8784313725490196,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokeWeight": 1
+           }
+          ]
+         },
+         {
+          "id": "30:21",
+          "name": "CatChip",
+          "type": "FRAME",
+          "visible": true,
+          "size": {
+           "x": 80,
+           "y": 36
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            270
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [],
+          "children": [
+           {
+            "id": "30:18",
+            "name": "ChipOn",
+            "type": "FRAME",
+            "visible": false,
+            "size": {
+             "x": 80,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.10196078431372549,
+               "g": 0.45098039215686275,
+               "b": 0.9098039215686274,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:17",
+              "name": "ChipOnLabel",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 80,
+               "y": 36
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "汤",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 600,
+               "fontSize": 14,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 999
+           },
+           {
+            "id": "30:20",
+            "name": "ChipOff",
+            "type": "FRAME",
+            "visible": true,
+            "size": {
+             "x": 80,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:19",
+              "name": "ChipOffLabel",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 80,
+               "y": 36
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "汤",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.23529411764705882,
+                 "g": 0.25098039215686274,
+                 "b": 0.2627450980392157,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 600,
+               "fontSize": 14,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 999,
+            "strokes": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8549019607843137,
+               "g": 0.8627450980392157,
+               "b": 0.8784313725490196,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokeWeight": 1
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "30:36",
+        "name": "RecipeList",
+        "type": "FRAME",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 692
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          164
+         ]
+        ],
+        "clipsContent": true,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:35",
+          "name": "RecipeRow",
+          "type": "FRAME",
+          "visible": true,
+          "size": {
+           "x": 380,
+           "y": 76
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:29",
+            "name": "RecipeThumb",
+            "type": "FRAME",
+            "visible": true,
+            "size": {
+             "x": 56,
+             "y": 56
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              10
+             ],
+             [
+              0,
+              1,
+              10
+             ]
+            ],
+            "clipsContent": true,
+            "fills": [],
+            "children": [
+             {
+              "id": "30:23",
+              "name": "Tint0",
+              "type": "RECTANGLE",
+              "visible": true,
+              "size": {
+               "x": 56,
+               "y": 56
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.9098039215686274,
+                 "g": 0.9411764705882353,
+                 "b": 0.996078431372549,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 12
+             },
+             {
+              "id": "30:24",
+              "name": "Tint1",
+              "type": "RECTANGLE",
+              "visible": false,
+              "size": {
+               "x": 56,
+               "y": 56
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.9882352941176471,
+                 "g": 0.9098039215686274,
+                 "b": 0.9019607843137255,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 12
+             },
+             {
+              "id": "30:25",
+              "name": "Tint2",
+              "type": "RECTANGLE",
+              "visible": false,
+              "size": {
+               "x": 56,
+               "y": 56
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.996078431372549,
+                 "g": 0.9686274509803922,
+                 "b": 0.8784313725490196,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 12
+             },
+             {
+              "id": "30:26",
+              "name": "Tint3",
+              "type": "RECTANGLE",
+              "visible": false,
+              "size": {
+               "x": 56,
+               "y": 56
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.9019607843137255,
+                 "g": 0.9568627450980393,
+                 "b": 0.9176470588235294,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 12
+             },
+             {
+              "id": "30:27",
+              "name": "Tint4",
+              "type": "RECTANGLE",
+              "visible": false,
+              "size": {
+               "x": 56,
+               "y": 56
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.9529411764705882,
+                 "g": 0.9098039215686274,
+                 "b": 0.9921568627450981,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 12
+             },
+             {
+              "id": "30:28",
+              "name": "ThumbAbbr",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 56,
+               "y": 56
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "炒蛋",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.23529411764705882,
+                 "g": 0.25098039215686274,
+                 "b": 0.2627450980392157,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 700,
+               "fontSize": 16,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 12
+           },
+           {
+            "id": "30:30",
+            "name": "RecipeName",
+            "type": "TEXT",
+            "visible": true,
+            "size": {
+             "x": 224,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              84
+             ],
+             [
+              0,
+              1,
+              15
+             ]
+            ],
+            "characters": "番茄炒蛋",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.12549019607843137,
+               "g": 0.12941176470588237,
+               "b": 0.1411764705882353,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:31",
+            "name": "RecipeMeta",
+            "type": "TEXT",
+            "visible": true,
+            "size": {
+             "x": 224,
+             "y": 18
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              84
+             ],
+             [
+              0,
+              1,
+              42
+             ]
+            ],
+            "characters": "10 分钟 · 简单",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.37254901960784315,
+               "g": 0.38823529411764707,
+               "b": 0.40784313725490196,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 12,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:34",
+            "name": "FavBtn",
+            "type": "FRAME",
+            "visible": true,
+            "size": {
+             "x": 40,
+             "y": 40
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              326
+             ],
+             [
+              0,
+              1,
+              18
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [],
+            "children": [
+             {
+              "id": "30:32",
+              "name": "FavOff",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 40,
+               "y": 40
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "♡",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.37254901960784315,
+                 "g": 0.38823529411764707,
+                 "b": 0.40784313725490196,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 400,
+               "fontSize": 20,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             },
+             {
+              "id": "30:33",
+              "name": "FavOn",
+              "type": "TEXT",
+              "visible": false,
+              "size": {
+               "x": 40,
+               "y": 40
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "♥",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.10196078431372549,
+                 "g": 0.45098039215686275,
+                 "b": 0.9098039215686274,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 400,
+               "fontSize": 20,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ]
+           }
+          ],
+          "cornerRadius": 12,
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9294117647058824,
+             "g": 0.9411764705882353,
+             "b": 0.9490196078431372,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokeWeight": 1
+         }
+        ],
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 12,
+        "primaryAxisSizingMode": "FIXED",
+        "counterAxisSizingMode": "FIXED"
+       }
+      ]
+     },
+     {
+      "id": "30:67",
+      "name": "Recipe",
+      "type": "FRAME",
+      "visible": true,
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        520
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.9725490196078431,
+         "g": 0.9803921568627451,
+         "b": 0.9921568627450981,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "30:55",
+        "name": "Back Button",
+        "type": "FRAME",
+        "visible": true,
+        "size": {
+         "x": 36,
+         "y": 36
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          52
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:54",
+          "name": "Back Glyph",
+          "type": "TEXT",
+          "visible": true,
+          "size": {
+           "x": 36,
+           "y": 36
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            -2
+           ]
+          ],
+          "characters": "‹",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.12549019607843137,
+             "g": 0.12941176470588237,
+             "b": 0.1411764705882353,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 20,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 999,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8549019607843137,
+           "g": 0.8627450980392157,
+           "b": 0.8784313725490196,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:62",
+        "name": "DetailThumb",
+        "type": "FRAME",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 160
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          104
+         ]
+        ],
+        "clipsContent": true,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:56",
+          "name": "DetailTint0",
+          "type": "RECTANGLE",
+          "visible": true,
+          "size": {
+           "x": 380,
+           "y": 160
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9098039215686274,
+             "g": 0.9411764705882353,
+             "b": 0.996078431372549,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12
+         },
+         {
+          "id": "30:57",
+          "name": "DetailTint1",
+          "type": "RECTANGLE",
+          "visible": false,
+          "size": {
+           "x": 380,
+           "y": 160
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9882352941176471,
+             "g": 0.9098039215686274,
+             "b": 0.9019607843137255,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12
+         },
+         {
+          "id": "30:58",
+          "name": "DetailTint2",
+          "type": "RECTANGLE",
+          "visible": false,
+          "size": {
+           "x": 380,
+           "y": 160
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.996078431372549,
+             "g": 0.9686274509803922,
+             "b": 0.8784313725490196,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12
+         },
+         {
+          "id": "30:59",
+          "name": "DetailTint3",
+          "type": "RECTANGLE",
+          "visible": false,
+          "size": {
+           "x": 380,
+           "y": 160
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9019607843137255,
+             "g": 0.9568627450980393,
+             "b": 0.9176470588235294,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12
+         },
+         {
+          "id": "30:60",
+          "name": "DetailTint4",
+          "type": "RECTANGLE",
+          "visible": false,
+          "size": {
+           "x": 380,
+           "y": 160
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9529411764705882,
+             "g": 0.9098039215686274,
+             "b": 0.9921568627450981,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12
+         },
+         {
+          "id": "30:61",
+          "name": "DetailAbbr",
+          "type": "TEXT",
+          "visible": true,
+          "size": {
+           "x": 380,
+           "y": 160
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "炒蛋",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.23529411764705882,
+             "g": 0.25098039215686274,
+             "b": 0.2627450980392157,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 700,
+           "fontSize": 36,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12
+       },
+       {
+        "id": "30:63",
+        "name": "DetailName",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 260,
+         "y": 32
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          284
+         ]
+        ],
+        "characters": "番茄炒蛋",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.12549019607843137,
+           "g": 0.12941176470588237,
+           "b": 0.1411764705882353,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 24,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:53",
+        "name": "DetailFav",
+        "type": "FRAME",
+        "visible": true,
+        "size": {
+         "x": 112,
+         "y": 36
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          288
+         ],
+         [
+          0,
+          1,
+          284
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:50",
+          "name": "DetailFavOn",
+          "type": "FRAME",
+          "visible": false,
+          "size": {
+           "x": 112,
+           "y": 36
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.10196078431372549,
+             "g": 0.45098039215686275,
+             "b": 0.9098039215686274,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:49",
+            "name": "DetailFavOnLabel",
+            "type": "TEXT",
+            "visible": true,
+            "size": {
+             "x": 112,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "♥ 已收藏",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 14,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 999
+         },
+         {
+          "id": "30:52",
+          "name": "DetailFavOff",
+          "type": "FRAME",
+          "visible": true,
+          "size": {
+           "x": 112,
+           "y": 36
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:51",
+            "name": "DetailFavOffLabel",
+            "type": "TEXT",
+            "visible": true,
+            "size": {
+             "x": 112,
+             "y": 36
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "♡ 收藏",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.10196078431372549,
+               "g": 0.45098039215686275,
+               "b": 0.9098039215686274,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 14,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 999,
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.8549019607843137,
+             "g": 0.8627450980392157,
+             "b": 0.8784313725490196,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokeWeight": 1
+         }
+        ]
+       },
+       {
+        "id": "30:64",
+        "name": "DetailMeta",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 20
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          326
+         ]
+        ],
+        "characters": "10 分钟 · 简单 · 2 人份",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.37254901960784315,
+           "g": 0.38823529411764707,
+           "b": 0.40784313725490196,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:65",
+        "name": "IngHeader",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 120,
+         "y": 22
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          360
+         ]
+        ],
+        "characters": "配料",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.12549019607843137,
+           "g": 0.12941176470588237,
+           "b": 0.1411764705882353,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 16,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:44",
+        "name": "IngredientList",
+        "type": "FRAME",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 192
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          392
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:43",
+          "name": "IngredientRow",
+          "type": "FRAME",
+          "visible": true,
+          "size": {
+           "x": 380,
+           "y": 32
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [],
+          "children": [
+           {
+            "id": "30:40",
+            "name": "IngDot",
+            "type": "ELLIPSE",
+            "size": {
+             "x": 6,
+             "y": 6
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              2
+             ],
+             [
+              0,
+              1,
+              13
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.10196078431372549,
+               "g": 0.45098039215686275,
+               "b": 0.9098039215686274,
+               "a": 1.0
+              }
+             }
+            ]
+           },
+           {
+            "id": "30:41",
+            "name": "IngName",
+            "type": "TEXT",
+            "visible": true,
+            "size": {
+             "x": 220,
+             "y": 20
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              20
+             ],
+             [
+              0,
+              1,
+              6
+             ]
+            ],
+            "characters": "番茄",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.23529411764705882,
+               "g": 0.25098039215686274,
+               "b": 0.2627450980392157,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 14,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:42",
+            "name": "IngAmt",
+            "type": "TEXT",
+            "visible": true,
+            "size": {
+             "x": 140,
+             "y": 20
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              240
+             ],
+             [
+              0,
+              1,
+              6
+             ]
+            ],
+            "characters": "2 个",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.37254901960784315,
+               "g": 0.38823529411764707,
+               "b": 0.40784313725490196,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 14,
+             "textAlignHorizontal": "RIGHT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         }
+        ],
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 0,
+        "primaryAxisSizingMode": "AUTO",
+        "counterAxisSizingMode": "FIXED"
+       },
+       {
+        "id": "30:66",
+        "name": "StepHeader",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 120,
+         "y": 22
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          608
+         ]
+        ],
+        "characters": "步骤",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.12549019607843137,
+           "g": 0.12941176470588237,
+           "b": 0.1411764705882353,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 16,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:45",
+        "name": "Step 1",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 50
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          640
+         ]
+        ],
+        "characters": "",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.23529411764705882,
+           "g": 0.25098039215686274,
+           "b": 0.2627450980392157,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0,
+         "lineHeightPx": 21
+        }
+       },
+       {
+        "id": "30:46",
+        "name": "Step 2",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 50
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          702
+         ]
+        ],
+        "characters": "",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.23529411764705882,
+           "g": 0.25098039215686274,
+           "b": 0.2627450980392157,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0,
+         "lineHeightPx": 21
+        }
+       },
+       {
+        "id": "30:47",
+        "name": "Step 3",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 50
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          764
+         ]
+        ],
+        "characters": "",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.23529411764705882,
+           "g": 0.25098039215686274,
+           "b": 0.2627450980392157,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0,
+         "lineHeightPx": 21
+        }
+       },
+       {
+        "id": "30:48",
+        "name": "Step 4",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 380,
+         "y": 50
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          826
+         ]
+        ],
+        "characters": "",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.23529411764705882,
+           "g": 0.25098039215686274,
+           "b": 0.2627450980392157,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0,
+         "lineHeightPx": 21
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

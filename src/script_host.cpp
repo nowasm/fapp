@@ -532,6 +532,10 @@ struct ScriptHost::Impl {
     };
     std::unordered_map<uint64_t, PendingFetch> pendingFetch;
 
+    // Host-injected audio player (see ScriptHost::setAudioPlayer). Empty =
+    // ui.playSound is a quiet no-op returning false.
+    std::function<bool(const std::string&, float)> audioPlayer;
+
     // localStorage: in-memory map, write-through to a JSON file when a
     // storage path is set (std::map keeps the file diff-stable).
     std::string storagePath;
@@ -1139,6 +1143,25 @@ Node* argNodeCenter(JSContext* ctx, JSValueConst arg, float& vx, float& vy,
     return n;
 }
 
+// ui.playSound(path, volume?) -> bool. Forwards to the host-injected audio
+// player (ScriptHost::setAudioPlayer); without one this is a quiet no-op
+// returning false — never an error — so web/silent environments keep
+// working. volume clamps to 0..1 (default 1).
+JSValue ui_playSound(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    if (argc < 1) return JS_ThrowTypeError(ctx, "sound path expected");
+    CStr path(ctx, argv[0]);
+    if (!path) return JS_EXCEPTION;
+    double vol = 1.0;
+    if (argc >= 2 && !JS_IsUndefined(argv[1]) && !JS_IsNull(argv[1])) {
+        if (JS_ToFloat64(ctx, &vol, argv[1])) return JS_EXCEPTION;
+    }
+    if (!(vol >= 0.0)) vol = 0.0;  // also catches NaN
+    if (vol > 1.0) vol = 1.0;
+    if (!im->audioPlayer) return JS_NewBool(ctx, false);
+    return JS_NewBool(ctx, im->audioPlayer(path.s, static_cast<float>(vol)));
+}
+
 // Synthesized click at the node's on-screen center (uses the hit-test
 // transforms, so render at least one frame first). Accepts a node object or
 // a node name.
@@ -1393,6 +1416,7 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     fn("find", ui_find, 1);
     fn("findAll", ui_findAll, 1);
     fn("diagnostics", ui_diagnostics, 0);
+    fn("playSound", ui_playSound, 2);
     fn("tap", ui_tap, 1);
     fn("longPress", ui_longPress, 1);
     auto fnMagic = [&](const char* name, int magic) {
@@ -1478,6 +1502,10 @@ ScriptHost::~ScriptHost() {
     JS_FreeRuntime(d.rt);
     // In-flight fetch threads keep the queue alive via shared_ptr and finish
     // harmlessly; their results are never drained.
+}
+
+void ScriptHost::setAudioPlayer(std::function<bool(const std::string&, float)> play) {
+    impl_->audioPlayer = std::move(play);
 }
 
 void ScriptHost::setStoragePath(const std::string& path) {

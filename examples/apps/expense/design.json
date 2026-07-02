@@ -1,0 +1,3426 @@
+{
+ "name": "Expense",
+ "document": {
+  "id": "30:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "30:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "30:32",
+      "name": "Ledger",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.9686274509803922,
+         "g": 0.9725490196078431,
+         "b": 0.984313725490196,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "30:29",
+        "name": "Ledger Title",
+        "type": "TEXT",
+        "size": {
+         "x": 200,
+         "y": 26
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          52
+         ]
+        ],
+        "characters": "支出账本",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.06666666666666667,
+           "g": 0.09411764705882353,
+           "b": 0.15294117647058825,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 18,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.3
+        }
+       },
+       {
+        "id": "30:30",
+        "name": "Ledger Sub",
+        "type": "TEXT",
+        "size": {
+         "x": 100,
+         "y": 18
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          280
+         ],
+         [
+          0,
+          1,
+          58
+         ]
+        ],
+        "characters": "记录每一笔",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.39215686274509803,
+           "g": 0.4549019607843137,
+           "b": 0.5450980392156862,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 12,
+         "textAlignHorizontal": "RIGHT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:5",
+        "name": "Hero Card",
+        "type": "FRAME",
+        "size": {
+         "x": 380,
+         "y": 148
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          96
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.06666666666666667,
+           "g": 0.09411764705882353,
+           "b": 0.15294117647058825,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:2",
+          "name": "Month Label",
+          "type": "TEXT",
+          "size": {
+           "x": 200,
+           "y": 20
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            24
+           ],
+           [
+            0,
+            1,
+            24
+           ]
+          ],
+          "characters": "本月支出",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 0.72
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 14,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         },
+         {
+          "id": "30:3",
+          "name": "Total Amount",
+          "type": "TEXT",
+          "size": {
+           "x": 332,
+           "y": 48
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            24
+           ],
+           [
+            0,
+            1,
+            52
+           ]
+          ],
+          "characters": "¥0.00",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 700,
+           "fontSize": 36,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": -1.0
+          }
+         },
+         {
+          "id": "30:4",
+          "name": "Count Label",
+          "type": "TEXT",
+          "size": {
+           "x": 332,
+           "y": 18
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            24
+           ],
+           [
+            0,
+            1,
+            108
+           ]
+          ],
+          "characters": "共 0 笔",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 0.6
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 12,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12
+       },
+       {
+        "id": "30:9",
+        "name": "Cat Card 1",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 84
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          264
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:6",
+          "name": "Cat Dot 1",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 8,
+           "y": 8
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            18
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9607843137254902,
+             "g": 0.6196078431372549,
+             "b": 0.043137254901960784,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 4
+         },
+         {
+          "id": "30:7",
+          "name": "Cat Name 1",
+          "type": "TEXT",
+          "size": {
+           "x": 78,
+           "y": 18
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            30
+           ],
+           [
+            0,
+            1,
+            12
+           ]
+          ],
+          "characters": "餐饮",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.39215686274509803,
+             "g": 0.4549019607843137,
+             "b": 0.5450980392156862,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 12,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         },
+         {
+          "id": "30:8",
+          "name": "Cat Sum 1",
+          "type": "TEXT",
+          "size": {
+           "x": 86,
+           "y": 24
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            42
+           ]
+          ],
+          "characters": "¥0.00",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 16,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:13",
+        "name": "Cat Card 2",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 84
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          150
+         ],
+         [
+          0,
+          1,
+          264
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:10",
+          "name": "Cat Dot 2",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 8,
+           "y": 8
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            18
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.023529411764705882,
+             "g": 0.4,
+             "b": 0.9215686274509803,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 4
+         },
+         {
+          "id": "30:11",
+          "name": "Cat Name 2",
+          "type": "TEXT",
+          "size": {
+           "x": 78,
+           "y": 18
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            30
+           ],
+           [
+            0,
+            1,
+            12
+           ]
+          ],
+          "characters": "出行",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.39215686274509803,
+             "g": 0.4549019607843137,
+             "b": 0.5450980392156862,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 12,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         },
+         {
+          "id": "30:12",
+          "name": "Cat Sum 2",
+          "type": "TEXT",
+          "size": {
+           "x": 86,
+           "y": 24
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            42
+           ]
+          ],
+          "characters": "¥0.00",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 16,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:17",
+        "name": "Cat Card 3",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 84
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          280
+         ],
+         [
+          0,
+          1,
+          264
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:14",
+          "name": "Cat Dot 3",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 8,
+           "y": 8
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            18
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.39215686274509803,
+             "g": 0.4549019607843137,
+             "b": 0.5450980392156862,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 4
+         },
+         {
+          "id": "30:15",
+          "name": "Cat Name 3",
+          "type": "TEXT",
+          "size": {
+           "x": 78,
+           "y": 18
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            30
+           ],
+           [
+            0,
+            1,
+            12
+           ]
+          ],
+          "characters": "日用",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.39215686274509803,
+             "g": 0.4549019607843137,
+             "b": 0.5450980392156862,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 12,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         },
+         {
+          "id": "30:16",
+          "name": "Cat Sum 3",
+          "type": "TEXT",
+          "size": {
+           "x": 86,
+           "y": 24
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            42
+           ]
+          ],
+          "characters": "¥0.00",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 16,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:31",
+        "name": "Tx Label",
+        "type": "TEXT",
+        "size": {
+         "x": 200,
+         "y": 20
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          368
+         ]
+        ],
+        "characters": "流水",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.39215686274509803,
+           "g": 0.4549019607843137,
+           "b": 0.5450980392156862,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:26",
+        "name": "Tx List",
+        "type": "FRAME",
+        "size": {
+         "x": 380,
+         "y": 352
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          400
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:25",
+          "name": "Tx Row",
+          "type": "FRAME",
+          "size": {
+           "x": 380,
+           "y": 52
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [],
+          "children": [
+           {
+            "id": "30:18",
+            "name": "Row Dot 1",
+            "type": "RECTANGLE",
+            "size": {
+             "x": 10,
+             "y": 10
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              2
+             ],
+             [
+              0,
+              1,
+              21
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.9607843137254902,
+               "g": 0.6196078431372549,
+               "b": 0.043137254901960784,
+               "a": 1.0
+              }
+             }
+            ],
+            "cornerRadius": 5
+           },
+           {
+            "id": "30:19",
+            "name": "Row Dot 2",
+            "type": "RECTANGLE",
+            "size": {
+             "x": 10,
+             "y": 10
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              2
+             ],
+             [
+              0,
+              1,
+              21
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.023529411764705882,
+               "g": 0.4,
+               "b": 0.9215686274509803,
+               "a": 1.0
+              }
+             }
+            ],
+            "cornerRadius": 5
+           },
+           {
+            "id": "30:20",
+            "name": "Row Dot 3",
+            "type": "RECTANGLE",
+            "size": {
+             "x": 10,
+             "y": 10
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              2
+             ],
+             [
+              0,
+              1,
+              21
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.39215686274509803,
+               "g": 0.4549019607843137,
+               "b": 0.5450980392156862,
+               "a": 1.0
+              }
+             }
+            ],
+            "cornerRadius": 5
+           },
+           {
+            "id": "30:21",
+            "name": "Row Note",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 22
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              26
+             ],
+             [
+              0,
+              1,
+              6
+             ]
+            ],
+            "characters": "备注",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.06666666666666667,
+               "g": 0.09411764705882353,
+               "b": 0.15294117647058825,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:22",
+            "name": "Row Date",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 16
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              26
+             ],
+             [
+              0,
+              1,
+              30
+             ]
+            ],
+            "characters": "7月1日",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.39215686274509803,
+               "g": 0.4549019607843137,
+               "b": 0.5450980392156862,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 12,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:23",
+            "name": "Amt Exp",
+            "type": "TEXT",
+            "size": {
+             "x": 130,
+             "y": 22
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              250
+             ],
+             [
+              0,
+              1,
+              15
+             ]
+            ],
+            "characters": "-0.00",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.9372549019607843,
+               "g": 0.26666666666666666,
+               "b": 0.26666666666666666,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "RIGHT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:24",
+            "name": "Amt Inc",
+            "type": "TEXT",
+            "size": {
+             "x": 130,
+             "y": 22
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              250
+             ],
+             [
+              0,
+              1,
+              15
+             ]
+            ],
+            "characters": "+0.00",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.08627450980392157,
+               "g": 0.6392156862745098,
+               "b": 0.2901960784313726,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "RIGHT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         }
+        ],
+        "layoutMode": "VERTICAL",
+        "primaryAxisSizingMode": "AUTO",
+        "counterAxisSizingMode": "FIXED",
+        "itemSpacing": 8
+       },
+       {
+        "id": "30:28",
+        "name": "Fab",
+        "type": "FRAME",
+        "size": {
+         "x": 56,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          344
+         ],
+         [
+          0,
+          1,
+          816
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.023529411764705882,
+           "g": 0.4,
+           "b": 0.9215686274509803,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:27",
+          "name": "Fab Glyph",
+          "type": "TEXT",
+          "size": {
+           "x": 56,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            -2
+           ]
+          ],
+          "characters": "+",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 28,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 9999
+       }
+      ]
+     },
+     {
+      "id": "30:85",
+      "name": "Add",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        520
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.9686274509803922,
+         "g": 0.9725490196078431,
+         "b": 0.984313725490196,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "30:49",
+        "name": "Close Button",
+        "type": "FRAME",
+        "size": {
+         "x": 40,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          48
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:48",
+          "name": "Close Glyph",
+          "type": "TEXT",
+          "size": {
+           "x": 40,
+           "y": 40
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            -2
+           ]
+          ],
+          "characters": "×",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 20,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 9999,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8588235294117647,
+           "g": 0.8901960784313725,
+           "b": 0.9372549019607843,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:50",
+        "name": "Add Title",
+        "type": "TEXT",
+        "size": {
+         "x": 420,
+         "y": 24
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          0
+         ],
+         [
+          0,
+          1,
+          58
+         ]
+        ],
+        "characters": "记一笔",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.06666666666666667,
+           "g": 0.09411764705882353,
+           "b": 0.15294117647058825,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 16,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:51",
+        "name": "Currency Mark",
+        "type": "TEXT",
+        "size": {
+         "x": 60,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          158
+         ]
+        ],
+        "characters": "¥",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.39215686274509803,
+           "g": 0.4549019607843137,
+           "b": 0.5450980392156862,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 24,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:52",
+        "name": "Amount Display",
+        "type": "TEXT",
+        "size": {
+         "x": 340,
+         "y": 68
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          60
+         ],
+         [
+          0,
+          1,
+          128
+         ]
+        ],
+        "characters": "0",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.06666666666666667,
+           "g": 0.09411764705882353,
+           "b": 0.15294117647058825,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 54,
+         "textAlignHorizontal": "RIGHT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -1.6
+        }
+       },
+       {
+        "id": "30:53",
+        "name": "Amount Rule",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 380,
+         "y": 1
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          212
+         ]
+        ],
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8588235294117647,
+           "g": 0.8901960784313725,
+           "b": 0.9372549019607843,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "30:54",
+        "name": "Cat Label",
+        "type": "TEXT",
+        "size": {
+         "x": 200,
+         "y": 18
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          272
+         ]
+        ],
+        "characters": "分类",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.39215686274509803,
+           "g": 0.4549019607843137,
+           "b": 0.5450980392156862,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 12,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:37",
+        "name": "Pill Food",
+        "type": "FRAME",
+        "size": {
+         "x": 120,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          300
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:34",
+          "name": "Pill Food On",
+          "type": "FRAME",
+          "size": {
+           "x": 120,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.023529411764705882,
+             "g": 0.4,
+             "b": 0.9215686274509803,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:33",
+            "name": "Pill Food On Label",
+            "type": "TEXT",
+            "size": {
+             "x": 120,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "餐饮",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 14,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 9999
+         },
+         {
+          "id": "30:36",
+          "name": "Pill Food Off",
+          "type": "FRAME",
+          "size": {
+           "x": 120,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:35",
+            "name": "Pill Food Off Label",
+            "type": "TEXT",
+            "size": {
+             "x": 120,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "餐饮",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.2,
+               "g": 0.2549019607843137,
+               "b": 0.3333333333333333,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 14,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 9999,
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.8588235294117647,
+             "g": 0.8901960784313725,
+             "b": 0.9372549019607843,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokeWeight": 1
+         }
+        ]
+       },
+       {
+        "id": "30:42",
+        "name": "Pill Transit",
+        "type": "FRAME",
+        "size": {
+         "x": 120,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          150
+         ],
+         [
+          0,
+          1,
+          300
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:39",
+          "name": "Pill Transit On",
+          "type": "FRAME",
+          "size": {
+           "x": 120,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.023529411764705882,
+             "g": 0.4,
+             "b": 0.9215686274509803,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:38",
+            "name": "Pill Transit On Label",
+            "type": "TEXT",
+            "size": {
+             "x": 120,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "出行",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 14,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 9999
+         },
+         {
+          "id": "30:41",
+          "name": "Pill Transit Off",
+          "type": "FRAME",
+          "size": {
+           "x": 120,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:40",
+            "name": "Pill Transit Off Label",
+            "type": "TEXT",
+            "size": {
+             "x": 120,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "出行",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.2,
+               "g": 0.2549019607843137,
+               "b": 0.3333333333333333,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 14,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 9999,
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.8588235294117647,
+             "g": 0.8901960784313725,
+             "b": 0.9372549019607843,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokeWeight": 1
+         }
+        ]
+       },
+       {
+        "id": "30:47",
+        "name": "Pill Daily",
+        "type": "FRAME",
+        "size": {
+         "x": 120,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          280
+         ],
+         [
+          0,
+          1,
+          300
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:44",
+          "name": "Pill Daily On",
+          "type": "FRAME",
+          "size": {
+           "x": 120,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.023529411764705882,
+             "g": 0.4,
+             "b": 0.9215686274509803,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:43",
+            "name": "Pill Daily On Label",
+            "type": "TEXT",
+            "size": {
+             "x": 120,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "日用",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 14,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 9999
+         },
+         {
+          "id": "30:46",
+          "name": "Pill Daily Off",
+          "type": "FRAME",
+          "size": {
+           "x": 120,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:45",
+            "name": "Pill Daily Off Label",
+            "type": "TEXT",
+            "size": {
+             "x": 120,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "日用",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.2,
+               "g": 0.2549019607843137,
+               "b": 0.3333333333333333,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 14,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 9999,
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.8588235294117647,
+             "g": 0.8901960784313725,
+             "b": 0.9372549019607843,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokeWeight": 1
+         }
+        ]
+       },
+       {
+        "id": "30:58",
+        "name": "Note Row",
+        "type": "FRAME",
+        "size": {
+         "x": 380,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          372
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:55",
+          "name": "Note Label",
+          "type": "TEXT",
+          "size": {
+           "x": 60,
+           "y": 16
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            9
+           ]
+          ],
+          "characters": "备注",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.39215686274509803,
+             "g": 0.4549019607843137,
+             "b": 0.5450980392156862,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 12,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         },
+         {
+          "id": "30:56",
+          "name": "Note Value",
+          "type": "TEXT",
+          "size": {
+           "x": 240,
+           "y": 20
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            27
+           ]
+          ],
+          "characters": "楼下便利店",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 14,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         },
+         {
+          "id": "30:57",
+          "name": "Note Cycle Hint",
+          "type": "TEXT",
+          "size": {
+           "x": 80,
+           "y": 18
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            284
+           ],
+           [
+            0,
+            1,
+            19
+           ]
+          ],
+          "characters": "换一个",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.023529411764705882,
+             "g": 0.4,
+             "b": 0.9215686274509803,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 12,
+           "textAlignHorizontal": "RIGHT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:60",
+        "name": "Key1",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          504
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:59",
+          "name": "Key1 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "1",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:62",
+        "name": "Key2",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          151
+         ],
+         [
+          0,
+          1,
+          504
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:61",
+          "name": "Key2 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "2",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:64",
+        "name": "Key3",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          282
+         ],
+         [
+          0,
+          1,
+          504
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:63",
+          "name": "Key3 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "3",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:66",
+        "name": "Key4",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          580
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:65",
+          "name": "Key4 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "4",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:68",
+        "name": "Key5",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          151
+         ],
+         [
+          0,
+          1,
+          580
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:67",
+          "name": "Key5 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "5",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:70",
+        "name": "Key6",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          282
+         ],
+         [
+          0,
+          1,
+          580
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:69",
+          "name": "Key6 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "6",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:72",
+        "name": "Key7",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          656
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:71",
+          "name": "Key7 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "7",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:74",
+        "name": "Key8",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          151
+         ],
+         [
+          0,
+          1,
+          656
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:73",
+          "name": "Key8 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "8",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:76",
+        "name": "Key9",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          282
+         ],
+         [
+          0,
+          1,
+          656
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:75",
+          "name": "Key9 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "9",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:78",
+        "name": "KeyDot",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          732
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:77",
+          "name": "KeyDot Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": ".",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:80",
+        "name": "Key0",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          151
+         ],
+         [
+          0,
+          1,
+          732
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:79",
+          "name": "Key0 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "0",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.06666666666666667,
+             "g": 0.09411764705882353,
+             "b": 0.15294117647058825,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:82",
+        "name": "KeyDel",
+        "type": "FRAME",
+        "size": {
+         "x": 118,
+         "y": 64
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          282
+         ],
+         [
+          0,
+          1,
+          732
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:81",
+          "name": "KeyDel Label",
+          "type": "TEXT",
+          "size": {
+           "x": 118,
+           "y": 64
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "⌫",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.39215686274509803,
+             "g": 0.4549019607843137,
+             "b": 0.5450980392156862,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 500,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9294117647058824,
+           "g": 0.9490196078431372,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:84",
+        "name": "Save Button",
+        "type": "FRAME",
+        "size": {
+         "x": 380,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          816
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.023529411764705882,
+           "g": 0.4,
+           "b": 0.9215686274509803,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:83",
+          "name": "Save Label",
+          "type": "TEXT",
+          "size": {
+           "x": 380,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "保存",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 16,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 9999
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

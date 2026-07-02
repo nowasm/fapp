@@ -29,6 +29,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include <nlohmann/json.hpp>
 #include <raylib.h>
@@ -97,7 +98,7 @@ struct Player {
     // App project (app.json): viewport / fonts / entry frame / the manifest
     // exposed to the script as globalThis.APP.
     int winW = 420, winH = 900;
-    std::string fontsDir, entryFrame;
+    std::string fontsDir, entryFrame, appDir;
     std::string appInject = "globalThis.APP = {};";
 
     std::unique_ptr<figo::FigmaUI> ui;
@@ -108,6 +109,43 @@ struct Player {
     int frame = 0;
     int watchTick = 0;
     bool done = false;
+
+#ifndef __EMSCRIPTEN__
+    // ui.playSound backing store: raylib Sound cache keyed by resolved path.
+    // Failed loads are cached too (frameCount 0) so a bad path doesn't hit
+    // the decoder every call. Unloaded in shutdown() before CloseAudioDevice.
+    std::unordered_map<std::string, Sound> sounds;
+
+    // Injected into each ScriptHost (see loadScript): resolve a relative path
+    // against the app dir (script dir for the plain two-file form), load once,
+    // play. Returns whether the sound actually started.
+    bool playSound(const std::string& path, float volume) {
+        if (!IsAudioDeviceReady()) return false;
+        namespace fs = std::filesystem;
+        std::string full = path;
+        if (fs::path(path).is_relative()) {
+            const std::string base =
+                appDir.empty() ? fs::path(script).parent_path().string() : appDir;
+            if (!base.empty()) full = (fs::path(base) / path).string();
+        }
+        auto it = sounds.find(full);
+        if (it == sounds.end()) {
+            it = sounds.emplace(full, LoadSound(full.c_str())).first;
+        }
+        if (!IsSoundValid(it->second)) return false;
+        SetSoundVolume(it->second, volume);
+        PlaySound(it->second);
+        return true;
+    }
+
+    void shutdownAudio() {
+        for (auto& [path, s] : sounds) {
+            if (IsSoundValid(s)) UnloadSound(s);
+        }
+        sounds.clear();
+        if (IsAudioDeviceReady()) CloseAudioDevice();
+    }
+#endif
 
     // An app = <dir>/app.json bundling design + script + config. When `design`
     // names a directory (or an app.json path) this resolves those fields;
@@ -155,6 +193,7 @@ struct Player {
             winH = m["viewport"][1].get<int>();
         }
         if (m.contains("entryFrame")) entryFrame = m["entryFrame"].get<std::string>();
+        appDir = dir;  // ui.playSound resolves relative paths against this
         appInject = "globalThis.APP = " + m.dump() + ";";
         std::printf("[figoplay] app '%s' (%s)\n",
                     m.value("name", std::string("app")).c_str(), dir.c_str());
@@ -164,6 +203,13 @@ struct Player {
         ui->clearHandlers();  // the script re-registers everything it needs
         host = std::make_unique<figo::ScriptHost>(*ui);
         host->setStoragePath(script + ".storage.json");
+#ifndef __EMSCRIPTEN__
+        // Audio: raylib-backed ui.playSound on desktop/Android. The web build
+        // stays un-injected (playSound -> quiet false): raylib web audio
+        // needs extra setup, v1 skips it.
+        host->setAudioPlayer(
+            [this](const std::string& path, float volume) { return playSound(path, volume); });
+#endif
         if (drivePrefix) host->eval("globalThis.SELFDRIVE = true;", "<selfdrive>");
         if (!shotPath.empty()) host->eval("globalThis.SHOT = true;", "<shot>");
         host->eval(appInject, "<app>");          // globalThis.APP = manifest
@@ -313,6 +359,10 @@ int main(int argc, char** argv) {
 #endif
     InitWindow(p->winW, p->winH, "figoplay — design.fig + logic.js");
 #ifndef __EMSCRIPTEN__
+    // Audio device for ui.playSound (desktop + Android; web is a no-op —
+    // playSound quietly returns false there). Failure to open a device is
+    // fine: playSound checks IsAudioDeviceReady and returns false.
+    InitAudioDevice();
     // FLAG_VSYNC_HINT is only a hint — drivers may ignore it, and an uncapped
     // loop runs at 1000s of fps, breaking every real-time assumption (script
     // setInterval pacing, selfdrive frame budgets). Hard-cap as a fallback;
@@ -351,6 +401,9 @@ int main(int argc, char** argv) {
 #endif
     if (!p->fontsDir.empty()) p->ui->renderer().registerFontsFromDirectory(p->fontsDir);
     if (!p->loadScript()) {
+#ifndef __EMSCRIPTEN__
+        p->shutdownAudio();
+#endif
         CloseWindow();
         return 1;
     }
@@ -361,6 +414,7 @@ int main(int argc, char** argv) {
     emscripten_set_main_loop(emFrame, 0 /*use rAF*/, 1 /*never returns*/);
 #else
     while (!WindowShouldClose() && !p->done) p->tick();
+    p->shutdownAudio();
     CloseWindow();
     delete p;
 #endif

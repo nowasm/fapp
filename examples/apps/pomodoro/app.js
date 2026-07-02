@@ -39,6 +39,10 @@ function tick() {
         if (mode === "focus") {
             rounds = Math.min(rounds + 1, 4);
             setMode("break");
+            // Phase-change chime. Purely informational: playSound returns
+            // false in silent environments (web / no audio device) and the
+            // bench never depends on it.
+            console.log("pomodoro ding played=" + ui.playSound("sounds/ding.wav"));
         } else {
             if (rounds >= 4) rounds = 0;   // new cycle after the 4th round
             setMode("focus");
