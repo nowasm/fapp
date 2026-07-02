@@ -1480,6 +1480,41 @@ void FigmaUI::editKey(EditKey key) {
     impl_->renderer.markDirty();
 }
 
+std::string FigmaUI::editCopy() {
+    Node* n = impl_->focused;
+    size_t lo, hi;
+    // passwordMask: the selection is bullets on screen but plaintext in the
+    // node — never hand it out.
+    if (!n || n->passwordMask || !impl_->selectionRange(lo, hi)) return {};
+    return n->characters.substr(lo, hi - lo);
+}
+
+std::string FigmaUI::editCut() {
+    std::string copied = editCopy();
+    if (copied.empty()) return copied;  // includes the passwordMask case
+    Node* n = impl_->focused;
+    size_t lo, hi;
+    if (impl_->selectionRange(lo, hi)) {
+        n->characters.erase(lo, hi - lo);
+        n->caretByte = static_cast<int>(lo);
+        n->selAnchorByte = -1;
+        impl_->editChanged();
+    }
+    return copied;
+}
+
+void FigmaUI::editPaste(const std::string& utf8) {
+    textInput(utf8);  // replaces the selection, filters \r/control, keeps \n
+}
+
+void FigmaUI::editSelectAll() {
+    Node* n = impl_->focused;
+    if (!n) return;
+    n->selAnchorByte = 0;
+    n->caretByte = static_cast<int>(n->characters.size());
+    impl_->renderer.markDirty();
+}
+
 void FigmaUI::onClick(const std::string& nodeName, ClickHandler fn) {
     impl_->clickHandlers[nodeName].push_back(std::move(fn));
 }

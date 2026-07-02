@@ -72,6 +72,10 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
      `.scrollX/.scrollY`（可读写）、`.maxScrollX/.maxScrollY`
    - `ui.setText/setVisible/setOpacity/setVariant/setScroll/setEditable/focusText`
      （`setVariant(..., {duration})` = dissolve 淡入过渡）
+   - 文本编辑：`ui.setPassword(name, bool)`（"•" 遮罩显示，`node.text` 仍明文，
+     copy/cut 返回空）、`ui.typeText(str)`、`ui.editKey("left"|…|"enter"|"selectAll"|
+     "copy"|"cut"|"paste")`——editKey 的剪贴板是进程内模拟的（copy/cut 返回所复制串）；
+     真实 OS 剪贴板只在 raylib 后端粘合（Ctrl/Cmd+C/X/V/A），两者互不干扰
    - `ui.bindSlider(track, {min,max,step?,value,knob?,fill?,axis?,readonly?,onChange(v,committed)})`
      —— slider/进度条语义：外观全是设计节点，引擎管手势→值（同轴优先于滚动）+
      摆 knob/缩 fill；`ui.setValue(track, v)` 程序驱动（不触发 onChange）

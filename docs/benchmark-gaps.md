@@ -20,7 +20,7 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
 
 | # | 缺口 | 命中 | 内容 | 关键事实 |
 |---|------|-----|------|---------|
-| G1 | 移动端文本输入 | 9 | Android 软键盘唤起/避让（需 JNI，现 `hasCode="false"` 无通道）、IME 预编辑显示、剪贴板（复制/粘贴完全没接）、密码遮罩 | `ui.cpp:287-349,950-1027`；桌面已有 caret/选区/多行，缺的是移动端和周边 |
+| G1 | 移动端文本输入 | 9 | ~~剪贴板（复制/粘贴完全没接）、密码遮罩~~ **桌面侧已做(2026-07)**：核心 `editCopy/editCut/editPaste/editSelectAll`（核心不碰平台剪贴板，raylib 后端粘 Ctrl/Cmd+C/X/V/A ↔ OS 剪贴板）；`Node::passwordMask` 全码点 "•" 遮罩（度量/caret/选区/点击定位全按遮罩后显示文本，`node.text` 仍是明文，copy/cut 返回空——密码不进剪贴板）；JS `ui.setPassword` / `node.passwordMask` / `ui.typeText` / `ui.editKey`（copy/cut/paste 走进程内模拟剪贴板，见 script.h）。断言固化在 `_events_regress`。**仍缺**：Android 软键盘唤起/避让（需 JNI，现 `hasCode="false"` 无通道）、IME 预编辑显示（真机 pending） | `ui.cpp` editCopy/editCut、`scene_builder.cpp` makeMaskTwin、`figo_raylib.cpp` 键盘粘合；桌面 caret/选区/多行原有 |
 | G2 | 系统能力桥 | 8 | 相机/相册、定位、分享、本地通知、深链、震动。现状零桥接，Android 无 JNI 通道 | `AndroidManifest.xml` 纯 NativeActivity；全仓 grep 0 命中 |
 | G3 | 控件语义/值概念 | 7 | ~~无连续值、无自动状态切换、无过渡~~ **v1 已实现(2026-07)**：`ui.bindSlider`（track/knob/fill 全是设计节点，引擎管手势→值：step 吸附、clamp、committed 语义、readonly 进度条、同轴 slider 优先/异轴分流给滚动）+ `ui.setValue`；`ui.autoStates`（hover/press 自动 setVariant，切换延迟到派发结束、不吃点击）；`setVariant(..., {duration})` dissolve（新子树 runtimeOpacity 淡入）。设计稿 `docs/design-g3-value-binding.md`，回归 `_value_regress`。仍缺：日期/时间滚轮选择器（滚动吸附路线，后置）、下拉（setVisible 可拼，不进引擎）、knob 高于 track 的"细轨大钮"视觉（music 实测用等高 knob 规避） | `ui.cpp` bindSlider/autoStates/setVariant |
 | G4 | 跨平台网络 | 6 | ~~Android fetch 直接返回 not supported、无超时~~ **部分修复(2026-07)**：Android 走 JNI→`HttpURLConnection`（后台线程，HTTPS 系统级支持），Windows/Android 均加 15s 连接/读超时；注入口 `figo::setAndroidJNI(vm, activity)` 是通用 JNI 通道（存 JavaVM* + activity 全局引用，G1/G2 复用），figoplay android_main 已注入。编译/打包已验证，**真机运行验证 pending（无 adb 设备）**。仍缺：二进制 body/ArrayBuffer、WebSocket | `script_host.cpp` fetchWorker（Android 分支）、`script.h` setAndroidJNI |
@@ -47,9 +47,9 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
 | 4 | 设置页 | 变体拼 switch、导航 | G3 用 setVisible 双态拼、G12 | **✅ 已做**（apple）|
 | 5 | 电商浏览/购物车 | 列表、详情转场、stepper | G11 跨页写需 node 句柄绕 | **✅ 已做**（airbnb）|
 | 6 | 待办清单 | 文本输入、列表增删 | **滑动删除 G5**、移动端输入 G1 | 桌面可做 |
-| 7 | 笔记 | 多行编辑、持久化 | **剪贴板 G1**、移动端输入 G1 | 桌面可做 |
+| 7 | 笔记 | 多行编辑、持久化 | ~~剪贴板 G1~~（桌面已补）、移动端输入 G1 | 桌面可做 |
 | 8 | 记账 | 数字输入、分组列表、简单图表 | 日期选择器 G3、移动端输入 G1 | 桌面可做 |
-| 9 | 登录/注册流程 | 表单、校验、fetch POST | **密码遮罩 G1**、Android fetch G4 | 桌面可做 |
+| 9 | 登录/注册流程 | 表单、校验、fetch POST | ~~密码遮罩 G1~~（已补）、Android fetch G4 | 桌面可做 |
 | 10 | 天气 | fetch JSON、数据绑定 | **Android fetch G4**、定位 G2 | Win/Web 可做 |
 | 11 | 新闻阅读器 | fetch 列表、图片、阅读页 | **Android fetch G4**、分享 G2、下拉刷新 G5 | Win/Web 可做 |
 | 12 | 菜谱 | 图片列表、搜索、收藏 | 搜索输入 G1、fetch G4 | Win/Web 可做 |
@@ -69,7 +69,8 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
 2. **G1 Android 软键盘（JNI 通道）**：这是架构性决定——`hasCode="false"`
    要改成带一个极薄 Java 层或用 `ANativeActivity` 的 JNIEnv 直调
    InputMethodManager。同一条 JNI 通道也是 G2 所有系统桥的地基，**先打通道，
-   再逐个上桥**。剪贴板/密码遮罩属桌面侧小活，可并行。
+   再逐个上桥**。~~剪贴板/密码遮罩属桌面侧小活，可并行~~ **桌面侧已做(2026-07)**，
+   见上表 G1 行；Android 软键盘/IME 预编辑仍 pending 真机。
 3. ~~**G5 事件面**：给 JS 加 onLongPress/onSwipe/onScroll + 事件坐标 +
    滚动位置读取~~ **已实现(2026-07)**，见上表 G5 行（v1 范围；双击/捏合/
    多点触控仍缺）。

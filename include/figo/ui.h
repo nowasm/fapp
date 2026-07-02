@@ -198,6 +198,17 @@ public:
     Node* focusedNode() const;
     void textInput(const std::string& utf8);  // insert at the caret
     void editKey(EditKey key);
+    // ---- Clipboard editing ----
+    // The core never touches the platform clipboard; a backend glues these
+    // to it (raylib: Ctrl+C/X/V/A, plus Cmd on macOS). On a passwordMask
+    // node editCopy/editCut return "" (and cut deletes nothing) so passwords
+    // never leave the node.
+    std::string editCopy();  // selection text of the focused node, "" if none
+    std::string editCut();   // editCopy() + delete the selection
+    // Replace the selection / insert at the caret. Same filtering as
+    // textInput: \r and control chars drop, \n survives (multi-line paste).
+    void editPaste(const std::string& utf8);
+    void editSelectAll();    // anchor at 0, caret at end (Ctrl+A)
 
     // ---- Value binding (G3): slider / progress semantics on designed nodes ----
     // The engine owns the "gesture -> value" mapping; the LOOK stays entirely

@@ -89,8 +89,37 @@ void RaylibFigmaView::update() {
     // input works without extra plumbing.
     if (ui_.focusedNode()) {
         using EK = FigmaUI::EditKey;
+        // Clipboard chords glue the core's edit ops to the OS clipboard —
+        // the core itself never touches it. Ctrl on Windows/Linux, plus Cmd
+        // on macOS. AltGr = Ctrl+Alt on Windows layouts, so a chord only
+        // counts without Alt (AltGr characters must still type below).
+        const bool alt = IsKeyDown(KEY_LEFT_ALT) || IsKeyDown(KEY_RIGHT_ALT);
+        bool chord = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+#if defined(__APPLE__)
+        chord = chord || IsKeyDown(KEY_LEFT_SUPER) || IsKeyDown(KEY_RIGHT_SUPER);
+#endif
+        chord = chord && !alt;
+        if (chord) {
+            if (IsKeyPressed(KEY_A)) ui_.editSelectAll();
+            if (IsKeyPressed(KEY_C)) {
+                const std::string s = ui_.editCopy();  // "" on passwordMask
+                if (!s.empty()) SetClipboardText(s.c_str());
+            }
+            if (IsKeyPressed(KEY_X)) {
+                const std::string s = ui_.editCut();
+                if (!s.empty()) SetClipboardText(s.c_str());
+            }
+            if (IsKeyPressed(KEY_V)) {
+                const char* t = GetClipboardText();
+                if (t && *t) ui_.editPaste(t);
+            }
+        }
         int cp;
         while ((cp = GetCharPressed()) != 0) {
+            // Some hosts deliver Ctrl+letter as a control char (^C = 0x03);
+            // textInput filters those, but drain the queue and never feed
+            // chord keystrokes into the text.
+            if (chord) continue;
             char buf[5] = {};
             if (cp < 0x80) {
                 buf[0] = static_cast<char>(cp);

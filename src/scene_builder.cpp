@@ -1108,6 +1108,60 @@ size_t nextCpBoundary(const std::string& s, size_t i) {
     return i;
 }
 
+// ---- Password mask (Node::passwordMask) ----
+// The DISPLAY text replaces every code point (newlines included) with
+// U+2022 "•" — exactly 3 UTF-8 bytes — so real-byte ↔ display-byte offsets
+// map through the code-point index. All text entry points below lay out the
+// display twin, keeping caret/selection/click metrics and pixels in sync,
+// while Node::characters stays the real plaintext.
+constexpr char kMaskBullet[] = "\xE2\x80\xA2";  // U+2022 BULLET
+
+// Real byte offset -> display byte offset (code points before it × 3).
+int maskDisplayByte(const std::string& real, int byte) {
+    const size_t b = std::min(static_cast<size_t>(std::max(byte, 0)), real.size());
+    int cps = 0;
+    for (size_t i = 0; i < b; i = nextCpBoundary(real, i)) ++cps;
+    return cps * 3;
+}
+
+// Display byte offset -> real byte offset (start of code point #db/3).
+int maskRealByte(const std::string& real, int displayByte) {
+    if (displayByte < 0) return displayByte;
+    int cps = displayByte / 3;
+    size_t i = 0;
+    while (cps-- > 0 && i < real.size()) i = nextCpBoundary(real, i);
+    return static_cast<int>(i);
+}
+
+// Display twin of a passwordMask TEXT node: same box/base style, characters
+// swapped for bullets, runs reduced to one base-style run (per-run styling
+// is moot under the mask; a run keeps rendering on the flow path so glyphs
+// and caret math share the same layout), caret/selection remapped.
+void makeMaskTwin(const Node& src, Node& out) {
+    static_cast<NodeData&>(out) = src;
+    out.passwordMask = false;  // the twin lays out literally — no recursion
+    std::string masked;
+    masked.reserve(src.characters.size() * 3);
+    for (size_t i = 0; i < src.characters.size(); i = nextCpBoundary(src.characters, i)) {
+        masked += kMaskBullet;
+    }
+    out.characters = std::move(masked);
+    out.textRuns.clear();
+    if (!out.characters.empty()) {
+        TextRun run;
+        run.start = 0;
+        run.end = static_cast<int>(out.characters.size());
+        run.style = src.textStyle;
+        out.textRuns.push_back(run);
+    }
+    if (src.caretByte >= 0) {
+        out.caretByte = maskDisplayByte(src.characters, src.caretByte);
+    }
+    if (src.selAnchorByte >= 0) {
+        out.selAnchorByte = maskDisplayByte(src.characters, src.selAnchorByte);
+    }
+}
+
 // X position on a flowed line for a byte offset (clamped to the line span),
 // starting from the line's aligned origin `startX`.
 float lineCaretX(const Node& n, const TextFlow::Line& ln, float startX, int byte) {
@@ -1187,6 +1241,11 @@ bool textCaretRect(const Node& n, int caretByte, BuildContext& ctx, float& outX,
 
 bool measureTextNode(const Node& n, float maxWidth, BuildContext& ctx,
                      float& outWidth, float& outHeight) {
+    if (n.passwordMask) {  // measure what is actually drawn: the bullets
+        Node twin;
+        makeMaskTwin(n, twin);
+        return measureTextNode(twin, maxWidth, ctx, outWidth, outHeight);
+    }
     TextFlow flow;
     if (!buildTextFlow(n, maxWidth, ctx, false /*keepTexts*/, flow)) return false;
     outWidth = flow.maxLineW;
@@ -1195,6 +1254,12 @@ bool measureTextNode(const Node& n, float maxWidth, BuildContext& ctx,
 }
 
 int textByteFromPoint(const Node& n, BuildContext& ctx, float x, float y) {
+    if (n.passwordMask) {  // hit the bullets, answer in plaintext bytes
+        Node twin;
+        makeMaskTwin(n, twin);
+        const int db = textByteFromPoint(twin, ctx, x, y);
+        return db < 0 ? db : maskRealByte(n.characters, db);
+    }
     if (n.characters.empty()) return 0;
     const TextStyle& base = n.textStyle;
     TextFlow flow;
@@ -1266,6 +1331,12 @@ int textByteFromPoint(const Node& n, BuildContext& ctx, float x, float y) {
 
 bool textSelectionRects(const Node& n, int a, int b, BuildContext& ctx,
                         std::vector<std::array<float, 4>>& outRects) {
+    if (n.passwordMask) {  // highlight spans measured on the bullets
+        Node twin;
+        makeMaskTwin(n, twin);
+        return textSelectionRects(twin, maskDisplayByte(n.characters, a),
+                                  maskDisplayByte(n.characters, b), ctx, outRects);
+    }
     if (n.characters.empty() || a >= b) return false;
     const TextStyle& base = n.textStyle;
     TextFlow flow;
@@ -1326,24 +1397,29 @@ tvg::Scene* buildNodeScene(Node& node, const Mat23& parentAbs, BuildContext& ctx
 
     bool skipChildren = false;
     if (node.type == NodeType::Text) {
+        // passwordMask: rasterize (and place caret/selection on) the bullet
+        // display twin — the plaintext never reaches the raster.
+        Node twin;
+        if (node.passwordMask) makeMaskTwin(node, twin);
+        const Node& tn = node.passwordMask ? twin : node;
         // Selection highlight first, so it sits behind the glyphs.
-        if (node.caretByte >= 0 && node.selAnchorByte >= 0 &&
-            node.selAnchorByte != node.caretByte) {
-            const int a = std::min(node.caretByte, node.selAnchorByte);
-            const int b = std::max(node.caretByte, node.selAnchorByte);
+        if (tn.caretByte >= 0 && tn.selAnchorByte >= 0 &&
+            tn.selAnchorByte != tn.caretByte) {
+            const int a = std::min(tn.caretByte, tn.selAnchorByte);
+            const int b = std::max(tn.caretByte, tn.selAnchorByte);
             std::vector<std::array<float, 4>> rects;
-            if (textSelectionRects(node, a, b, ctx, rects)) {
+            if (textSelectionRects(tn, a, b, ctx, rects)) {
                 auto* sel = tvg::Shape::gen();
                 for (const auto& r : rects) sel->appendRect(r[0], r[1], r[2], r[3], 2, 2);
                 sel->fill(64, 140, 255, 105);
                 scene->add(sel);
             }
         }
-        if (auto* rich = makeRichText(node, ctx)) scene->add(rich);
-        else if (auto* text = makeText(node, ctx)) scene->add(text);
-        if (node.caretByte >= 0) {  // focused for editing: draw the caret
+        if (auto* rich = makeRichText(tn, ctx)) scene->add(rich);
+        else if (auto* text = makeText(tn, ctx)) scene->add(text);
+        if (tn.caretByte >= 0) {  // focused for editing: draw the caret
             float cx = 0, cy = 0, ch = 0;
-            if (textCaretRect(node, node.caretByte, ctx, cx, cy, ch)) {
+            if (textCaretRect(tn, tn.caretByte, ctx, cx, cy, ch)) {
                 auto* caret = tvg::Shape::gen();
                 caret->appendRect(cx - 0.75f, cy + ch * 0.08f, 1.5f, ch * 0.84f, 0.75f,
                                   0.75f);

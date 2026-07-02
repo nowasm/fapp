@@ -52,6 +52,19 @@
 //     // apply AFTER event dispatch, so they never eat the click. Variants
 //     // missing from the set are skipped (soft no-op).
 //   ui.setEditable(name, editable?)    ui.focusText(name)    ui.blur()
+//   ui.setPassword(name, on?) -> bool  // TEXT node becomes a password field:
+//     rendered (and caret/selection-measured) as one "•" per code point while
+//     node.text stays plaintext. copy/cut return "" on it — passwords never
+//     reach any clipboard. Also node.passwordMask (get/set).
+//   ui.typeText(s)   // synthesized typing into the focused node, code point
+//     by code point through the real textInput path (replaces the selection)
+//   ui.editKey(k)    // synthesized edit keystroke: "left"|"right"|"home"|
+//     "end"|"backspace"|"delete"|"enter" (inserts \n)|"selectAll"|"copy"|
+//     "cut"|"paste". copy/cut return the copied string and, with paste, use
+//     an IN-PROCESS simulated clipboard private to this ScriptHost — the
+//     real backend chords (raylib: Ctrl/Cmd+C/X/V/A) use the OS clipboard;
+//     the two never mix, so selfdrive tests don't depend on OS clipboard
+//     state.
 //   ui.find(name) -> node|null         ui.findAll(name) -> [node]
 //   ui.diagnostics() -> [{kind, node, id, message}]  // render problems in the
 //     current frame a screenshot doesn't explain: kind = "font-fallback"
@@ -78,6 +91,7 @@
 //   node.name (get/set)   node.id   node.type        // "Text", "Frame", ...
 //   node.text (get/set)   node.visible (get/set)     node.opacity (get/set)
 //   node.scrollFixed (get/set)   node.childCount     node.child(i) -> node
+//   node.passwordMask (get/set)   // see ui.setPassword
 //   node.parent -> node|null           node.index    // position in parent
 //   node.find(name) -> node|null       node.width / node.height  (read-only,
 //                                      layout size in frame-local px)

@@ -1,6 +1,8 @@
-// _events_regress — benchmark app for the G5 event surface:
-// onLongPress / onSwipe / onScroll, node.scrollX/scrollY(/max*) and event
-// coordinates on onClick. Layout (420x900 viewport, scale 1):
+// _events_regress — benchmark app for the G5 event surface
+// (onLongPress / onSwipe / onScroll, node.scrollX/scrollY(/max*), event
+// coordinates on onClick) plus the G1 desktop text-editing surface
+// (ui.typeText / ui.editKey with the sim clipboard, ui.setPassword mask).
+// Layout (420x900 viewport, scale 1):
 //   List  : x 24..396, y 120..720, vertical scroll, maxScrollY = 352
 //   Row2  : on-screen center (210, 316) at scroll 0
 //   Card  : on-screen center (210, 820), not scrollable
@@ -113,7 +115,62 @@ if (globalThis.SELFDRIVE) {
         if (frames === 72) ui.tap("Row2");
         if (frames === 74) check("row click after swipe", count(clicks, "Row2"), "1");
 
-        if (frames === 100) {
+        // ---- G1 text editing: typeText/editKey, sim clipboard, password ----
+        if (frames === 78) {
+            check("setEditable Input", ui.setEditable("Input"), "true");
+            check("setEditable Pwd", ui.setEditable("Pwd"), "true");
+            check("setPassword", ui.setPassword("Pwd", true), "true");
+            ui.focusText("Input");
+            ui.typeText("Hi 你好");
+        }
+        if (frames === 80) {
+            check("typeText", ui.find("Input").text, "Hi 你好");
+            ui.editKey("selectAll");
+            check("copy", ui.editKey("copy"), "Hi 你好");
+            ui.editKey("end");   // collapse the selection to the end
+            ui.editKey("paste");
+        }
+        if (frames === 82) {
+            check("paste appended", ui.find("Input").text, "Hi 你好Hi 你好");
+            ui.editKey("selectAll");
+            check("cut returns", ui.editKey("cut"), "Hi 你好Hi 你好");
+            check("cut cleared", ui.find("Input").text, "");
+        }
+        if (frames === 84) {
+            ui.typeText("ab");
+            ui.editKey("enter");
+            ui.typeText("cd");
+        }
+        if (frames === 86) {
+            check("enter multiline", JSON.stringify(ui.find("Input").text),
+                  JSON.stringify("ab\ncd"));
+            ui.editKey("backspace");
+            ui.editKey("backspace");
+            ui.editKey("backspace");  // eats d, c, \n
+        }
+        if (frames === 88) check("backspace x3", ui.find("Input").text, "ab");
+        if (frames === 90) {
+            ui.focusText("Pwd");
+            ui.typeText("hunter2");
+        }
+        if (frames === 92) {
+            const pwd = ui.find("Pwd");
+            check("pwd plaintext", pwd.text, "hunter2");   // node.text = real text
+            check("pwd mask flag", pwd.passwordMask, "true");
+            ui.editKey("selectAll");
+            check("pwd copy empty", JSON.stringify(ui.editKey("copy")), '""');
+            ui.editKey("paste");  // sim clipboard is now "" — must be a no-op
+        }
+        if (frames === 94) {
+            check("pwd survives paste", ui.find("Pwd").text, "hunter2");
+            check("pwd cut empty", JSON.stringify(ui.editKey("cut")), '""');
+            check("pwd cut kept text", ui.find("Pwd").text, "hunter2");
+            // Leave Pwd focused with the selection: the frame-110 _nav.png
+            // shot shows the bullet mask + highlight for eyeballing.
+            ui.editKey("selectAll");
+        }
+
+        if (frames === 130) {
             const fails = checks.filter(([, got, want]) => got !== want);
             for (const [what, got, want] of checks)
                 console.log(`bench check ${what}: got=${got} want=${want}`);

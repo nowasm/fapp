@@ -289,6 +289,12 @@ struct NodeData {
     // Text editing (FigmaUI::setEditable / focus): a TEXT node the user can
     // type into. caretByte ≥ 0 → node has focus; the renderer draws the caret.
     bool editable = false;
+    // Password field: the renderer displays every code point as U+2022 "•"
+    // and all caret/selection/click-positioning metrics use that masked
+    // display text, while `characters` stays the real plaintext (node.text
+    // reads/writes plaintext). FigmaUI::editCopy/editCut return "" on masked
+    // nodes so passwords never reach a clipboard. Copied by cloneNode.
+    bool passwordMask = false;
     int caretByte = -1;  // UTF-8 byte offset into `characters`
     // Selection anchor (set on press, caret follows the drag); together with
     // caretByte it spans the highlighted range. -1 → no selection.

@@ -536,6 +536,13 @@ struct ScriptHost::Impl {
     // ui.playSound is a quiet no-op returning false.
     std::function<bool(const std::string&, float)> audioPlayer;
 
+    // ui.editKey("copy"/"cut"/"paste") clipboard: an in-process string,
+    // private to this host. Deliberately NOT the OS clipboard — synthetic
+    // edit tests must not depend on (or leak into) machine clipboard state.
+    // The real backend chords (raylib Ctrl/Cmd+C/X/V) use the OS clipboard;
+    // the two never mix.
+    std::string simClipboard;
+
     // localStorage: in-memory map, write-through to a JSON file when a
     // storage path is set (std::map keeps the file diff-stable).
     std::string storagePath;
@@ -699,6 +706,7 @@ enum NodeProp {
     NP_SCROLL_Y,
     NP_MAX_SCROLL_X,
     NP_MAX_SCROLL_Y,
+    NP_PASSWORD_MASK,
 };
 
 JSValue nodeGet(JSContext* ctx, JSValueConst thisVal, int /*argc*/, JSValueConst* /*argv*/,
@@ -725,6 +733,7 @@ JSValue nodeGet(JSContext* ctx, JSValueConst thisVal, int /*argc*/, JSValueConst
         return JS_NewInt32(ctx, idx);
     }
     case NP_SCROLL_FIXED: return JS_NewBool(ctx, n->scrollFixed);
+    case NP_PASSWORD_MASK: return JS_NewBool(ctx, n->passwordMask);
     case NP_VISIBLE: return JS_NewBool(ctx, n->effectivelyVisible());
     case NP_OPACITY: return JS_NewFloat64(ctx, n->effectiveOpacity());
     case NP_WIDTH: return JS_NewFloat64(ctx, n->width);
@@ -781,6 +790,10 @@ JSValue nodeSet(JSContext* ctx, JSValueConst thisVal, int argc, JSValueConst* ar
     }
     case NP_SCROLL_FIXED:
         n->scrollFixed = JS_ToBool(ctx, argv[0]);
+        im->ui.markDirty();
+        break;
+    case NP_PASSWORD_MASK:
+        n->passwordMask = JS_ToBool(ctx, argv[0]);
         im->ui.markDirty();
         break;
     case NP_PRIMARY_SIZING: {
@@ -1167,6 +1180,63 @@ JSValue ui_blur(JSContext* ctx, JSValueConst, int, JSValueConst*) {
     return JS_UNDEFINED;
 }
 
+// ui.setPassword(name, on?) -> bool. Marks a TEXT node as a password field:
+// the renderer shows every code point as "•" while node.text stays plaintext.
+JSValue ui_setPassword(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    std::string name;
+    if (argc < 1 || !argName(ctx, argv[0], name)) return JS_EXCEPTION;
+    const bool on = argc < 2 || JS_ToBool(ctx, argv[1]);
+    Node* n = im->findNode(name);
+    if (!n || n->type != NodeType::Text) return JS_NewBool(ctx, false);
+    n->passwordMask = on;
+    im->ui.markDirty();
+    return JS_NewBool(ctx, true);
+}
+
+// ui.typeText(s): synthesized typing — each code point runs through the
+// real textInput path, exactly like characters from the host keyboard.
+JSValue ui_typeText(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    if (argc < 1) return JS_ThrowTypeError(ctx, "text expected");
+    CStr s(ctx, argv[0]);
+    if (!s) return JS_EXCEPTION;
+    const std::string text = s.s;
+    size_t i = 0;
+    while (i < text.size()) {  // next UTF-8 code-point boundary
+        size_t e = i + 1;
+        while (e < text.size() && (static_cast<unsigned char>(text[e]) & 0xC0) == 0x80) ++e;
+        im->ui.textInput(text.substr(i, e - i));
+        i = e;
+    }
+    return JS_UNDEFINED;
+}
+
+// ui.editKey(k): synthesized edit keystroke on the focused node. "copy" and
+// "cut" store into (and return) the host's in-process simulated clipboard;
+// "paste" inserts from it. See Impl::simClipboard for why it is not the OS
+// clipboard.
+JSValue ui_editKey(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    std::string k;
+    if (argc < 1 || !argName(ctx, argv[0], k)) return JS_EXCEPTION;
+    using EK = FigmaUI::EditKey;
+    if (k == "left") im->ui.editKey(EK::Left);
+    else if (k == "right") im->ui.editKey(EK::Right);
+    else if (k == "home") im->ui.editKey(EK::Home);
+    else if (k == "end") im->ui.editKey(EK::End);
+    else if (k == "backspace") im->ui.editKey(EK::Backspace);
+    else if (k == "delete") im->ui.editKey(EK::Delete);
+    else if (k == "enter") im->ui.textInput("\n");
+    else if (k == "selectAll") im->ui.editSelectAll();
+    else if (k == "copy" || k == "cut") {
+        im->simClipboard = k == "cut" ? im->ui.editCut() : im->ui.editCopy();
+        return JS_NewString(ctx, im->simClipboard.c_str());
+    } else if (k == "paste") im->ui.editPaste(im->simClipboard);
+    else return JS_ThrowTypeError(ctx, "unknown edit key '%s'", k.c_str());
+    return JS_UNDEFINED;
+}
+
 JSValue ui_markDirty(JSContext* ctx, JSValueConst, int, JSValueConst*) {
     ScriptHost::Impl::from(ctx)->ui.markDirty();
     return JS_UNDEFINED;
@@ -1464,6 +1534,7 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     prop("visible", NP_VISIBLE, true);
     prop("opacity", NP_OPACITY, true);
     prop("scrollFixed", NP_SCROLL_FIXED, true);
+    prop("passwordMask", NP_PASSWORD_MASK, true);
     prop("primarySizing", NP_PRIMARY_SIZING, true);
     prop("primaryAlign", NP_PRIMARY_ALIGN, true);
     prop("width", NP_WIDTH, false);
@@ -1507,6 +1578,9 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     fn("setScroll", ui_setScroll, 3);
     fn("setEditable", ui_setEditable, 2);
     fn("focusText", ui_focusText, 1);
+    fn("setPassword", ui_setPassword, 2);
+    fn("typeText", ui_typeText, 1);
+    fn("editKey", ui_editKey, 1);
     fn("blur", ui_blur, 0);
     fn("markDirty", ui_markDirty, 0);
     fn("find", ui_find, 1);

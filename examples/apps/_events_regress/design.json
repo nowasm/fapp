@@ -84,6 +84,86 @@
         }
        },
        {
+        "id": "1:6",
+        "name": "Input",
+        "type": "TEXT",
+        "size": {
+         "x": 170,
+         "y": 24
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          92
+         ]
+        ],
+        "characters": "",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.15,
+           "g": 0.17,
+           "b": 0.2,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 16,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP"
+        }
+       },
+       {
+        "id": "1:7",
+        "name": "Pwd",
+        "type": "TEXT",
+        "size": {
+         "x": 180,
+         "y": 24
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          216
+         ],
+         [
+          0,
+          1,
+          92
+         ]
+        ],
+        "characters": "",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.15,
+           "g": 0.17,
+           "b": 0.2,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 16,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP"
+        }
+       },
+       {
         "id": "1:3",
         "name": "List",
         "type": "FRAME",
