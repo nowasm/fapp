@@ -26,12 +26,12 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
 | G4 | 跨平台网络 | 6 | **Android fetch 直接返回 not supported**（只实现了 `_WIN32`/`__EMSCRIPTEN__`）；无超时、无二进制 body/ArrayBuffer、无 WebSocket | `script_host.cpp:259-266,865-889` |
 | G5 | 手势与事件面 | 6 | 长按、滑动（swipe/滑动删除/下拉刷新）、拖拽、双击、捏合；onScroll 回调与滚动位置读取；事件坐标入参。滚动引擎本身很完整但对 JS 是黑盒 | `figo_raylib.cpp:77-85` 只投单指针；`script_host.cpp:577-603` 仅两种事件 |
 | G6 | 动态媒体 | 4 | 音频播放（raylib 有能力未接线）、视频、GIF 动图、Lottie（wasm sjlj 限制已知） | `scene_builder.cpp:250-292`；loaders 仅 svg,ttf,png,jpg,webp |
-| G7 | JS 属性/查询面 | 横切 | visible/opacity/primarySizing 只写不可读（getter 落 default 返回 undefined，与 script.h 注释不符）；读不到几何(x/y/w/h)与样式；不能建/删节点 | `script_host.cpp:465-486` |
+| G7 | JS 属性/查询面 | 横切 | ~~visible/opacity/primarySizing 只写不可读~~ **部分修复(2026-07)**：visible/opacity/primarySizing/primaryAlign 补了 getter，新增只读 width/height。仍缺：位置(x/y)、颜色/样式读写、建/删节点 | `script_host.cpp` nodeGet |
 | G8 | 运行时诊断 | 横切 | 布局溢出/文本截断/字体缺失无警告（font_provider 静默回退，0 输出）；无机器可读诊断通道。直接决定 AI 迭代效率 | `font_provider.cpp:521,541` |
 | G9 | 数据层 | 横切 | localStorage 之外无结构化存储；无 BaaS 绑定（目标：`ui.bindList` 接远程数据源） | `script_host.cpp:807-834` |
-| G10 | 事件派发中改树 | 横切 | **onClick 处理器里调 `bindList` 是 UB**：`fireUp` 沿 `n->parent` 继续走已被 bindList 销毁的节点（habits 实测同名处理器一次点击多次乱序触发，bench.py 下 0xC0000005 崩溃）。`pointerUp` 里 `hit`/`target` 链同样悬空。修法：派发期间延迟树变更，或 fireUp 先快照名字链。当前约定：点击处理器内只做 setText/setVisible 等就地改动，重绑列表须移出派发（如 setTimeout） | `ui.cpp:114-131,842-902`（habits app 实测，2026-07） |
-| G11 | 名字寻址不跨页 | 横切 | **`ui.setText/setVisible` 等按名 mutation 只搜当前 frame 不回落全文档**，与 `script.h` 注释"current frame first, then document"矛盾（`ui.find` 却会回落）——跨页写状态静默返回 false。绕法：`ui.find(name).text/.visible` 走 node 句柄。修法：`findMutable` 与 `findNode` 对齐 | `ui.cpp:136`（shop app 实测，2026-07） |
-| G12 | 文档承诺未兑现 | 横切 | `ui.transitionProgress()` 写在 CLAUDE.md 巡演指引里但**未绑定到 JS**（只存在于 C++ `FigmaUI`）；AI 只能按帧数猜转场结束（且真实 vsync dt=1/60，非动画时钟 1/30 假设）。修法：补一个 JS 绑定，G7 一起做 | `ui.cpp:659`；`script_host.cpp` 无注册（settings/shop 实测，2026-07） |
+| G10 | 事件派发中改树 | 横切 | ~~onClick 处理器里调 bindList 是 UB~~ **已修复(2026-07)**：Impl 加 `structureRev`，bindList/setVariant 递增；`fireUp` 在结构变更后立即停止冒泡（同导航消费事件的语义），`pointerUp` 原型链走查与 `pointerMove` 悬空 hit 同步加守卫。注意：处理器**自己的 node 参数**在调 bindList 后仍失效（文档已有约定），需要时重新 find | `ui.cpp` fireUp/bindList/setVariant |
+| G11 | 名字寻址不跨页 | 横切 | ~~按名 mutation 只搜当前 frame~~ **已修复(2026-07)**：`findMutable` 与 `findNode` 对齐——当前 frame 优先、回落全文档，跨页 setText/setVisible 生效 | `ui.cpp` findMutable |
+| G12 | 文档承诺未兑现 | 横切 | ~~transitionProgress 未绑定 JS~~ **已修复(2026-07)**：`ui.transitionProgress()` 已绑定；语义=转场中 eased [0,1)、**空闲返回 1**，截图门控用 `>= 1` 判定就位（script.h 注释已同步） | `script_host.cpp` ui_transitionProgress |
 
 ## 20 个 benchmark app × 卡点矩阵
 

@@ -87,12 +87,10 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
 - 巡演/测试脚本**数帧不要累计 dt**——首帧 GetFrameTime 含文件加载耗时。
 - 合成多帧指针手势必须在一个 tick 内完成（pointerDown/Move/update/Up 一气呵成），
   跨帧会和后端的真实鼠标喂入打架。
-- 转场/滚动动画时钟每帧最多计 1/30s；`ui.transitionProgress()` **尚未绑定到 JS**
-  （缺口 G12），转场门控用帧数预算（真实 vsync dt≈1/60）+ `ui.currentFrame().name` 断言。
-- 脚本坑三连（docs/benchmark-gaps.md 实测）：`ui.setText/setVisible` 按名寻址
-  **只搜当前 frame**，跨页写用 `ui.find(name).text/.visible` 句柄（G11）；
-  onClick 处理器里**禁止调 bindList**（G10 use-after-free 会崩），重绑列表用
-  setTimeout 移出派发；`visible/opacity` 是只写属性，读回 undefined（G7）。
+- 转场/滚动动画时钟每帧最多计 1/30s；转场截图门控用
+  `ui.transitionProgress() >= 1`（转场中 eased [0,1)，**空闲返回 1**）。
+- 事件处理器里调 bindList/setVariant 会**立即停止本次冒泡**（结构变更消费
+  事件，同导航语义），且处理器持有的 node 参数随之失效——需要时重新 find。
 - ThorVG `Picture::load(path)` 自带按路径解码缓存；滚动/转场都不重建场景
   （ScrollBinding 变换重定向 / 后端贴图合成），性能敏感改动先看 `src/renderer.cpp`。
 - .fig 输入靠 fig2json（`D:\work_open\fig2json`，Rust）转 canvas.json，缓存于

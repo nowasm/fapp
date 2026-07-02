@@ -20,6 +20,10 @@ struct FigmaUI::Impl {
     Node* hovered = nullptr;
     Node* pressed = nullptr;
     Node* focused = nullptr;  // editable TEXT node owning the caret
+    // Bumped whenever nodes are destroyed/rebuilt (bindList, setVariant):
+    // event dispatch walks raw Node* chains and must bail out once a handler
+    // invalidated them.
+    uint64_t structureRev = 0;
     ResizeMode resizeMode = ResizeMode::Scale;
 
     // Touch-style drag scrolling: candidate picked at pointerDown, panning
@@ -117,6 +121,7 @@ struct FigmaUI::Impl {
         // Capture the stop node up front: a handler may navigate and swap
         // `frame` mid-walk, and the loop must not run past the old frame.
         Node* stop = frame;
+        const uint64_t rev = structureRev;
         for (Node* n = node; n; n = n->parent) {
             if (auto it = handlers.find(n->name); it != handlers.end()) {
                 for (auto& h : it->second) {
@@ -127,15 +132,23 @@ struct FigmaUI::Impl {
                     // frames — "Discover" the button bubbling up to
                     // "Discover" the frame would navigate right back.)
                     if (frame != stop) return;
+                    // So does a structural mutation (bindList/setVariant):
+                    // `n` and its parent chain may now be freed memory.
+                    if (structureRev != rev) return;
                 }
             }
             if (n == stop) break;
         }
     }
 
+    // Name lookup for mutations: current frame first, then the whole document
+    // (matches findNode in the script host and the script.h contract — apps
+    // legitimately write to other pages, e.g. a cart badge while on Detail).
     Node* findMutable(const std::string& name) {
-        Node* base = frame ? frame : (doc ? doc->root.get() : nullptr);
-        return base ? base->findByName(name) : nullptr;
+        if (frame) {
+            if (Node* n = frame->findByName(name)) return n;
+        }
+        return doc && doc->root ? doc->root->findByName(name) : nullptr;
     }
 
     // ---- Scrolling ----
@@ -771,10 +784,13 @@ void FigmaUI::pointerMove(float x, float y) {
 
     Node* hit = impl_->hitTestViewport(x, y);
     if (hit == impl_->hovered) return;
+    const uint64_t rev = impl_->structureRev;
     if (impl_->hovered) {
         impl_->fireUp(impl_->hoverHandlers, impl_->hovered,
                       [](HoverHandler& h, Node& n) { h(n, false); });
     }
+    // A leave handler may have rebuilt the tree; `hit` would be dangling.
+    if (impl_->structureRev != rev) hit = impl_->hitTestViewport(x, y);
     impl_->hovered = hit;
     if (hit) {
         impl_->fireUp(impl_->hoverHandlers, hit,
@@ -844,6 +860,7 @@ void FigmaUI::pointerUp(float x, float y) {
 
     Node* hit = impl_->hitTestViewport(x, y);
     Node* frameAtClick = impl_->frame;  // handlers may navigate mid-dispatch
+    const uint64_t revAtClick = impl_->structureRev;  // ... or rebuild the tree
 
     // Focus follows the click: nearest editable text in the hit chain wins;
     // clicking anywhere else (or outside the frame) blurs.
@@ -888,8 +905,9 @@ void FigmaUI::pointerUp(float x, float y) {
                           [](ClickHandler& h, Node& n) { h(n); });
         }
         // Authored Figma prototype link anywhere in the chain — but only when
-        // no click handler already navigated (navigation consumes the click).
-        if (impl_->frame == frameAtClick) {
+        // no click handler already navigated (navigation consumes the click)
+        // and the hit chain is still alive (a handler may have rebuilt it).
+        if (impl_->frame == frameAtClick && impl_->structureRev == revAtClick) {
             for (Node* n = hit; n; n = n->parent) {
                 if (!n->transitionNodeId.empty()) {
                     navigateTo(n->transitionNodeId, Impl::fromAuthored(n->transitionType),
@@ -1062,6 +1080,7 @@ bool FigmaUI::bindList(const std::string& listName, size_t count,
     impl_->setFocus(nullptr);  // the focused node may be a list item
     impl_->hovered = nullptr;
     impl_->pressed = nullptr;
+    impl_->structureRev++;  // list items are about to be freed
     // A data-driven list grows with its data: hug the main axis and pack from
     // the start (a fixed CENTER stack would overlap its surroundings).
     if (list->autoLayout.enabled()) {
@@ -1167,6 +1186,7 @@ bool FigmaUI::setVariant(const std::string& instanceName, const std::string& pro
     // the component's authored size to this instance's authored size so the
     // new subtree behaves exactly like a parse-time instance.
     impl_->setFocus(nullptr);  // the focused node may live in the old subtree
+    impl_->structureRev++;     // the old variant subtree is about to be freed
     inst->children.clear();
     for (const auto& c : target->children) inst->children.push_back(cloneNode(*c, inst));
     inst->componentId = target->id;

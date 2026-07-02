@@ -456,6 +456,8 @@ enum NodeProp {
     NP_SCROLL_FIXED,
     NP_PRIMARY_SIZING,
     NP_PRIMARY_ALIGN,
+    NP_WIDTH,
+    NP_HEIGHT,
 };
 
 JSValue nodeGet(JSContext* ctx, JSValueConst thisVal, int /*argc*/, JSValueConst* /*argv*/,
@@ -482,6 +484,21 @@ JSValue nodeGet(JSContext* ctx, JSValueConst thisVal, int /*argc*/, JSValueConst
         return JS_NewInt32(ctx, idx);
     }
     case NP_SCROLL_FIXED: return JS_NewBool(ctx, n->scrollFixed);
+    case NP_VISIBLE: return JS_NewBool(ctx, n->effectivelyVisible());
+    case NP_OPACITY: return JS_NewFloat64(ctx, n->effectiveOpacity());
+    case NP_WIDTH: return JS_NewFloat64(ctx, n->width);
+    case NP_HEIGHT: return JS_NewFloat64(ctx, n->height);
+    case NP_PRIMARY_SIZING:
+        return JS_NewString(
+            ctx, n->autoLayout.primarySizing == AutoLayout::Sizing::Hug ? "hug" : "fixed");
+    case NP_PRIMARY_ALIGN: {
+        const char* s =
+            n->autoLayout.primaryAlign == AutoLayout::Align::Center         ? "center"
+            : n->autoLayout.primaryAlign == AutoLayout::Align::Max          ? "max"
+            : n->autoLayout.primaryAlign == AutoLayout::Align::SpaceBetween ? "spaceBetween"
+                                                                            : "min";
+        return JS_NewString(ctx, s);
+    }
     default: return JS_UNDEFINED;
     }
 }
@@ -634,6 +651,10 @@ JSValue ui_navigateBack(JSContext* ctx, JSValueConst, int argc, JSValueConst* ar
 
 JSValue ui_canGoBack(JSContext* ctx, JSValueConst, int, JSValueConst*) {
     return JS_NewBool(ctx, ScriptHost::Impl::from(ctx)->ui.canGoBack());
+}
+
+JSValue ui_transitionProgress(JSContext* ctx, JSValueConst, int, JSValueConst*) {
+    return JS_NewFloat64(ctx, ScriptHost::Impl::from(ctx)->ui.transitionProgress());
 }
 
 JSValue ui_selectFrame(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
@@ -938,6 +959,8 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     prop("scrollFixed", NP_SCROLL_FIXED, true);
     prop("primarySizing", NP_PRIMARY_SIZING, true);
     prop("primaryAlign", NP_PRIMARY_ALIGN, true);
+    prop("width", NP_WIDTH, false);
+    prop("height", NP_HEIGHT, false);
     JS_SetPropertyStr(ctx, proto, "find", JS_NewCFunction(ctx, nodeFind, "find", 1));
     JS_SetPropertyStr(ctx, proto, "child", JS_NewCFunction(ctx, nodeChild, "child", 1));
     JS_SetClassProto(ctx, d.nodeClass, proto);
@@ -954,6 +977,7 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     fn("navigateTo", ui_navigateTo, 3);
     fn("navigateBack", ui_navigateBack, 1);
     fn("canGoBack", ui_canGoBack, 0);
+    fn("transitionProgress", ui_transitionProgress, 0);
     fn("selectFrame", ui_selectFrame, 1);
     fn("frameNames", ui_frameNames, 0);
     fn("currentFrame", ui_currentFrame, 0);

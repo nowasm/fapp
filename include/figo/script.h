@@ -11,6 +11,8 @@
 //   ui.navigateTo(name, transition?, durationSec?)   // "slideLeft" | "slideRight"
 //   ui.navigateBack(durationSec?)                    // | "slideUp" | "slideDown"
 //   ui.canGoBack() -> bool                           // | "dissolve" | "none"
+//   ui.transitionProgress() -> number   // eased [0,1) mid-transition, 1 when
+//                                       // idle — gate shots on >= 1
 //   ui.selectFrame(name)               ui.frameNames() -> [string]
 //   ui.currentFrame() -> node          ui.setResizeMode("reflow" | "scale")
 //   ui.bindList(name, count, fn(itemNode, index))
@@ -19,15 +21,21 @@
 //   ui.setEditable(name, editable?)    ui.focusText(name)    ui.blur()
 //   ui.find(name) -> node|null         ui.findAll(name) -> [node]
 //   ui.tap(nameOrNode) -> bool         // synthesized click at the node center
+// By-name lookups (ui.find/setText/setVisible/...) search the current frame
+// first, then the whole document. Structural mutations (ui.bindList /
+// ui.setVariant) invalidate live node handles; don't call them from inside
+// an onClick/onHover handler's node argument scope and re-find afterwards.
 // Node objects (valid only while the underlying document node lives — don't
 // hold them across bindList/setVariant/navigation):
 //   node.name (get/set)   node.id   node.type        // "Text", "Frame", ...
-//   node.text (get/set)   node.visible = b           node.opacity = v
-//   node.scrollFixed = b  node.childCount            node.child(i) -> node
+//   node.text (get/set)   node.visible (get/set)     node.opacity (get/set)
+//   node.scrollFixed (get/set)   node.childCount     node.child(i) -> node
 //   node.parent -> node|null           node.index    // position in parent
-//   node.find(name) -> node|null
+//   node.find(name) -> node|null       node.width / node.height  (read-only,
+//                                      layout size in frame-local px)
 //   node.primarySizing = "hug"|"fixed"   node.primaryAlign = "min"|"center"|
-//                                        "max"|"spaceBetween"   (auto-layout)
+//                                        "max"|"spaceBetween"   (auto-layout,
+//                                        both also readable)
 // Also available:
 //   setTimeout(fn, ms) / setInterval(fn, ms) -> id, clearTimeout/clearInterval
 //     (driven by update(dt) — they tick in app time, pausing with the host)
