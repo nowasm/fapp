@@ -110,6 +110,9 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
   `ui.transitionProgress() >= 1`（转场中 eased [0,1)，**空闲返回 1**）。
 - 事件处理器里调 bindList/setVariant 会**立即停止本次冒泡**（结构变更消费
   事件，同导航语义），且处理器持有的 node 参数随之失效——需要时重新 find。
+- **可点容器必须有 fill**：无 fill 的 FRAME 在子节点空隙处不可命中，
+  `ui.tap(node)` 返回 true 只表示派发了点击、不保证命中该节点（notes 实测：
+  行中心落在两行文本的间隙，点击落到底层节点，onClick 静默不触发）。
 - ThorVG `Picture::load(path)` 自带按路径解码缓存；滚动/转场都不重建场景
   （ScrollBinding 变换重定向 / 后端贴图合成），性能敏感改动先看 `src/renderer.cpp`。
 - .fig 输入靠 fig2json（`D:\work_open\fig2json`，Rust）转 canvas.json，缓存于

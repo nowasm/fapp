@@ -1,0 +1,995 @@
+{
+ "name": "Login",
+ "document": {
+  "id": "40:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "40:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "40:18",
+      "name": "SignIn",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 1.0,
+         "g": 1.0,
+         "b": 1.0,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "40:2",
+        "name": "Brand",
+        "type": "TEXT",
+        "size": {
+         "x": 160,
+         "y": 30
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          72
+         ]
+        ],
+        "characters": "figo",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3254901960784314,
+           "g": 0.22745098039215686,
+           "b": 0.9921568627450981,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 22,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.4
+        }
+       },
+       {
+        "id": "40:3",
+        "name": "Title",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 42
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          148
+         ]
+        ],
+        "characters": "欢迎回来",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.023529411764705882,
+           "g": 0.10588235294117647,
+           "b": 0.19215686274509805,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 32,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.64
+        }
+       },
+       {
+        "id": "40:4",
+        "name": "Subtitle",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 20
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          198
+         ]
+        ],
+        "characters": "登录你的账户以继续",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.39215686274509803,
+           "g": 0.4549019607843137,
+           "b": 0.5529411764705883,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "40:5",
+        "name": "Email Label",
+        "type": "TEXT",
+        "size": {
+         "x": 200,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          276
+         ]
+        ],
+        "characters": "邮箱",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.39215686274509803,
+           "g": 0.4549019607843137,
+           "b": 0.5529411764705883,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 12,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "40:6",
+        "name": "Email Input",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 24
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          298
+         ]
+        ],
+        "characters": "",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.023529411764705882,
+           "g": 0.10588235294117647,
+           "b": 0.19215686274509805,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 16,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "40:7",
+        "name": "Email Line",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 372,
+         "y": 1
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          330
+         ]
+        ],
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8980392156862745,
+           "g": 0.9294117647058824,
+           "b": 0.9607843137254902,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "40:8",
+        "name": "Email Error",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          338
+         ]
+        ],
+        "characters": "请输入有效的邮箱地址",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8470588235294118,
+           "g": 0.10588235294117647,
+           "b": 0.3411764705882353,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 12,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        },
+        "visible": false
+       },
+       {
+        "id": "40:9",
+        "name": "Password Label",
+        "type": "TEXT",
+        "size": {
+         "x": 200,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          380
+         ]
+        ],
+        "characters": "密码",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.39215686274509803,
+           "g": 0.4549019607843137,
+           "b": 0.5529411764705883,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 12,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "40:10",
+        "name": "Password Input",
+        "type": "TEXT",
+        "size": {
+         "x": 312,
+         "y": 24
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          402
+         ]
+        ],
+        "characters": "",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.023529411764705882,
+           "g": 0.10588235294117647,
+           "b": 0.19215686274509805,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 16,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "40:12",
+        "name": "Toggle Mask",
+        "type": "FRAME",
+        "size": {
+         "x": 48,
+         "y": 28
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          348
+         ],
+         [
+          0,
+          1,
+          398
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "40:11",
+          "name": "Toggle Label",
+          "type": "TEXT",
+          "size": {
+           "x": 48,
+           "y": 28
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "显示",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.3254901960784314,
+             "g": 0.22745098039215686,
+             "b": 0.9921568627450981,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 12,
+           "textAlignHorizontal": "RIGHT",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "40:13",
+        "name": "Password Line",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 372,
+         "y": 1
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          434
+         ]
+        ],
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8980392156862745,
+           "g": 0.9294117647058824,
+           "b": 0.9607843137254902,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "40:14",
+        "name": "Password Error",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          442
+         ]
+        ],
+        "characters": "密码至少需要 8 位",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8470588235294118,
+           "g": 0.10588235294117647,
+           "b": 0.3411764705882353,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 12,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        },
+        "visible": false
+       },
+       {
+        "id": "40:16",
+        "name": "Sign In Button",
+        "type": "FRAME",
+        "size": {
+         "x": 372,
+         "y": 48
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          506
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3254901960784314,
+           "g": 0.22745098039215686,
+           "b": 0.9921568627450981,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "40:15",
+          "name": "Sign In Label",
+          "type": "TEXT",
+          "size": {
+           "x": 372,
+           "y": 48
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "登录",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 16,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 8
+       },
+       {
+        "id": "40:17",
+        "name": "Forgot Link",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 20
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          578
+         ]
+        ],
+        "characters": "忘记密码",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3254901960784314,
+           "g": 0.22745098039215686,
+           "b": 0.9921568627450981,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 14,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       }
+      ]
+     },
+     {
+      "id": "40:26",
+      "name": "Welcome",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        480
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 1.0,
+         "g": 1.0,
+         "b": 1.0,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "40:19",
+        "name": "Brand",
+        "type": "TEXT",
+        "size": {
+         "x": 160,
+         "y": 30
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          72
+         ]
+        ],
+        "characters": "figo",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3254901960784314,
+           "g": 0.22745098039215686,
+           "b": 0.9921568627450981,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 22,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.4
+        }
+       },
+       {
+        "id": "40:21",
+        "name": "Welcome Badge",
+        "type": "FRAME",
+        "size": {
+         "x": 56,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          182
+         ],
+         [
+          0,
+          1,
+          280
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9333333333333333,
+           "g": 0.9215686274509803,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "40:20",
+          "name": "Badge Mark",
+          "type": "TEXT",
+          "size": {
+           "x": 56,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "✓",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.3254901960784314,
+             "g": 0.22745098039215686,
+             "b": 0.9921568627450981,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 700,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 28
+       },
+       {
+        "id": "40:22",
+        "name": "Welcome Title",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          372
+         ]
+        ],
+        "characters": "你好",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.023529411764705882,
+           "g": 0.10588235294117647,
+           "b": 0.19215686274509805,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 32,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.64
+        }
+       },
+       {
+        "id": "40:23",
+        "name": "Welcome Email",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 20
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          422
+         ]
+        ],
+        "characters": "you@example.com",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.39215686274509803,
+           "g": 0.4549019607843137,
+           "b": 0.5529411764705883,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "40:25",
+        "name": "Sign Out Button",
+        "type": "FRAME",
+        "size": {
+         "x": 372,
+         "y": 48
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          494
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "40:24",
+          "name": "Sign Out Label",
+          "type": "TEXT",
+          "size": {
+           "x": 372,
+           "y": 48
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "退出",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.023529411764705882,
+             "g": 0.10588235294117647,
+             "b": 0.19215686274509805,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 16,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 8,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8980392156862745,
+           "g": 0.9294117647058824,
+           "b": 0.9607843137254902,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
