@@ -305,6 +305,9 @@ public:
 
     // ---- Runtime mutation (marks dirty, returns false if node not found) ----
     bool setVisible(const std::string& nodeName, bool visible);
+    // Node-handle form. A hidden child gives up its auto-layout slot: the
+    // containing stack chain is re-laid immediately.
+    void setVisible(Node& node, bool visible);
     bool setOpacity(const std::string& nodeName, float opacity);  // <0 resets to authored
     bool setText(const std::string& nodeName, const std::string& text);
 

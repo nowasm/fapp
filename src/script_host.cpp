@@ -783,8 +783,7 @@ JSValue nodeSet(JSContext* ctx, JSValueConst thisVal, int argc, JSValueConst* ar
         break;
     }
     case NP_VISIBLE:
-        n->runtimeVisible = JS_ToBool(ctx, argv[0]) ? 1 : 0;
-        im->ui.markDirty();
+        im->ui.setVisible(*n, JS_ToBool(ctx, argv[0]));  // re-stacks auto-layout
         break;
     case NP_OPACITY: {
         double v = 0;

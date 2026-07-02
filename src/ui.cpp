@@ -1797,9 +1797,26 @@ bool FigmaUI::bindList(const std::string& listName, size_t count,
 bool FigmaUI::setVisible(const std::string& nodeName, bool visible) {
     Node* n = impl_->findMutable(nodeName);
     if (!n) return false;
-    n->runtimeVisible = visible ? 1 : 0;
-    impl_->renderer.markDirty();
+    setVisible(*n, visible);
     return true;
+}
+
+void FigmaUI::setVisible(Node& n, bool visible) {
+    const int rv = visible ? 1 : 0;
+    if (n.runtimeVisible != rv) {
+        n.runtimeVisible = rv;
+        // Visibility participates in auto-layout flow (a hidden child gives
+        // up its slot): re-stack from the outermost affected stack ancestor
+        // so hug chains shrink/grow with it.
+        Node* top = nullptr;
+        for (Node* p = n.parent; p && p->autoLayout.enabled(); p = p->parent) top = p;
+        if (top) {
+            relayoutNode(*top);
+            impl_->reflow();
+            impl_->clampScrollOffsets();
+        }
+    }
+    impl_->renderer.markDirty();
 }
 
 bool FigmaUI::setOpacity(const std::string& nodeName, float opacity) {

@@ -47,7 +47,9 @@ std::optional<std::pair<float, float>> textNaturalSize(const Node& n, float widt
 }
 
 bool inFlow(const Node& c) {
-    return c.visible && !c.layoutAbsolute && c.type != NodeType::Slice;
+    // effectivelyVisible: a script-hidden child (runtimeVisible=0) gives up
+    // its auto-layout slot, same as an authored-invisible one.
+    return c.effectivelyVisible() && !c.layoutAbsolute && c.type != NodeType::Slice;
 }
 
 struct Size {
