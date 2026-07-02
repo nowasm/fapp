@@ -277,6 +277,10 @@ struct NodeData {
     // Child of a scrolling frame that stays put while siblings scroll
     // (.fig/REST scrollBehavior FIXED_WHEN_CHILD_OF_SCROLLING_FRAME / FIXED).
     bool scrollFixed = false;
+    // Runtime-only switch (no design counterpart): scrolling that comes to a
+    // natural rest settles onto the nearest child boundary along the main
+    // scroll axis (wheel-picker semantics). See FigmaUI::snapTo/snapIndex.
+    bool snapToChildren = false;
 
     // ---- Runtime state (set by the renderer / UI layer) ----
     Mat23 absoluteTransform;        // computed during scene build

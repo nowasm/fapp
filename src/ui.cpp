@@ -59,6 +59,7 @@ struct FigmaUI::Impl {
         float targetX = 0, targetY = 0;  // wheel easing target (frame-local)
         float velX = 0, velY = 0;        // fling velocity (frame-local px/s)
         bool easing = false, fling = false;
+        float easeRate = 0;  // easing strength override (snapTo); 0 = kEaseRate
     };
     std::unordered_map<Node*, ScrollAnim> scrollAnims;
     Node* dragConsumer = nullptr;        // node the current drag actually scrolls
@@ -73,13 +74,22 @@ struct FigmaUI::Impl {
     std::unordered_map<std::string, std::vector<LongPressHandler>> longPressHandlers;
     std::unordered_map<std::string, std::vector<SwipeHandler>> swipeHandlers;
     std::unordered_map<std::string, std::vector<ScrollHandler>> scrollHandlers;
+    std::unordered_map<std::string, std::vector<ScrollEndHandler>> scrollEndHandlers;
 
     // Scrolling frames whose offset changed since the last dispatch; flushed
     // (coalesced, one call per node) at the end of update(dt). Cleared
     // whenever structureRev bumps — the pointers may be about to dangle.
     std::vector<Node*> pendingScroll;
+    // Frames that scrolled and haven't come to rest yet (onScrollEnd debounce
+    // state). Same lifetime rules as pendingScroll.
+    std::vector<Node*> scrollEndWatch;
 
     void noteScroll(Node* n) {
+        if (!scrollEndHandlers.empty() &&
+            std::find(scrollEndWatch.begin(), scrollEndWatch.end(), n) ==
+                scrollEndWatch.end()) {
+            scrollEndWatch.push_back(n);
+        }
         if (scrollHandlers.empty()) return;  // fast path: feature unused
         if (std::find(pendingScroll.begin(), pendingScroll.end(), n) ==
             pendingScroll.end()) {
@@ -99,6 +109,110 @@ struct FigmaUI::Impl {
                 h(*n, n->scrollX, n->scrollY);
                 // A handler rebuilt the tree (bindList/setVariant): every
                 // remaining pointer in the batch may be freed memory.
+                if (structureRev != rev) return;
+            }
+        }
+    }
+
+    // ---- Scroll snapping (snapToChildren / snapTo) ----
+
+    // Main snap axis of a scrolling frame: the explicit scroll direction
+    // wins; Both-axis frames follow the auto-layout main axis (default Y).
+    static bool snapAxisY(const Node& n) {
+        if (n.scrollDirection == ScrollDirection::Horizontal) return false;
+        if (n.scrollDirection == ScrollDirection::Vertical) return true;
+        return n.autoLayout.mode != AutoLayout::Mode::Horizontal;
+    }
+
+    // Child boundaries as scroll offsets: offset i aligns child i's main-axis
+    // start with the FIRST child's start (auto-layout padding/itemSpacing
+    // fall out of the authored positions), clamped into the scroll range —
+    // the tail children that can't reach the top all collapse onto maxScroll.
+    static std::vector<float> snapOffsets(const Node& n, bool axisY) {
+        std::vector<float> out;
+        float base = 0;
+        const float maxS = axisY ? n.maxScrollY() : n.maxScrollX();
+        for (const auto& c : n.children) {
+            if (!c->effectivelyVisible() || c->scrollFixed ||
+                c->type == NodeType::Slice) {
+                continue;
+            }
+            const float pos = axisY ? c->relativeTransform.m12
+                                    : c->relativeTransform.m02;
+            if (out.empty()) base = pos;
+            out.push_back(std::clamp(pos - base, 0.0f, maxS));
+        }
+        return out;
+    }
+
+    // Index of the boundary nearest to `cur` (ties go to the lower index —
+    // clamped tail boundaries coincide at maxScroll).
+    static int nearestSnap(const std::vector<float>& offs, float cur) {
+        int best = -1;
+        float bd = 0;
+        for (size_t i = 0; i < offs.size(); ++i) {
+            const float d = std::abs(offs[i] - cur);
+            if (best < 0 || d < bd - 0.001f) {
+                best = static_cast<int>(i);
+                bd = d;
+            }
+        }
+        return best;
+    }
+
+    // Boundary the container currently sits nearest to; -1 for non-snap
+    // containers (the onScrollEnd contract).
+    int snapIndexOf(Node* n) const {
+        if (!n || !n->snapToChildren) return -1;
+        const bool ay = snapAxisY(*n);
+        const auto offs = snapOffsets(*n, ay);
+        if (offs.empty()) return -1;
+        return nearestSnap(offs, ay ? n->scrollY : n->scrollX);
+    }
+
+    // Ease a snap container onto the boundary nearest to its current offset
+    // (fling ran out / drag released below the fling threshold). The easing
+    // channel does the glide — never a hard jump.
+    void startSnapEase(Node* n) {
+        if (!n || !n->snapToChildren) return;
+        const bool ay = snapAxisY(*n);
+        const auto offs = snapOffsets(*n, ay);
+        if (offs.empty()) return;
+        const float cur = ay ? n->scrollY : n->scrollX;
+        const float target = offs[nearestSnap(offs, cur)];
+        if (std::abs(target - cur) < 0.25f) return;  // already on a boundary
+        ScrollAnim& a = scrollAnims[n];
+        a.easing = true;
+        a.fling = false;
+        a.easeRate = 0;
+        a.targetX = ay ? n->scrollX : target;
+        a.targetY = ay ? target : n->scrollY;
+    }
+
+    // onScrollEnd: a watched frame is at rest once no easing/fling animates
+    // it and no drag gesture is in flight — then the offset can't move again
+    // without a new cause. Dispatched after dispatchScrollEvents, so instant
+    // sets (setScroll / scrollY writes) fire their end within the same
+    // update(dt); a wheel train / fling stays debounced by its live anim.
+    void dispatchScrollEndEvents() {
+        if (scrollEndWatch.empty() || dragScrolling) return;
+        const uint64_t rev = structureRev;
+        for (size_t i = 0; i < scrollEndWatch.size();) {
+            Node* n = scrollEndWatch[i];
+            const auto anim = scrollAnims.find(n);
+            if (anim != scrollAnims.end() &&
+                (anim->second.easing || anim->second.fling)) {
+                ++i;
+                continue;
+            }
+            scrollEndWatch.erase(scrollEndWatch.begin() + i);
+            const auto it = scrollEndHandlers.find(n->name);
+            if (it == scrollEndHandlers.end()) continue;
+            const float sx = n->scrollX, sy = n->scrollY;
+            const int idx = snapIndexOf(n);
+            for (auto& h : it->second) {
+                h(*n, sx, sy, idx);
+                // Handler rebuilt the tree: remaining pointers may dangle.
                 if (structureRev != rev) return;
             }
         }
@@ -283,14 +397,33 @@ struct FigmaUI::Impl {
                 const bool easing = it != scrollAnims.end() && it->second.easing;
                 const float bx = easing ? it->second.targetX : n->scrollX;
                 const float by = easing ? it->second.targetY : n->scrollY;
-                const float nx = std::clamp(bx + dx, 0.0f, n->maxScrollX());
-                const float ny = std::clamp(by + dy, 0.0f, n->maxScrollY());
+                float nx = std::clamp(bx + dx, 0.0f, n->maxScrollX());
+                float ny = std::clamp(by + dy, 0.0f, n->maxScrollY());
+                // snapToChildren: quantize the wheel target to a child
+                // boundary; a notch smaller than the item pitch still
+                // advances one item (one notch ≈ one item).
+                if (n->snapToChildren) {
+                    const bool ay = snapAxisY(*n);
+                    const auto offs = snapOffsets(*n, ay);
+                    if (!offs.empty()) {
+                        float& t = ay ? ny : nx;
+                        const float d = ay ? dy : dx;
+                        int ti = nearestSnap(offs, t);
+                        const int ci = nearestSnap(offs, ay ? by : bx);
+                        if (ti == ci && d != 0) {
+                            ti = std::clamp(ci + (d > 0 ? 1 : -1), 0,
+                                            static_cast<int>(offs.size()) - 1);
+                        }
+                        t = offs[ti];
+                    }
+                }
                 if (nx != bx || ny != by) {
                     ScrollAnim& a = scrollAnims[n];
                     a.targetX = nx;
                     a.targetY = ny;
                     a.easing = true;
                     a.fling = false;
+                    a.easeRate = 0;
                     return true;
                 }
             }
@@ -314,7 +447,8 @@ struct FigmaUI::Impl {
             ScrollAnim& a = it->second;
             float x = n->scrollX, y = n->scrollY;
             if (a.easing) {
-                const float k = 1 - std::exp(-dt * kEaseRate);
+                const float k =
+                    1 - std::exp(-dt * (a.easeRate > 0 ? a.easeRate : kEaseRate));
                 x += (a.targetX - x) * k;
                 y += (a.targetY - y) * k;
                 if (std::abs(a.targetX - x) < 0.25f && std::abs(a.targetY - y) < 0.25f) {
@@ -335,6 +469,22 @@ struct FigmaUI::Impl {
                 if (x <= 0 || x >= n->maxScrollX()) a.velX = 0;
                 if (y <= 0 || y >= n->maxScrollY()) a.velY = 0;
                 if (std::hypot(a.velX, a.velY) < kFlingStop) a.fling = false;
+                // A fling that just ran out on a snap container glides onto
+                // the nearest child boundary through the easing channel.
+                if (!a.fling && n->snapToChildren) {
+                    const bool ay = snapAxisY(*n);
+                    const auto offs = snapOffsets(*n, ay);
+                    if (!offs.empty()) {
+                        const float cur = ay ? y : x;
+                        const float target = offs[nearestSnap(offs, cur)];
+                        if (std::abs(target - cur) >= 0.25f) {
+                            a.easing = true;
+                            a.easeRate = 0;
+                            a.targetX = ay ? x : target;
+                            a.targetY = ay ? target : y;
+                        }
+                    }
+                }
             }
             if (x != n->scrollX || y != n->scrollY) {
                 n->scrollX = x;
@@ -968,6 +1118,8 @@ void FigmaUI::update(float dtSeconds) {
     // All of this frame's scroll changes (wheel easing, fling, drag, script
     // writes) coalesce into one onScroll dispatch per node per frame.
     impl_->dispatchScrollEvents();
+    // ...and frames whose scrolling fully came to rest fire onScrollEnd once.
+    impl_->dispatchScrollEndEvents();
     // Auto-state switches queued during dispatch (e.g. a handler navigated)
     // apply now, after every handler ran.
     impl_->flushAutoVariants();
@@ -1249,6 +1401,10 @@ void FigmaUI::pointerUpMain(float x, float y) {
             a.velY = impl_->dragVelY;
             a.fling = true;
             a.easing = false;
+        } else if (n) {
+            // Released too slow to fling: a snap container still settles onto
+            // the nearest child boundary (no-op for ordinary frames).
+            impl_->startSnapEase(n);
         }
         impl_->dragVelX = impl_->dragVelY = 0;
         impl_->dragMoveX = impl_->dragMoveY = 0;
@@ -1380,6 +1536,31 @@ bool FigmaUI::setScroll(Node& node, float offsetX, float offsetY) {
 
 Node* FigmaUI::scrollableAt(float x, float y) {
     return impl_->scrollableAtViewport(x, y);
+}
+
+bool FigmaUI::snapTo(const std::string& nodeName, int index, float durationSec) {
+    Node* n = impl_->findMutable(nodeName);
+    if (!n || !n->scrolls()) return false;
+    const bool ay = Impl::snapAxisY(*n);
+    const auto offs = Impl::snapOffsets(*n, ay);
+    if (offs.empty()) return false;
+    index = std::clamp(index, 0, static_cast<int>(offs.size()) - 1);
+    const float tx = ay ? n->scrollX : offs[index];
+    const float ty = ay ? offs[index] : n->scrollY;
+    if (durationSec == 0) return setScroll(*n, tx, ty);  // instant (picker init)
+    Impl::ScrollAnim& a = impl_->scrollAnims[n];
+    a.easing = true;
+    a.fling = false;
+    // exp easing reaches ~98% of the distance after 4 time constants; <0 =
+    // the stock wheel-easing feel.
+    a.easeRate = durationSec > 0 ? 4.0f / durationSec : 0.0f;
+    a.targetX = tx;
+    a.targetY = ty;
+    return true;
+}
+
+int FigmaUI::snapIndex(const Node& node) const {
+    return impl_->snapIndexOf(const_cast<Node*>(&node));
 }
 
 bool FigmaUI::setEditable(const std::string& nodeName, bool editable) {
@@ -1535,13 +1716,19 @@ void FigmaUI::onScroll(const std::string& nodeName, ScrollHandler fn) {
     impl_->scrollHandlers[nodeName].push_back(std::move(fn));
 }
 
+void FigmaUI::onScrollEnd(const std::string& nodeName, ScrollEndHandler fn) {
+    impl_->scrollEndHandlers[nodeName].push_back(std::move(fn));
+}
+
 void FigmaUI::clearHandlers() {
     impl_->clickHandlers.clear();
     impl_->hoverHandlers.clear();
     impl_->longPressHandlers.clear();
     impl_->swipeHandlers.clear();
     impl_->scrollHandlers.clear();
+    impl_->scrollEndHandlers.clear();
     impl_->pendingScroll.clear();
+    impl_->scrollEndWatch.clear();
     // Value bindings and auto-states are script-registered like handlers:
     // hot reload re-registers them from scratch.
     impl_->sliders.clear();
@@ -1579,6 +1766,7 @@ bool FigmaUI::bindList(const std::string& listName, size_t count,
     impl_->pressed = nullptr;
     impl_->structureRev++;  // list items are about to be freed
     impl_->pendingScroll.clear();  // queued Node*s may point into them
+    impl_->scrollEndWatch.clear();
     // A data-driven list grows with its data: hug the main axis and pack from
     // the start (a fixed CENTER stack would overlap its surroundings).
     // Exception: the design says the list scrolls along its main axis — then
@@ -1827,6 +2015,7 @@ bool FigmaUI::setVariant(const std::string& instanceName, const std::string& pro
     impl_->setFocus(nullptr);  // the focused node may live in the old subtree
     impl_->structureRev++;     // the old variant subtree is about to be freed
     impl_->pendingScroll.clear();  // queued Node*s may point into it
+    impl_->scrollEndWatch.clear();
     inst->children.clear();
     for (const auto& c : target->children) inst->children.push_back(cloneNode(*c, inst));
     inst->componentId = target->id;

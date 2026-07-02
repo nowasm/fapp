@@ -42,6 +42,10 @@ public:
     using SwipeHandler = std::function<void(Node&, const char* direction)>;
     // x/y are the node's current scroll offset in frame-local px.
     using ScrollHandler = std::function<void(Node&, float scrollX, float scrollY)>;
+    // snapIndex = the child the container is snapped to (snapToChildren
+    // containers), -1 otherwise. See onScrollEnd.
+    using ScrollEndHandler =
+        std::function<void(Node&, float scrollX, float scrollY, int snapIndex)>;
 
     static std::unique_ptr<FigmaUI> fromFile(const std::string& path);
     static std::unique_ptr<FigmaUI> fromJson(const std::string& jsonText);
@@ -150,6 +154,25 @@ public:
     bool setScroll(const std::string& nodeName, float offsetX, float offsetY);
     bool setScroll(Node& node, float offsetX, float offsetY);
 
+    // ---- Scroll snapping (wheel-picker foundation) ----
+    // node.snapToChildren (a runtime Node flag, settable from JS) makes a
+    // scrolling frame settle on child boundaries whenever a scroll comes to a
+    // natural rest: a fling that decays below its stop speed eases onto the
+    // nearest child, a drag released too slow to fling does the same, and a
+    // wheel notch quantizes its easing target to a child boundary (one notch
+    // advances at least one item). A "child boundary" is the scroll offset
+    // that aligns child i's main-axis start with the first child's start
+    // (auto-layout padding/itemSpacing fall out of the child positions),
+    // clamped into the scroll range.
+
+    // Ease the named frame's scroll so child `index` (clamped) sits at the
+    // first child's start. durationSec < 0 → the stock easing feel, 0 →
+    // instant set. Works on any scrolling frame, snapToChildren or not.
+    bool snapTo(const std::string& nodeName, int index, float durationSec = -1.0f);
+    // Child the container is currently nearest/snapped to; -1 unless the
+    // node has snapToChildren set (and at least one child).
+    int snapIndex(const Node& node) const;
+
     // Innermost scrollable frame under the point with a non-empty scroll
     // range, or nullptr.
     Node* scrollableAt(float x, float y);
@@ -180,6 +203,14 @@ public:
     // fling therefore fires once per frame. No ancestor bubbling: the handler
     // name must match the scrolled node.
     void onScroll(const std::string& nodeName, ScrollHandler fn);
+    // Fires once when the named scrolling frame comes fully to rest: easing,
+    // fling and the drag gesture are all over and the offset stopped moving.
+    // A wheel-notch train or a fling therefore yields exactly one call at the
+    // final position; an instant set (setScroll / scrollX|Y writes) counts as
+    // an end of its own and fires at the end of that update(dt). snapIndex is
+    // the child the container settled on for snapToChildren containers, -1
+    // otherwise. No ancestor bubbling (like onScroll).
+    void onScrollEnd(const std::string& nodeName, ScrollEndHandler fn);
     // Drop every registered event handler. Script hot reload uses this
     // before re-running a script that re-registers its handlers.
     void clearHandlers();

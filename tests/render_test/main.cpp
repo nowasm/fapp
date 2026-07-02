@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -471,6 +472,109 @@ int main(int argc, char** argv) {
         } else {
             std::printf("FAIL: hitTest(450,320) -> null\n");
             ++failures;
+        }
+    }
+
+    // Scroll snapping (snapToChildren): a real-velocity fling must decay,
+    // then EASE onto the nearest child boundary, and onScrollEnd must fire
+    // exactly once at rest with the snapped index. Uses a purpose-built
+    // inline document (frame == viewport, scale 1) so pointer px == frame px.
+    {
+        std::string json =
+            "{\"name\":\"snap\",\"document\":{\"id\":\"0:0\",\"type\":\"DOCUMENT\","
+            "\"children\":[{\"id\":\"0:1\",\"type\":\"CANVAS\",\"name\":\"P\","
+            "\"children\":[{\"id\":\"1:1\",\"type\":\"FRAME\",\"name\":\"Main\","
+            "\"size\":{\"x\":400,\"y\":400},"
+            "\"relativeTransform\":[[1,0,0],[0,1,0]],\"clipsContent\":true,"
+            "\"fills\":[{\"type\":\"SOLID\",\"color\":{\"r\":1,\"g\":1,\"b\":1,\"a\":1}}],"
+            "\"children\":[{\"id\":\"2:1\",\"type\":\"FRAME\",\"name\":\"SnapList\","
+            "\"size\":{\"x\":400,\"y\":400},"
+            "\"relativeTransform\":[[1,0,0],[0,1,0]],\"clipsContent\":true,"
+            "\"overflowDirection\":\"VERTICAL_SCROLLING\","
+            "\"fills\":[{\"type\":\"SOLID\",\"color\":{\"r\":0.9,\"g\":0.9,\"b\":0.9,\"a\":1}}],"
+            "\"children\":[";
+        for (int i = 0; i < 10; ++i) {  // 10 rows of 100 at pitch 110
+            if (i) json += ",";
+            json += "{\"id\":\"3:" + std::to_string(i) + "\",\"type\":\"RECTANGLE\","
+                    "\"name\":\"Row" + std::to_string(i) + "\","
+                    "\"size\":{\"x\":400,\"y\":100},"
+                    "\"relativeTransform\":[[1,0,0],[0,1," + std::to_string(i * 110) + "]],"
+                    "\"fills\":[{\"type\":\"SOLID\",\"color\":{\"r\":0.5,\"g\":0.5,\"b\":0.8,\"a\":1}}]}";
+        }
+        json += "]}]}]}]}}";
+        auto sui = figo::FigmaUI::fromJson(json);
+        sui->setViewport(400, 400);
+        sui->render();
+        figo::Node* list = sui->currentFrame()->findByName("SnapList");
+        // maxScrollY = 9*110 + 100 - 400 = 690; boundaries i*110 clamped to 690.
+        if (!list || std::abs(list->maxScrollY() - 690.0f) > 0.5f) {
+            std::printf("FAIL: snap fixture maxScrollY %.1f (want 690)\n",
+                        list ? list->maxScrollY() : -1.0f);
+            ++failures;
+        } else {
+            list->snapToChildren = true;
+            int ends = 0, lastIdx = -2;
+            float endX = -1, endY = -1;
+            sui->onScrollEnd("SnapList", [&](figo::Node&, float x, float y, int idx) {
+                ++ends;
+                endX = x;
+                endY = y;
+                lastIdx = idx;
+            });
+            // Fling: build up drag velocity over several ticks, then release.
+            sui->pointerDown(200, 350);
+            for (int i = 1; i <= 5; ++i) {
+                sui->pointerMove(200, 350.0f - 30.0f * i);
+                sui->update(1.0f / 60);
+            }
+            sui->pointerUp(200, 200);
+            for (int i = 0; i < 600; ++i) sui->update(1.0f / 60);  // decay + snap
+            const float rest = list->scrollY;
+            const int wantIdx = static_cast<int>(std::lround(rest / 110.0f));
+            const bool onBoundary =
+                std::abs(rest - wantIdx * 110.0f) < 0.5f || std::abs(rest - 690.0f) < 0.5f;
+            std::printf("snap: fling rest=%.1f ends=%d idx=%d\n", rest, ends, lastIdx);
+            if (rest <= 150.0f || !onBoundary) {
+                std::printf("FAIL: fling did not settle on a child boundary\n");
+                ++failures;
+            }
+            if (ends != 1 || lastIdx != sui->snapIndex(*list) || lastIdx < 0) {
+                std::printf("FAIL: onScrollEnd after fling: ends=%d idx=%d snapIndex=%d\n",
+                            ends, lastIdx, sui->snapIndex(*list));
+                ++failures;
+            }
+            // Wheel notch smaller than the item pitch still advances one item.
+            ends = 0;
+            sui->setScroll("SnapList", 0, 0);
+            for (int i = 0; i < 10; ++i) sui->update(1.0f / 60);  // flush the end
+            ends = 0;
+            sui->scrollBy(200, 200, 0, 30);  // 30px notch, item pitch 110
+            for (int i = 0; i < 300; ++i) sui->update(1.0f / 60);
+            if (std::abs(list->scrollY - 110.0f) > 0.5f || ends != 1 || lastIdx != 1) {
+                std::printf("FAIL: wheel quantize: scrollY=%.1f ends=%d idx=%d\n",
+                            list->scrollY, ends, lastIdx);
+                ++failures;
+            }
+            // snapTo eases to an exact boundary and reports its index.
+            ends = 0;
+            sui->snapTo("SnapList", 5);
+            for (int i = 0; i < 300; ++i) sui->update(1.0f / 60);
+            if (std::abs(list->scrollY - 550.0f) > 0.5f || ends != 1 || lastIdx != 5) {
+                std::printf("FAIL: snapTo(5): scrollY=%.1f ends=%d idx=%d\n",
+                            list->scrollY, ends, lastIdx);
+                ++failures;
+            }
+            // Non-snap container: onScrollEnd still fires, index is -1.
+            list->snapToChildren = false;
+            ends = 0;
+            sui->setScroll("SnapList", 0, 42);
+            sui->update(1.0f / 60);
+            if (ends != 1 || lastIdx != -1 || endY != 42.0f) {
+                std::printf("FAIL: non-snap end: ends=%d idx=%d y=%.1f\n", ends,
+                            lastIdx, endY);
+                ++failures;
+            }
+            (void)endX;
         }
     }
 

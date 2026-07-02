@@ -1,0 +1,435 @@
+{
+ "name": "SnapRegress",
+ "document": {
+  "id": "0:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "0:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "1:1",
+      "name": "Main",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.98,
+         "g": 0.98,
+         "b": 0.985,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "1:2",
+        "name": "Title",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          48
+         ]
+        ],
+        "characters": "Snap Regress",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.12,
+           "g": 0.13,
+           "b": 0.16,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 28,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP"
+        }
+       },
+       {
+        "id": "1:10",
+        "name": "Picker",
+        "type": "FRAME",
+        "size": {
+         "x": 300,
+         "y": 336
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          60
+         ],
+         [
+          0,
+          1,
+          120
+         ]
+        ],
+        "clipsContent": true,
+        "overflowDirection": "VERTICAL_SCROLLING",
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.97,
+           "g": 0.97,
+           "b": 0.99,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "2:1",
+          "name": "Item",
+          "type": "FRAME",
+          "size": {
+           "x": 300,
+           "y": 100
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.86,
+             "g": 0.89,
+             "b": 0.95,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "2:2",
+            "name": "ItemLabel",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              38
+             ]
+            ],
+            "characters": "Item",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.12,
+               "g": 0.13,
+               "b": 0.16,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         }
+        ],
+        "primaryAxisSizingMode": "FIXED",
+        "counterAxisSizingMode": "FIXED"
+       },
+       {
+        "id": "1:20",
+        "name": "Plain",
+        "type": "FRAME",
+        "size": {
+         "x": 300,
+         "y": 300
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          60
+         ],
+         [
+          0,
+          1,
+          520
+         ]
+        ],
+        "clipsContent": true,
+        "overflowDirection": "VERTICAL_SCROLLING",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.95,
+           "g": 0.93,
+           "b": 0.9,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "3:0",
+          "name": "PRow0",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 300,
+           "y": 80
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.75,
+             "g": 0.82,
+             "b": 0.7,
+             "a": 1.0
+            }
+           }
+          ]
+         },
+         {
+          "id": "3:1",
+          "name": "PRow1",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 300,
+           "y": 80
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            90
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.75,
+             "g": 0.82,
+             "b": 0.7,
+             "a": 1.0
+            }
+           }
+          ]
+         },
+         {
+          "id": "3:2",
+          "name": "PRow2",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 300,
+           "y": 80
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            180
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.75,
+             "g": 0.82,
+             "b": 0.7,
+             "a": 1.0
+            }
+           }
+          ]
+         },
+         {
+          "id": "3:3",
+          "name": "PRow3",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 300,
+           "y": 80
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            270
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.75,
+             "g": 0.82,
+             "b": 0.7,
+             "a": 1.0
+            }
+           }
+          ]
+         },
+         {
+          "id": "3:4",
+          "name": "PRow4",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 300,
+           "y": 80
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            360
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.75,
+             "g": 0.82,
+             "b": 0.7,
+             "a": 1.0
+            }
+           }
+          ]
+         },
+         {
+          "id": "3:5",
+          "name": "PRow5",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 300,
+           "y": 80
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            450
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.75,
+             "g": 0.82,
+             "b": 0.7,
+             "a": 1.0
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

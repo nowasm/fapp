@@ -707,6 +707,8 @@ enum NodeProp {
     NP_MAX_SCROLL_X,
     NP_MAX_SCROLL_Y,
     NP_PASSWORD_MASK,
+    NP_SNAP_TO_CHILDREN,
+    NP_SNAP_INDEX,
 };
 
 JSValue nodeGet(JSContext* ctx, JSValueConst thisVal, int /*argc*/, JSValueConst* /*argv*/,
@@ -742,6 +744,9 @@ JSValue nodeGet(JSContext* ctx, JSValueConst thisVal, int /*argc*/, JSValueConst
     case NP_SCROLL_Y: return JS_NewFloat64(ctx, n->scrollY);
     case NP_MAX_SCROLL_X: return JS_NewFloat64(ctx, n->maxScrollX());
     case NP_MAX_SCROLL_Y: return JS_NewFloat64(ctx, n->maxScrollY());
+    case NP_SNAP_TO_CHILDREN: return JS_NewBool(ctx, n->snapToChildren);
+    case NP_SNAP_INDEX:
+        return JS_NewInt32(ctx, ScriptHost::Impl::from(ctx)->ui.snapIndex(*n));
     case NP_PRIMARY_SIZING:
         return JS_NewString(
             ctx, n->autoLayout.primarySizing == AutoLayout::Sizing::Hug ? "hug" : "fixed");
@@ -795,6 +800,9 @@ JSValue nodeSet(JSContext* ctx, JSValueConst thisVal, int argc, JSValueConst* ar
     case NP_PASSWORD_MASK:
         n->passwordMask = JS_ToBool(ctx, argv[0]);
         im->ui.markDirty();
+        break;
+    case NP_SNAP_TO_CHILDREN:
+        n->snapToChildren = JS_ToBool(ctx, argv[0]);
         break;
     case NP_PRIMARY_SIZING: {
         CStr s(ctx, argv[0]);
@@ -928,6 +936,21 @@ JSValue ui_onScroll(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) 
         JSValue args[3] = {im->wrapNode(&n), JS_NewFloat64(im->ctx, sx),
                            JS_NewFloat64(im->ctx, sy)};
         im->callVoid(fn, 3, args);
+    });
+    return JS_UNDEFINED;
+}
+
+JSValue ui_onScrollEnd(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    std::string name;
+    if (argc < 2 || !argName(ctx, argv[0], name)) return JS_EXCEPTION;
+    if (!JS_IsFunction(ctx, argv[1])) return JS_ThrowTypeError(ctx, "function expected");
+    JSValue fn = JS_DupValue(ctx, argv[1]);
+    im->retained.push_back(fn);
+    im->ui.onScrollEnd(name, [im, fn](Node& n, float sx, float sy, int idx) {
+        JSValue args[4] = {im->wrapNode(&n), JS_NewFloat64(im->ctx, sx),
+                           JS_NewFloat64(im->ctx, sy), JS_NewInt32(im->ctx, idx)};
+        im->callVoid(fn, 4, args);
     });
     return JS_UNDEFINED;
 }
@@ -1158,6 +1181,34 @@ JSValue ui_setScroll(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv)
     }
     return JS_NewBool(ctx,
                       im->ui.setScroll(name, static_cast<float>(x), static_cast<float>(y)));
+}
+
+JSValue ui_snapTo(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    std::string name;
+    int32_t index = 0;
+    if (argc < 2 || !argName(ctx, argv[0], name) || JS_ToInt32(ctx, &index, argv[1])) {
+        return JS_EXCEPTION;
+    }
+    double dur = -1;  // < 0 = the stock easing feel
+    if (argc >= 3 && !JS_IsUndefined(argv[2]) && JS_ToFloat64(ctx, &dur, argv[2])) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewBool(ctx, im->ui.snapTo(name, index, static_cast<float>(dur)));
+}
+
+// ui.scrollBy(x, y, dx, dy): wheel/trackpad scroll at a viewport point — the
+// exact path a real wheel notch takes (easing + bubbling + snap quantization).
+JSValue ui_scrollBy(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    double x = 0, y = 0, dx = 0, dy = 0;
+    if (argc < 4 || JS_ToFloat64(ctx, &x, argv[0]) || JS_ToFloat64(ctx, &y, argv[1]) ||
+        JS_ToFloat64(ctx, &dx, argv[2]) || JS_ToFloat64(ctx, &dy, argv[3])) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewBool(ctx, im->ui.scrollBy(static_cast<float>(x), static_cast<float>(y),
+                                           static_cast<float>(dx),
+                                           static_cast<float>(dy)));
 }
 
 JSValue ui_setEditable(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
@@ -1543,6 +1594,8 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     prop("scrollY", NP_SCROLL_Y, true);
     prop("maxScrollX", NP_MAX_SCROLL_X, false);
     prop("maxScrollY", NP_MAX_SCROLL_Y, false);
+    prop("snapToChildren", NP_SNAP_TO_CHILDREN, true);
+    prop("snapIndex", NP_SNAP_INDEX, false);
     JS_SetPropertyStr(ctx, proto, "find", JS_NewCFunction(ctx, nodeFind, "find", 1));
     JS_SetPropertyStr(ctx, proto, "child", JS_NewCFunction(ctx, nodeChild, "child", 1));
     JS_SetClassProto(ctx, d.nodeClass, proto);
@@ -1558,6 +1611,7 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     fn("onLongPress", ui_onLongPress, 2);
     fn("onSwipe", ui_onSwipe, 2);
     fn("onScroll", ui_onScroll, 2);
+    fn("onScrollEnd", ui_onScrollEnd, 2);
     fn("onUpdate", ui_onUpdate, 1);
     fn("navigateTo", ui_navigateTo, 3);
     fn("navigateBack", ui_navigateBack, 1);
@@ -1576,6 +1630,8 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     fn("setValue", ui_setValue, 2);
     fn("autoStates", ui_autoStates, 2);
     fn("setScroll", ui_setScroll, 3);
+    fn("snapTo", ui_snapTo, 3);
+    fn("scrollBy", ui_scrollBy, 4);
     fn("setEditable", ui_setEditable, 2);
     fn("focusText", ui_focusText, 1);
     fn("setPassword", ui_setPassword, 2);

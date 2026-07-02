@@ -72,6 +72,9 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
      `.scrollX/.scrollY`（可读写）、`.maxScrollX/.maxScrollY`
    - `ui.setText/setVisible/setOpacity/setVariant/setScroll/setEditable/focusText`
      （`setVariant(..., {duration})` = dissolve 淡入过渡）
+   - 滚轮选择器地基：`node.snapToChildren`（滚动自然停下时吸附最近子项边界）+
+     `ui.onScrollEnd(name, fn(node,x,y,index))`（完全静止派发一次）+
+     `ui.snapTo(name, index, dur?)` + `node.snapIndex`（只读）
    - 文本编辑：`ui.setPassword(name, bool)`（"•" 遮罩显示，`node.text` 仍明文，
      copy/cut 返回空）、`ui.typeText(str)`、`ui.editKey("left"|…|"enter"|"selectAll"|
      "copy"|"cut"|"paste")`——editKey 的剪贴板是进程内模拟的（copy/cut 返回所复制串）；

@@ -19,6 +19,19 @@
 //     changed (wheel/drag/fling/setScroll/scrollX writes); x/y = current
 //     offset in frame px. Coalesced to one call per node per frame; a fling
 //     that moves every frame fires every frame. No ancestor bubbling.
+//   ui.onScrollEnd(name, fn(node, x, y, index))  // fires ONCE when the frame
+//     comes fully to rest (wheel easing / fling / drag all over and the
+//     offset stopped): a whole wheel train or fling = one call at the final
+//     position. Instant sets (ui.setScroll, scrollX/Y writes) count as an end
+//     of their own. index = the snapped child for a node.snapToChildren
+//     container, -1 otherwise. No ancestor bubbling.
+//   ui.snapTo(name, index, durationSec?) -> bool  // ease the scroll so child
+//     `index` (clamped) aligns with the first child's start — the wheel-picker
+//     "set initial value" call. durationSec omitted/<0 = stock easing feel,
+//     0 = instant. Works on any scrolling frame, snapToChildren or not.
+//   ui.scrollBy(x, y, dx, dy) -> bool  // wheel/trackpad scroll at a viewport
+//     point (easing + ancestor bubbling + snap quantization — the real wheel
+//     path); positive dy reveals content below.
 //   ui.onUpdate(fn(dtSeconds))         ui.markDirty()
 //   ui.navigateTo(name, transition?, durationSec?)   // "slideLeft" | "slideRight"
 //   ui.navigateBack(durationSec?)                    // | "slideUp" | "slideDown"
@@ -98,6 +111,14 @@
 //   node.scrollX / node.scrollY (get/set — write = instant, clamped; no-op on
 //                                non-scrolling nodes; fires onScroll on change)
 //   node.maxScrollX / node.maxScrollY  (read-only scroll range, frame px)
+//   node.snapToChildren (get/set)  // runtime flag on a scrolling frame:
+//     scrolls that come to a natural rest settle onto the nearest child
+//     boundary (fling decays -> eases onto a child; slow drag release ->
+//     same; a wheel notch quantizes to a child, one notch >= one item).
+//     Boundary i = the offset aligning child i's main-axis start with the
+//     first child's start (auto-layout padding/spacing included), clamped.
+//   node.snapIndex  // read-only: nearest/snapped child index; -1 unless
+//                   // snapToChildren is set
 //   node.primarySizing = "hug"|"fixed"   node.primaryAlign = "min"|"center"|
 //                                        "max"|"spaceBetween"   (auto-layout,
 //                                        both also readable)
