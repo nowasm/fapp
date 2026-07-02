@@ -6,7 +6,19 @@
 // two files and runs the frame loop.
 //
 // JS API (all names resolve within the current frame first, then document):
-//   ui.onClick(name, fn(node))         ui.onHover(name, fn(node, entered))
+//   ui.onClick(name, fn(node, x, y))   ui.onHover(name, fn(node, entered, x, y))
+//   ui.onLongPress(name, fn(node, x, y))  // pointer held >= 0.5s without
+//     moving; fires once per press and consumes the release (no click). x/y
+//     are viewport px (as in onClick/onHover; old 1-arg callbacks still work).
+//   ui.onSwipe(name, fn(node, direction))  // "left" | "right"; horizontal
+//     flick on release: |dx| >= 60 viewport px, |dx| > 2|dy|, < 0.5s. Bubbles
+//     from the pressed node like click and consumes the release. A gesture
+//     already eaten as HORIZONTAL drag-scroll doesn't swipe; a horizontal
+//     flick over a vertical list still does (swipe-to-delete).
+//   ui.onScroll(name, fn(node, x, y))  // the named scrolling frame's offset
+//     changed (wheel/drag/fling/setScroll/scrollX writes); x/y = current
+//     offset in frame px. Coalesced to one call per node per frame; a fling
+//     that moves every frame fires every frame. No ancestor bubbling.
 //   ui.onUpdate(fn(dtSeconds))         ui.markDirty()
 //   ui.navigateTo(name, transition?, durationSec?)   // "slideLeft" | "slideRight"
 //   ui.navigateBack(durationSec?)                    // | "slideUp" | "slideDown"
@@ -21,6 +33,10 @@
 //   ui.setEditable(name, editable?)    ui.focusText(name)    ui.blur()
 //   ui.find(name) -> node|null         ui.findAll(name) -> [node]
 //   ui.tap(nameOrNode) -> bool         // synthesized click at the node center
+//   ui.longPress(nameOrNode) -> bool   // synthesized long press (one tick)
+//   ui.pointerDown/pointerMove/pointerUp(x, y)  // raw pointer feed for
+//     synthesized gestures; a multi-move gesture (drag/swipe) must complete
+//     within ONE tick or the backend's real-mouse polling fights it
 // By-name lookups (ui.find/setText/setVisible/...) search the current frame
 // first, then the whole document. Structural mutations (ui.bindList /
 // ui.setVariant) invalidate live node handles; don't call them from inside
@@ -33,6 +49,9 @@
 //   node.parent -> node|null           node.index    // position in parent
 //   node.find(name) -> node|null       node.width / node.height  (read-only,
 //                                      layout size in frame-local px)
+//   node.scrollX / node.scrollY (get/set — write = instant, clamped; no-op on
+//                                non-scrolling nodes; fires onScroll on change)
+//   node.maxScrollX / node.maxScrollY  (read-only scroll range, frame px)
 //   node.primarySizing = "hug"|"fixed"   node.primaryAlign = "min"|"center"|
 //                                        "max"|"spaceBetween"   (auto-layout,
 //                                        both also readable)

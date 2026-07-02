@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
             ui->markDirty();
         }
     };
-    ui->onClick("Card", [&](figo::Node& n) {
+    ui->onClick("Card", [&](figo::Node& n, float, float) {
         if (!n.parent || n.parent->name != "portfolio-list") return;  // hero card etc.
         size_t idx = 0;
         for (size_t i = 0; i < n.parent->children.size(); ++i) {
@@ -149,19 +149,19 @@ int main(int argc, char** argv) {
     });
 
     // ---- behavior: bottom navigation ----
-    ui->onClick("Discover", [&](figo::Node&) {
+    ui->onClick("Discover", [&](figo::Node&, float, float) {
         std::printf("[nav] Discover clicked\n");
         ui->navigateTo("Discover");
     });
-    ui->onClick("Trade", [&](figo::Node&) {
+    ui->onClick("Trade", [&](figo::Node&, float, float) {
         std::printf("[nav] Trade clicked\n");
         ui->navigateTo("Marketplace");
     });
-    ui->onClick("Account", [&](figo::Node&) {
+    ui->onClick("Account", [&](figo::Node&, float, float) {
         std::printf("[nav] Account clicked\n");
         ui->navigateTo("Profile");
     });
-    ui->onClick("Wallet", [&](figo::Node&) {  // center button = home
+    ui->onClick("Wallet", [&](figo::Node&, float, float) {  // center button = home
         std::printf("[nav] Wallet clicked\n");
         while (ui->canGoBack()) ui->navigateBack(0.0f);
         ui->navigateTo("Home", figo::FigmaUI::Transition::Dissolve, 0.2f);

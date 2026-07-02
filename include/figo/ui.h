@@ -18,8 +18,15 @@ namespace figo {
 
 class FigmaUI {
 public:
-    using ClickHandler = std::function<void(Node&)>;
-    using HoverHandler = std::function<void(Node&, bool entered)>;
+    // Event coordinates are viewport/pixel-space (the same space the pointer
+    // methods take).
+    using ClickHandler = std::function<void(Node&, float x, float y)>;
+    using HoverHandler = std::function<void(Node&, bool entered, float x, float y)>;
+    using LongPressHandler = std::function<void(Node&, float x, float y)>;
+    // direction is "left" or "right" (v1 is horizontal-only).
+    using SwipeHandler = std::function<void(Node&, const char* direction)>;
+    // x/y are the node's current scroll offset in frame-local px.
+    using ScrollHandler = std::function<void(Node&, float scrollX, float scrollY)>;
 
     static std::unique_ptr<FigmaUI> fromFile(const std::string& path);
     static std::unique_ptr<FigmaUI> fromJson(const std::string& jsonText);
@@ -126,6 +133,7 @@ public:
 
     // Set a scrolling frame's offset directly (clamped to the content range).
     bool setScroll(const std::string& nodeName, float offsetX, float offsetY);
+    bool setScroll(Node& node, float offsetX, float offsetY);
 
     // Innermost scrollable frame under the point with a non-empty scroll
     // range, or nullptr.
@@ -140,7 +148,24 @@ public:
     // that name (so a click on a button's label still triggers the button).
     void onClick(const std::string& nodeName, ClickHandler fn);
     void onHover(const std::string& nodeName, HoverHandler fn);
-    // Drop every registered click/hover handler. Script hot reload uses this
+    // Long press: the pointer stays down >= 0.5s without travelling past the
+    // drag-scroll threshold. Fires at most once per press (from update(dt));
+    // a press that fired a long-press handler does not also click on release.
+    void onLongPress(const std::string& nodeName, LongPressHandler fn);
+    // Horizontal swipe, evaluated on pointerUp: total travel |dx| >= 60
+    // viewport px, |dx| > 2|dy|, press shorter than 0.5s. Bubbles up from the
+    // pressed node like click. A gesture the drag-scroller already consumed
+    // as HORIZONTAL scrolling is not reported again; a horizontal flick over
+    // a vertical scroll chain still swipes (list-row swipe-to-delete). A
+    // fired swipe consumes the release (no click).
+    void onSwipe(const std::string& nodeName, SwipeHandler fn);
+    // Fires when the named scrolling frame's offset actually changed this
+    // frame (wheel, drag, fling/easing, setScroll). Multiple changes within
+    // one update(dt) coalesce into one call at the end of update; an ongoing
+    // fling therefore fires once per frame. No ancestor bubbling: the handler
+    // name must match the scrolled node.
+    void onScroll(const std::string& nodeName, ScrollHandler fn);
+    // Drop every registered event handler. Script hot reload uses this
     // before re-running a script that re-registers its handlers.
     void clearHandlers();
 

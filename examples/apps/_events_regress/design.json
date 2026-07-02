@@ -1,0 +1,1117 @@
+{
+ "name": "EventsRegress",
+ "document": {
+  "id": "0:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "0:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "1:1",
+      "name": "Main",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.97,
+         "g": 0.97,
+         "b": 0.98,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "1:2",
+        "name": "Title",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          48
+         ]
+        ],
+        "characters": "Events Regress",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.1,
+           "g": 0.11,
+           "b": 0.13,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 28,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP"
+        }
+       },
+       {
+        "id": "1:3",
+        "name": "List",
+        "type": "FRAME",
+        "size": {
+         "x": 372,
+         "y": 600
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          120
+         ]
+        ],
+        "clipsContent": true,
+        "overflowDirection": "VERTICAL_SCROLLING",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 1.0
+          }
+         }
+        ],
+        "cornerRadius": 16,
+        "children": [
+         {
+          "id": "1:20",
+          "name": "Row0",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.91,
+             "g": 0.94,
+             "b": 0.99,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:40",
+            "name": "RowLabel0",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 0",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:21",
+          "name": "Row1",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            80
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.88,
+             "g": 0.93,
+             "b": 0.9,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:41",
+            "name": "RowLabel1",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 1",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:22",
+          "name": "Row2",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            160
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.95,
+             "g": 0.91,
+             "b": 0.88,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:42",
+            "name": "RowLabel2",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 2",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:23",
+          "name": "Row3",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            240
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.91,
+             "g": 0.94,
+             "b": 0.99,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:43",
+            "name": "RowLabel3",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 3",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:24",
+          "name": "Row4",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            320
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.88,
+             "g": 0.93,
+             "b": 0.9,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:44",
+            "name": "RowLabel4",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 4",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:25",
+          "name": "Row5",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            400
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.95,
+             "g": 0.91,
+             "b": 0.88,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:45",
+            "name": "RowLabel5",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 5",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:26",
+          "name": "Row6",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            480
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.91,
+             "g": 0.94,
+             "b": 0.99,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:46",
+            "name": "RowLabel6",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 6",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:27",
+          "name": "Row7",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            560
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.88,
+             "g": 0.93,
+             "b": 0.9,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:47",
+            "name": "RowLabel7",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 7",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:28",
+          "name": "Row8",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            640
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.95,
+             "g": 0.91,
+             "b": 0.88,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:48",
+            "name": "RowLabel8",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 8",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:29",
+          "name": "Row9",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            720
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.91,
+             "g": 0.94,
+             "b": 0.99,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:49",
+            "name": "RowLabel9",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 9",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:30",
+          "name": "Row10",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            800
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.88,
+             "g": 0.93,
+             "b": 0.9,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:50",
+            "name": "RowLabel10",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 10",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         },
+         {
+          "id": "1:31",
+          "name": "Row11",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            880
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.95,
+             "g": 0.91,
+             "b": 0.88,
+             "a": 1.0
+            }
+           }
+          ],
+          "cornerRadius": 12,
+          "children": [
+           {
+            "id": "1:51",
+            "name": "RowLabel11",
+            "type": "TEXT",
+            "size": {
+             "x": 200,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              24
+             ]
+            ],
+            "characters": "Row 11",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.15,
+               "g": 0.17,
+               "b": 0.2,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "1:4",
+        "name": "Card",
+        "type": "FRAME",
+        "size": {
+         "x": 200,
+         "y": 120
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          110
+         ],
+         [
+          0,
+          1,
+          760
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.24,
+           "g": 0.35,
+           "b": 0.85,
+           "a": 1.0
+          }
+         }
+        ],
+        "cornerRadius": 20,
+        "children": [
+         {
+          "id": "1:5",
+          "name": "CardLabel",
+          "type": "TEXT",
+          "size": {
+           "x": 160,
+           "y": 24
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            20
+           ],
+           [
+            0,
+            1,
+            48
+           ]
+          ],
+          "characters": "Hold / swipe me",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1,
+             "g": 1,
+             "b": 1,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 16,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

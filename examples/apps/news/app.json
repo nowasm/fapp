@@ -1,0 +1,16 @@
+{
+  "name": "News",
+  "design": "design.json",
+  "script": "app.js",
+  "viewport": [
+    420,
+    900
+  ],
+  "entryFrame": "Feed",
+  "designSystem": "notion",
+  "package": {
+    "id": "com.figo.news",
+    "version": "1.0.0"
+  },
+  "benchmark": true
+}

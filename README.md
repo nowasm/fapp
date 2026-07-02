@@ -158,8 +158,8 @@ The ThorVG paths can be overridden with
 #include <figo_raylib.h>
 
 auto ui = figo::FigmaUI::fromFile("menu.json");   // Figma REST JSON
-ui->onClick("btn-start", [&](figo::Node&) { startGame(); });
-ui->onHover("btn-start", [&](figo::Node& n, bool in) {
+ui->onClick("btn-start", [&](figo::Node&, float, float) { startGame(); });
+ui->onHover("btn-start", [&](figo::Node& n, bool in, float, float) {
     ui->setOpacity(n.name, in ? 0.8f : -1.0f);
 });
 

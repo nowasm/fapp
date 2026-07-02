@@ -443,8 +443,8 @@ int main(int argc, char** argv) {
         if (!tradeItem) {
             std::printf("nav-bubble: no Discover/Trade setup (skipped)\n");
         } else {
-            ui->onClick("Trade", [&](figo::Node&) { ui->navigateTo("Marketplace"); });
-            ui->onClick("Discover", [&](figo::Node&) { ui->navigateTo("Discover"); });
+            ui->onClick("Trade", [&](figo::Node&, float, float) { ui->navigateTo("Marketplace"); });
+            ui->onClick("Discover", [&](figo::Node&, float, float) { ui->navigateTo("Discover"); });
             ui->render();  // refresh absoluteTransform for the hit test
             float cx, cy, vx, vy;
             tradeItem->absoluteTransform.apply(tradeItem->width * 0.5f,

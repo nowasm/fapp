@@ -1,0 +1,11 @@
+{
+  "name": "EventsRegress",
+  "design": "design.json",
+  "script": "app.js",
+  "viewport": [
+    420,
+    900
+  ],
+  "entryFrame": "Main",
+  "benchmark": true
+}

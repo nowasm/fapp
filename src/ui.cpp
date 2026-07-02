@@ -34,6 +34,18 @@ struct FigmaUI::Impl {
     float dragAccumX = 0, dragAccumY = 0;
     float lastPointerX = 0, lastPointerY = 0;
     static constexpr float kDragScrollThreshold = 6.0f;  // viewport px
+
+    // ---- Gesture recognition (long press / swipe) ----
+    // All positions are viewport px; pressElapsed accumulates RAW update(dt)
+    // time (not the 1/30s-clamped animation clock) so held time is real time.
+    static constexpr float kLongPressSec = 0.5f;
+    static constexpr float kSwipeMinDx = 60.0f;  // viewport px
+    float pressDownX = 0, pressDownY = 0;  // pointerDown position
+    float pressElapsed = 0;                // seconds the press has been held
+    bool pressMoved = false;      // travelled past kDragScrollThreshold
+    bool longPressDone = false;   // long-press evaluated for this press
+    bool suppressClick = false;   // a long-press handler fired -> eat the click
+    float dragConsumedX = 0;      // frame-local X actually eaten by drag-scroll
     // Pressing inside the focused text starts caret placement / drag-select
     // (and takes the gesture away from drag scrolling).
     bool selectingText = false;
@@ -57,16 +69,54 @@ struct FigmaUI::Impl {
     static constexpr float kFlingStop = 10.0f;   // fling ends below this
     std::unordered_map<std::string, std::vector<ClickHandler>> clickHandlers;
     std::unordered_map<std::string, std::vector<HoverHandler>> hoverHandlers;
+    std::unordered_map<std::string, std::vector<LongPressHandler>> longPressHandlers;
+    std::unordered_map<std::string, std::vector<SwipeHandler>> swipeHandlers;
+    std::unordered_map<std::string, std::vector<ScrollHandler>> scrollHandlers;
+
+    // Scrolling frames whose offset changed since the last dispatch; flushed
+    // (coalesced, one call per node) at the end of update(dt). Cleared
+    // whenever structureRev bumps — the pointers may be about to dangle.
+    std::vector<Node*> pendingScroll;
+
+    void noteScroll(Node* n) {
+        if (scrollHandlers.empty()) return;  // fast path: feature unused
+        if (std::find(pendingScroll.begin(), pendingScroll.end(), n) ==
+            pendingScroll.end()) {
+            pendingScroll.push_back(n);
+        }
+    }
+
+    void dispatchScrollEvents() {
+        if (pendingScroll.empty()) return;
+        std::vector<Node*> batch;
+        batch.swap(pendingScroll);  // handlers may queue new changes
+        const uint64_t rev = structureRev;
+        for (Node* n : batch) {
+            const auto it = scrollHandlers.find(n->name);
+            if (it == scrollHandlers.end()) continue;
+            for (auto& h : it->second) {
+                h(*n, n->scrollX, n->scrollY);
+                // A handler rebuilt the tree (bindList/setVariant): every
+                // remaining pointer in the batch may be freed memory.
+                if (structureRev != rev) return;
+            }
+        }
+    }
 
     // Layout changes shrink scroll ranges (a taller viewport can swallow the
     // whole range): pull every scrolling frame's offset back inside, or the
     // content stays shoved out of its clip box.
     void clampScrollOffsets() {
         if (!frame) return;
-        frame->visit([](Node& n) {
+        frame->visit([this](Node& n) {
             if (n.scrolls()) {
-                n.scrollX = std::clamp(n.scrollX, 0.0f, n.maxScrollX());
-                n.scrollY = std::clamp(n.scrollY, 0.0f, n.maxScrollY());
+                const float nx = std::clamp(n.scrollX, 0.0f, n.maxScrollX());
+                const float ny = std::clamp(n.scrollY, 0.0f, n.maxScrollY());
+                if (nx != n.scrollX || ny != n.scrollY) {
+                    n.scrollX = nx;
+                    n.scrollY = ny;
+                    noteScroll(&n);
+                }
             }
             return true;
         });
@@ -116,29 +166,33 @@ struct FigmaUI::Impl {
     }
 
     // Fires handlers registered for the node or any of its ancestors.
+    // Returns true when at least one handler ran (gesture "consumed").
     template <typename Map, typename Fn>
-    void fireUp(Map& handlers, Node* node, Fn&& invoke) {
+    bool fireUp(Map& handlers, Node* node, Fn&& invoke) {
         // Capture the stop node up front: a handler may navigate and swap
         // `frame` mid-walk, and the loop must not run past the old frame.
         Node* stop = frame;
         const uint64_t rev = structureRev;
+        bool fired = false;
         for (Node* n = node; n; n = n->parent) {
             if (auto it = handlers.find(n->name); it != handlers.end()) {
                 for (auto& h : it->second) {
                     invoke(h, *n);
+                    fired = true;
                     // Navigation consumes the event: once a handler switched
                     // frames, ancestors of the OLD page must not keep firing.
                     // (Nav items commonly share names with their destination
                     // frames — "Discover" the button bubbling up to
                     // "Discover" the frame would navigate right back.)
-                    if (frame != stop) return;
+                    if (frame != stop) return fired;
                     // So does a structural mutation (bindList/setVariant):
                     // `n` and its parent chain may now be freed memory.
-                    if (structureRev != rev) return;
+                    if (structureRev != rev) return fired;
                 }
             }
             if (n == stop) break;
         }
+        return fired;
     }
 
     // Name lookup for mutations: current frame first, then the whole document
@@ -162,12 +216,14 @@ struct FigmaUI::Impl {
 
     // Move a frame's content by (dx, dy) in frame-local pixels, clamped to
     // the scroll range. Returns true when the offset actually changed.
-    static bool applyScroll(Node& n, float dx, float dy) {
+    bool applyScroll(Node& n, float dx, float dy) {
         const float nx = std::clamp(n.scrollX + dx, 0.0f, n.maxScrollX());
         const float ny = std::clamp(n.scrollY + dy, 0.0f, n.maxScrollY());
         if (nx == n.scrollX && ny == n.scrollY) return false;
+        dragConsumedX += nx - n.scrollX;  // swipe vs. horizontal drag-scroll
         n.scrollX = nx;
         n.scrollY = ny;
+        noteScroll(&n);
         return true;
     }
 
@@ -282,6 +338,7 @@ struct FigmaUI::Impl {
             if (x != n->scrollX || y != n->scrollY) {
                 n->scrollX = x;
                 n->scrollY = y;
+                noteScroll(n);
                 changed = true;
             }
             if (!a.easing && !a.fling) it = scrollAnims.erase(it);
@@ -295,6 +352,43 @@ struct FigmaUI::Impl {
         dragVelX = dragVelY = 0;
         dragMoveX = dragMoveY = 0;
         dragConsumer = nullptr;
+    }
+
+    // ---- Long press / swipe ----
+
+    // Advances the held press with RAW dt and fires long-press handlers once
+    // the press has been still for kLongPressSec. If a handler actually ran,
+    // the release stops counting as a click (suppressClick).
+    void stepLongPress(float dt) {
+        if (!pressed) return;
+        pressElapsed += dt;  // also feeds the swipe duration check
+        if (longPressDone || dragScrolling || selectingText || pressMoved) return;
+        if (pressElapsed < kLongPressSec) return;
+        longPressDone = true;  // evaluate at most once per press
+        if (longPressHandlers.empty()) return;
+        const float x = lastPointerX, y = lastPointerY;
+        // fireUp guards navigation/structure changes; a handler that calls
+        // bindList/setVariant also nulls `pressed` for us.
+        suppressClick = fireUp(longPressHandlers, pressed,
+                               [&](LongPressHandler& h, Node& n) { h(n, x, y); });
+    }
+
+    // Swipe check on release (viewport coordinates). Fires along the pressed
+    // chain like click; returns true when a handler consumed the gesture.
+    bool maybeFireSwipe(float x, float y) {
+        if (swipeHandlers.empty() || !pressed) return false;
+        if (pressElapsed >= kLongPressSec) return false;  // that's a hold
+        const float dx = x - pressDownX, dy = y - pressDownY;
+        if (std::abs(dx) < kSwipeMinDx || std::abs(dx) <= 2.0f * std::abs(dy)) {
+            return false;
+        }
+        // Already consumed as HORIZONTAL scrolling? Then it was a pan, not a
+        // swipe. (A vertical scroll chain clamps X, so a horizontal flick on
+        // a list row still swipes — the swipe-to-delete case.)
+        if (std::abs(dragConsumedX) > kDragScrollThreshold) return false;
+        const char* dir = dx < 0 ? "left" : "right";
+        return fireUp(swipeHandlers, pressed,
+                      [&](SwipeHandler& h, Node& n) { h(n, dir); });
     }
 
     // ---- Text editing ----
@@ -643,22 +737,30 @@ bool FigmaUI::canGoBack() const { return !impl_->navStack.empty(); }
 
 void FigmaUI::update(float dtSeconds) {
     if (dtSeconds <= 0) return;
+    impl_->stepLongPress(dtSeconds);  // real held time, before the clamp
     // Animation clock, not wall clock: a hitch (e.g. the incoming frame's
     // first scene build can take hundreds of ms) consumes one slow tick of
     // the animation instead of swallowing the whole transition.
     dtSeconds = std::min(dtSeconds, 1.0f / 30.0f);
     impl_->stepScrollAnims(dtSeconds);
-    if (!impl_->transFrom) return;
-    impl_->transElapsed += dtSeconds;
-    float p = impl_->transDuration > 0 ? impl_->transElapsed / impl_->transDuration : 1.0f;
-    if (p >= 1.0f) {
-        impl_->transFrom = nullptr;
-        impl_->clearChromeOverlay();  // restore the chrome into the page raster
-        return;
+    if (impl_->transFrom) {
+        impl_->transElapsed += dtSeconds;
+        const float p =
+            impl_->transDuration > 0 ? impl_->transElapsed / impl_->transDuration : 1.0f;
+        if (p >= 1.0f) {
+            impl_->transFrom = nullptr;
+            impl_->clearChromeOverlay();  // restore the chrome into the page raster
+        } else {
+            // Ease in-out (cubic) for a Figma-like feel. No re-raster happens
+            // here: the backend composites its cached textures at this
+            // progress.
+            impl_->transProgress =
+                p < 0.5f ? 4 * p * p * p : 1 - std::pow(-2 * p + 2, 3.0f) / 2;
+        }
     }
-    // Ease in-out (cubic) for a Figma-like feel. No re-raster happens here:
-    // the backend composites its cached textures at this progress.
-    impl_->transProgress = p < 0.5f ? 4 * p * p * p : 1 - std::pow(-2 * p + 2, 3.0f) / 2;
+    // All of this frame's scroll changes (wheel easing, fling, drag, script
+    // writes) coalesce into one onScroll dispatch per node per frame.
+    impl_->dispatchScrollEvents();
 }
 
 bool FigmaUI::animating() const { return impl_->transFrom != nullptr; }
@@ -753,6 +855,13 @@ void FigmaUI::pointerMove(float x, float y) {
         impl_->lastPointerY = y;
         return;  // no hover churn / scrolling while selecting
     }
+    // Gesture bookkeeping: once the pointer strays past the drag-scroll
+    // threshold this press can no longer become a long press.
+    if (impl_->pressed && !impl_->pressMoved &&
+        std::hypot(x - impl_->pressDownX, y - impl_->pressDownY) >
+            Impl::kDragScrollThreshold) {
+        impl_->pressMoved = true;
+    }
     if (impl_->pressed && impl_->dragScrollNode) {
         const float dx = x - impl_->lastPointerX, dy = y - impl_->lastPointerY;
         impl_->lastPointerX = x;
@@ -787,14 +896,14 @@ void FigmaUI::pointerMove(float x, float y) {
     const uint64_t rev = impl_->structureRev;
     if (impl_->hovered) {
         impl_->fireUp(impl_->hoverHandlers, impl_->hovered,
-                      [](HoverHandler& h, Node& n) { h(n, false); });
+                      [&](HoverHandler& h, Node& n) { h(n, false, x, y); });
     }
     // A leave handler may have rebuilt the tree; `hit` would be dangling.
     if (impl_->structureRev != rev) hit = impl_->hitTestViewport(x, y);
     impl_->hovered = hit;
     if (hit) {
         impl_->fireUp(impl_->hoverHandlers, hit,
-                      [](HoverHandler& h, Node& n) { h(n, true); });
+                      [&](HoverHandler& h, Node& n) { h(n, true, x, y); });
     }
 }
 
@@ -826,6 +935,14 @@ void FigmaUI::pointerDown(float x, float y) {
     impl_->dragAccumX = impl_->dragAccumY = 0;
     impl_->lastPointerX = x;
     impl_->lastPointerY = y;
+    // Arm gesture recognition for this press.
+    impl_->pressDownX = x;
+    impl_->pressDownY = y;
+    impl_->pressElapsed = 0;
+    impl_->pressMoved = false;
+    impl_->longPressDone = false;
+    impl_->suppressClick = false;
+    impl_->dragConsumedX = 0;
     impl_->stopScrollAnims();  // the finger catches any easing/fling in flight
 }
 
@@ -851,12 +968,22 @@ void FigmaUI::pointerUp(float x, float y) {
         impl_->dragVelX = impl_->dragVelY = 0;
         impl_->dragMoveX = impl_->dragMoveY = 0;
         impl_->dragConsumer = nullptr;
+        // A horizontal flick whose X the scroll chain clamped away (vertical
+        // list) is still a swipe — the swipe-to-delete gesture.
+        impl_->maybeFireSwipe(x, y);
         impl_->pressed = nullptr;
         impl_->dragScrollNode = nullptr;
         impl_->dragScrolling = false;
         return;
     }
     impl_->dragScrollNode = nullptr;
+
+    // A swipe or a fired long press consumes the release: no focus change,
+    // no click, no prototype navigation.
+    if (impl_->maybeFireSwipe(x, y) || impl_->suppressClick) {
+        impl_->pressed = nullptr;
+        return;
+    }
 
     Node* hit = impl_->hitTestViewport(x, y);
     Node* frameAtClick = impl_->frame;  // handlers may navigate mid-dispatch
@@ -902,7 +1029,7 @@ void FigmaUI::pointerUp(float x, float y) {
         }
         if (target) {
             impl_->fireUp(impl_->clickHandlers, target,
-                          [](ClickHandler& h, Node& n) { h(n); });
+                          [&](ClickHandler& h, Node& n) { h(n, x, y); });
         }
         // Authored Figma prototype link anywhere in the chain — but only when
         // no click handler already navigated (navigation consumes the click)
@@ -934,10 +1061,19 @@ bool FigmaUI::scrollBy(float x, float y, float dx, float dy) {
 
 bool FigmaUI::setScroll(const std::string& nodeName, float offsetX, float offsetY) {
     Node* n = impl_->findMutable(nodeName);
-    if (!n || !n->scrolls()) return false;
-    impl_->scrollAnims.erase(n);  // programmatic set overrides any animation
-    n->scrollX = std::clamp(offsetX, 0.0f, n->maxScrollX());
-    n->scrollY = std::clamp(offsetY, 0.0f, n->maxScrollY());
+    return n && setScroll(*n, offsetX, offsetY);
+}
+
+bool FigmaUI::setScroll(Node& node, float offsetX, float offsetY) {
+    if (!node.scrolls()) return false;
+    impl_->scrollAnims.erase(&node);  // programmatic set overrides any animation
+    const float nx = std::clamp(offsetX, 0.0f, node.maxScrollX());
+    const float ny = std::clamp(offsetY, 0.0f, node.maxScrollY());
+    if (nx != node.scrollX || ny != node.scrollY) {
+        node.scrollX = nx;
+        node.scrollY = ny;
+        impl_->noteScroll(&node);
+    }
     impl_->renderer.markScrollDirty();
     return true;
 }
@@ -1052,9 +1188,25 @@ void FigmaUI::onHover(const std::string& nodeName, HoverHandler fn) {
     impl_->hoverHandlers[nodeName].push_back(std::move(fn));
 }
 
+void FigmaUI::onLongPress(const std::string& nodeName, LongPressHandler fn) {
+    impl_->longPressHandlers[nodeName].push_back(std::move(fn));
+}
+
+void FigmaUI::onSwipe(const std::string& nodeName, SwipeHandler fn) {
+    impl_->swipeHandlers[nodeName].push_back(std::move(fn));
+}
+
+void FigmaUI::onScroll(const std::string& nodeName, ScrollHandler fn) {
+    impl_->scrollHandlers[nodeName].push_back(std::move(fn));
+}
+
 void FigmaUI::clearHandlers() {
     impl_->clickHandlers.clear();
     impl_->hoverHandlers.clear();
+    impl_->longPressHandlers.clear();
+    impl_->swipeHandlers.clear();
+    impl_->scrollHandlers.clear();
+    impl_->pendingScroll.clear();
 }
 
 bool FigmaUI::bindList(const std::string& listName, size_t count,
@@ -1081,6 +1233,7 @@ bool FigmaUI::bindList(const std::string& listName, size_t count,
     impl_->hovered = nullptr;
     impl_->pressed = nullptr;
     impl_->structureRev++;  // list items are about to be freed
+    impl_->pendingScroll.clear();  // queued Node*s may point into them
     // A data-driven list grows with its data: hug the main axis and pack from
     // the start (a fixed CENTER stack would overlap its surroundings).
     if (list->autoLayout.enabled()) {
@@ -1187,6 +1340,7 @@ bool FigmaUI::setVariant(const std::string& instanceName, const std::string& pro
     // new subtree behaves exactly like a parse-time instance.
     impl_->setFocus(nullptr);  // the focused node may live in the old subtree
     impl_->structureRev++;     // the old variant subtree is about to be freed
+    impl_->pendingScroll.clear();  // queued Node*s may point into it
     inst->children.clear();
     for (const auto& c : target->children) inst->children.push_back(cloneNode(*c, inst));
     inst->componentId = target->id;

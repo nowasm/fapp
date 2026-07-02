@@ -691,6 +691,10 @@ enum NodeProp {
     NP_PRIMARY_ALIGN,
     NP_WIDTH,
     NP_HEIGHT,
+    NP_SCROLL_X,
+    NP_SCROLL_Y,
+    NP_MAX_SCROLL_X,
+    NP_MAX_SCROLL_Y,
 };
 
 JSValue nodeGet(JSContext* ctx, JSValueConst thisVal, int /*argc*/, JSValueConst* /*argv*/,
@@ -721,6 +725,10 @@ JSValue nodeGet(JSContext* ctx, JSValueConst thisVal, int /*argc*/, JSValueConst
     case NP_OPACITY: return JS_NewFloat64(ctx, n->effectiveOpacity());
     case NP_WIDTH: return JS_NewFloat64(ctx, n->width);
     case NP_HEIGHT: return JS_NewFloat64(ctx, n->height);
+    case NP_SCROLL_X: return JS_NewFloat64(ctx, n->scrollX);
+    case NP_SCROLL_Y: return JS_NewFloat64(ctx, n->scrollY);
+    case NP_MAX_SCROLL_X: return JS_NewFloat64(ctx, n->maxScrollX());
+    case NP_MAX_SCROLL_Y: return JS_NewFloat64(ctx, n->maxScrollY());
     case NP_PRIMARY_SIZING:
         return JS_NewString(
             ctx, n->autoLayout.primarySizing == AutoLayout::Sizing::Hug ? "hug" : "fixed");
@@ -780,6 +788,15 @@ JSValue nodeSet(JSContext* ctx, JSValueConst thisVal, int argc, JSValueConst* ar
         im->ui.markDirty();
         break;
     }
+    case NP_SCROLL_X:
+    case NP_SCROLL_Y: {
+        double v = 0;
+        if (JS_ToFloat64(ctx, &v, argv[0])) return JS_EXCEPTION;
+        const float fx = magic == NP_SCROLL_X ? static_cast<float>(v) : n->scrollX;
+        const float fy = magic == NP_SCROLL_Y ? static_cast<float>(v) : n->scrollY;
+        im->ui.setScroll(*n, fx, fy);  // instant, clamped; false on non-scroller
+        break;
+    }
     case NP_PRIMARY_ALIGN: {
         CStr s(ctx, argv[0]);
         if (!s) return JS_EXCEPTION;
@@ -831,9 +848,10 @@ JSValue ui_onClick(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
     if (!JS_IsFunction(ctx, argv[1])) return JS_ThrowTypeError(ctx, "function expected");
     JSValue fn = JS_DupValue(ctx, argv[1]);
     im->retained.push_back(fn);
-    im->ui.onClick(name, [im, fn](Node& n) {
-        JSValue arg = im->wrapNode(&n);
-        im->callVoid(fn, 1, &arg);
+    im->ui.onClick(name, [im, fn](Node& n, float x, float y) {
+        JSValue args[3] = {im->wrapNode(&n), JS_NewFloat64(im->ctx, x),
+                           JS_NewFloat64(im->ctx, y)};
+        im->callVoid(fn, 3, args);
     });
     return JS_UNDEFINED;
 }
@@ -845,9 +863,54 @@ JSValue ui_onHover(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
     if (!JS_IsFunction(ctx, argv[1])) return JS_ThrowTypeError(ctx, "function expected");
     JSValue fn = JS_DupValue(ctx, argv[1]);
     im->retained.push_back(fn);
-    im->ui.onHover(name, [im, fn](Node& n, bool entered) {
-        JSValue args[2] = {im->wrapNode(&n), JS_NewBool(im->ctx, entered)};
+    im->ui.onHover(name, [im, fn](Node& n, bool entered, float x, float y) {
+        JSValue args[4] = {im->wrapNode(&n), JS_NewBool(im->ctx, entered),
+                           JS_NewFloat64(im->ctx, x), JS_NewFloat64(im->ctx, y)};
+        im->callVoid(fn, 4, args);
+    });
+    return JS_UNDEFINED;
+}
+
+JSValue ui_onLongPress(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    std::string name;
+    if (argc < 2 || !argName(ctx, argv[0], name)) return JS_EXCEPTION;
+    if (!JS_IsFunction(ctx, argv[1])) return JS_ThrowTypeError(ctx, "function expected");
+    JSValue fn = JS_DupValue(ctx, argv[1]);
+    im->retained.push_back(fn);
+    im->ui.onLongPress(name, [im, fn](Node& n, float x, float y) {
+        JSValue args[3] = {im->wrapNode(&n), JS_NewFloat64(im->ctx, x),
+                           JS_NewFloat64(im->ctx, y)};
+        im->callVoid(fn, 3, args);
+    });
+    return JS_UNDEFINED;
+}
+
+JSValue ui_onSwipe(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    std::string name;
+    if (argc < 2 || !argName(ctx, argv[0], name)) return JS_EXCEPTION;
+    if (!JS_IsFunction(ctx, argv[1])) return JS_ThrowTypeError(ctx, "function expected");
+    JSValue fn = JS_DupValue(ctx, argv[1]);
+    im->retained.push_back(fn);
+    im->ui.onSwipe(name, [im, fn](Node& n, const char* dir) {
+        JSValue args[2] = {im->wrapNode(&n), JS_NewString(im->ctx, dir)};
         im->callVoid(fn, 2, args);
+    });
+    return JS_UNDEFINED;
+}
+
+JSValue ui_onScroll(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    std::string name;
+    if (argc < 2 || !argName(ctx, argv[0], name)) return JS_EXCEPTION;
+    if (!JS_IsFunction(ctx, argv[1])) return JS_ThrowTypeError(ctx, "function expected");
+    JSValue fn = JS_DupValue(ctx, argv[1]);
+    im->retained.push_back(fn);
+    im->ui.onScroll(name, [im, fn](Node& n, float sx, float sy) {
+        JSValue args[3] = {im->wrapNode(&n), JS_NewFloat64(im->ctx, sx),
+                           JS_NewFloat64(im->ctx, sy)};
+        im->callVoid(fn, 3, args);
     });
     return JS_UNDEFINED;
 }
@@ -1036,25 +1099,77 @@ JSValue ui_findAll(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
     return arr;
 }
 
+// Resolve argv[0] (node object or name) and compute the node's on-screen
+// center in viewport coordinates. Returns nullptr when not found (out params
+// untouched); throws only on bad argument types.
+Node* argNodeCenter(JSContext* ctx, JSValueConst arg, float& vx, float& vy,
+                    bool& threw) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    threw = false;
+    Node* n = JS_IsObject(arg) ? nodeOf(ctx, arg) : nullptr;
+    if (!n) {
+        std::string name;
+        if (!argName(ctx, arg, name)) {
+            threw = true;
+            return nullptr;
+        }
+        n = im->findNode(name);
+    }
+    if (!n) return nullptr;
+    float cx, cy;
+    n->absoluteTransform.apply(n->width * 0.5f, n->height * 0.5f, cx, cy);
+    im->ui.renderer().contentTransform().apply(cx, cy, vx, vy);
+    return n;
+}
+
 // Synthesized click at the node's on-screen center (uses the hit-test
 // transforms, so render at least one frame first). Accepts a node object or
 // a node name.
 JSValue ui_tap(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
     auto* im = ScriptHost::Impl::from(ctx);
     if (argc < 1) return JS_ThrowTypeError(ctx, "node or name expected");
-    Node* n = JS_IsObject(argv[0]) ? nodeOf(ctx, argv[0]) : nullptr;
-    if (!n) {
-        std::string name;
-        if (!argName(ctx, argv[0], name)) return JS_EXCEPTION;
-        n = im->findNode(name);
-    }
+    float vx = 0, vy = 0;
+    bool threw = false;
+    Node* n = argNodeCenter(ctx, argv[0], vx, vy, threw);
+    if (threw) return JS_EXCEPTION;
     if (!n) return JS_NewBool(ctx, false);
-    float cx, cy, vx, vy;
-    n->absoluteTransform.apply(n->width * 0.5f, n->height * 0.5f, cx, cy);
-    im->ui.renderer().contentTransform().apply(cx, cy, vx, vy);
     im->ui.pointerDown(vx, vy);
     im->ui.pointerUp(vx, vy);
     return JS_NewBool(ctx, true);
+}
+
+// Synthesized long press at the node's center: press, advance the UI clock
+// past the long-press threshold, release — all inside one host tick, so the
+// backend's real-mouse feed can't tear the gesture apart.
+JSValue ui_longPress(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    if (argc < 1) return JS_ThrowTypeError(ctx, "node or name expected");
+    float vx = 0, vy = 0;
+    bool threw = false;
+    Node* n = argNodeCenter(ctx, argv[0], vx, vy, threw);
+    if (threw) return JS_EXCEPTION;
+    if (!n) return JS_NewBool(ctx, false);
+    im->ui.pointerDown(vx, vy);
+    im->ui.update(0.6f);  // held time is real (unclamped) for gestures
+    im->ui.pointerUp(vx, vy);
+    return JS_NewBool(ctx, true);
+}
+
+// Raw pointer feed for synthesized gestures (viewport px). A multi-move
+// gesture (drag/swipe) must complete within ONE host tick — down/moves/up in
+// the same callback — or the backend's real-mouse polling fights it.
+JSValue ui_pointer(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv,
+                   int magic) {
+    auto* im = ScriptHost::Impl::from(ctx);
+    double x = 0, y = 0;
+    if (argc < 2 || JS_ToFloat64(ctx, &x, argv[0]) || JS_ToFloat64(ctx, &y, argv[1])) {
+        return JS_EXCEPTION;
+    }
+    const float fx = static_cast<float>(x), fy = static_cast<float>(y);
+    if (magic == 0) im->ui.pointerDown(fx, fy);
+    else if (magic == 1) im->ui.pointerMove(fx, fy);
+    else im->ui.pointerUp(fx, fy);
+    return JS_UNDEFINED;
 }
 
 // localStorage (magic: 0 getItem, 1 setItem, 2 removeItem, 3 clear).
@@ -1220,6 +1335,10 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     prop("primaryAlign", NP_PRIMARY_ALIGN, true);
     prop("width", NP_WIDTH, false);
     prop("height", NP_HEIGHT, false);
+    prop("scrollX", NP_SCROLL_X, true);
+    prop("scrollY", NP_SCROLL_Y, true);
+    prop("maxScrollX", NP_MAX_SCROLL_X, false);
+    prop("maxScrollY", NP_MAX_SCROLL_Y, false);
     JS_SetPropertyStr(ctx, proto, "find", JS_NewCFunction(ctx, nodeFind, "find", 1));
     JS_SetPropertyStr(ctx, proto, "child", JS_NewCFunction(ctx, nodeChild, "child", 1));
     JS_SetClassProto(ctx, d.nodeClass, proto);
@@ -1232,6 +1351,9 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     };
     fn("onClick", ui_onClick, 2);
     fn("onHover", ui_onHover, 2);
+    fn("onLongPress", ui_onLongPress, 2);
+    fn("onSwipe", ui_onSwipe, 2);
+    fn("onScroll", ui_onScroll, 2);
     fn("onUpdate", ui_onUpdate, 1);
     fn("navigateTo", ui_navigateTo, 3);
     fn("navigateBack", ui_navigateBack, 1);
@@ -1254,6 +1376,15 @@ ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     fn("find", ui_find, 1);
     fn("findAll", ui_findAll, 1);
     fn("tap", ui_tap, 1);
+    fn("longPress", ui_longPress, 1);
+    auto fnMagic = [&](const char* name, int magic) {
+        JS_SetPropertyStr(ctx, uiObj, name,
+                          JS_NewCFunctionMagic(ctx, ui_pointer, name, 2,
+                                               JS_CFUNC_generic_magic, magic));
+    };
+    fnMagic("pointerDown", 0);
+    fnMagic("pointerMove", 1);
+    fnMagic("pointerUp", 2);
     JS_SetPropertyStr(ctx, global, "ui", uiObj);
 
     JSValue consoleObj = JS_NewObject(ctx);

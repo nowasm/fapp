@@ -59,7 +59,8 @@ build\figoedit.exe <dir>\design.json
 
 ## 3. 逻辑（app.js）
 对着 `script.h` 写。常用：
-- 事件：`ui.onClick(name, fn)` / `ui.onHover(name, fn)` / `ui.onUpdate(dt=>…)`
+- 事件：`ui.onClick(name, fn(node,x,y))` / `ui.onHover` / `ui.onLongPress`（≥0.5s，消费 click） /
+  `ui.onSwipe(name, fn(node,dir))`（"left"/"right"） / `ui.onScroll(name, fn(node,x,y))` / `ui.onUpdate(dt=>…)`
 - 导航：`ui.navigateTo(name, "slideLeft", 0.28)` / `ui.navigateBack()` /
   `ui.selectFrame(name)`
 - 数据：`ui.bindList(name, count, (item,i)=>{ item.find("x").text = … })`

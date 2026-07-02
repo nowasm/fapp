@@ -1,0 +1,714 @@
+{
+ "name": "Weather",
+ "document": {
+  "id": "30:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "30:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "30:19",
+      "name": "Weather",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 1.0,
+         "g": 1.0,
+         "b": 1.0,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "30:9",
+        "name": "City Name",
+        "type": "TEXT",
+        "size": {
+         "x": 260,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          64
+         ]
+        ],
+        "characters": "Shanghai",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.0392156862745098,
+           "g": 0.043137254901960784,
+           "b": 0.050980392156862744,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 32,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.5
+        }
+       },
+       {
+        "id": "30:11",
+        "name": "Unit Toggle",
+        "type": "FRAME",
+        "size": {
+         "x": 64,
+         "y": 36
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          332
+         ],
+         [
+          0,
+          1,
+          64
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:10",
+          "name": "Unit Label",
+          "type": "TEXT",
+          "size": {
+           "x": 64,
+           "y": 36
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "°F",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.0392156862745098,
+             "g": 0.043137254901960784,
+             "b": 0.050980392156862744,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 14,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 16,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3568627450980392,
+           "g": 0.3803921568627451,
+           "b": 0.43137254901960786,
+           "a": 0.2
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "30:12",
+        "name": "Current Temp",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 96
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          116
+         ]
+        ],
+        "characters": "26°",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.0392156862745098,
+           "g": 0.043137254901960784,
+           "b": 0.050980392156862744,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 80,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -1.6
+        }
+       },
+       {
+        "id": "30:13",
+        "name": "Current Desc",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 26
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          222
+         ]
+        ],
+        "characters": "Partly cloudy",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3568627450980392,
+           "g": 0.3803921568627451,
+           "b": 0.43137254901960786,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 18,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:14",
+        "name": "Today High",
+        "type": "TEXT",
+        "size": {
+         "x": 100,
+         "y": 24
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          258
+         ]
+        ],
+        "characters": "H 29°",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.0392156862745098,
+           "g": 0.043137254901960784,
+           "b": 0.050980392156862744,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 16,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:15",
+        "name": "Today Low",
+        "type": "TEXT",
+        "size": {
+         "x": 100,
+         "y": 24
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          116
+         ],
+         [
+          0,
+          1,
+          258
+         ]
+        ],
+        "characters": "L 22°",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3568627450980392,
+           "g": 0.3803921568627451,
+           "b": 0.43137254901960786,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 16,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:16",
+        "name": "Header Divider",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 372,
+         "y": 1
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          318
+         ]
+        ],
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3568627450980392,
+           "g": 0.3803921568627451,
+           "b": 0.43137254901960786,
+           "a": 0.2
+          }
+         }
+        ]
+       },
+       {
+        "id": "30:17",
+        "name": "Forecast Title",
+        "type": "TEXT",
+        "size": {
+         "x": 240,
+         "y": 22
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          350
+         ]
+        ],
+        "characters": "5-day forecast",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.0392156862745098,
+           "g": 0.043137254901960784,
+           "b": 0.050980392156862744,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:8",
+        "name": "Forecast List",
+        "type": "FRAME",
+        "size": {
+         "x": 372,
+         "y": 348
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          396
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:7",
+          "name": "Forecast Row",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 60
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [],
+          "children": [
+           {
+            "id": "30:2",
+            "name": "Row Day",
+            "type": "TEXT",
+            "size": {
+             "x": 90,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              18
+             ]
+            ],
+            "characters": "Mon",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.0392156862745098,
+               "g": 0.043137254901960784,
+               "b": 0.050980392156862744,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:4",
+            "name": "Cond Badge",
+            "type": "FRAME",
+            "size": {
+             "x": 92,
+             "y": 34
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              104
+             ],
+             [
+              0,
+              1,
+              13
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8784313725490196,
+               "g": 0.9176470588235294,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:3",
+              "name": "Cond Label",
+              "type": "TEXT",
+              "size": {
+               "x": 92,
+               "y": 34
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "Cloudy",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.0,
+                 "g": 0.3215686274509804,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 600,
+               "fontSize": 12,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ],
+            "cornerRadius": 8
+           },
+           {
+            "id": "30:5",
+            "name": "Row High",
+            "type": "TEXT",
+            "size": {
+             "x": 60,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              242
+             ],
+             [
+              0,
+              1,
+              18
+             ]
+            ],
+            "characters": "29°",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.0392156862745098,
+               "g": 0.043137254901960784,
+               "b": 0.050980392156862744,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "RIGHT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:6",
+            "name": "Row Low",
+            "type": "TEXT",
+            "size": {
+             "x": 60,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              312
+             ],
+             [
+              0,
+              1,
+              18
+             ]
+            ],
+            "characters": "22°",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.3568627450980392,
+               "g": 0.3803921568627451,
+               "b": 0.43137254901960786,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 16,
+             "textAlignHorizontal": "RIGHT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         }
+        ],
+        "layoutMode": "VERTICAL",
+        "primaryAxisSizingMode": "AUTO",
+        "counterAxisSizingMode": "FIXED",
+        "itemSpacing": 12
+       },
+       {
+        "id": "30:18",
+        "name": "Updated Label",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 18
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          846
+         ]
+        ],
+        "characters": "Updated: sample data",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3568627450980392,
+           "g": 0.3803921568627451,
+           "b": 0.43137254901960786,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 12,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

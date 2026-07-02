@@ -24,7 +24,7 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
 | G2 | 系统能力桥 | 8 | 相机/相册、定位、分享、本地通知、深链、震动。现状零桥接，Android 无 JNI 通道 | `AndroidManifest.xml` 纯 NativeActivity；全仓 grep 0 命中 |
 | G3 | 控件语义/值概念 | 7 | switch/slider/进度条/日期与时间选择器/下拉。现只有 `setVariant` 离散态整树替换，无连续值、无自动状态切换、无过渡 | `ui.cpp:1136-1195` |
 | G4 | 跨平台网络 | 6 | ~~Android fetch 直接返回 not supported、无超时~~ **部分修复(2026-07)**：Android 走 JNI→`HttpURLConnection`（后台线程，HTTPS 系统级支持），Windows/Android 均加 15s 连接/读超时；注入口 `figo::setAndroidJNI(vm, activity)` 是通用 JNI 通道（存 JavaVM* + activity 全局引用，G1/G2 复用），figoplay android_main 已注入。编译/打包已验证，**真机运行验证 pending（无 adb 设备）**。仍缺：二进制 body/ArrayBuffer、WebSocket | `script_host.cpp` fetchWorker（Android 分支）、`script.h` setAndroidJNI |
-| G5 | 手势与事件面 | 6 | 长按、滑动（swipe/滑动删除/下拉刷新）、拖拽、双击、捏合；onScroll 回调与滚动位置读取；事件坐标入参。滚动引擎本身很完整但对 JS 是黑盒 | `figo_raylib.cpp:77-85` 只投单指针；`script_host.cpp:577-603` 仅两种事件 |
+| G5 | 手势与事件面 | 6 | ~~长按、swipe、onScroll、滚动位置读取、事件坐标~~ **部分修复(2026-07)**：`ui.onLongPress`（按住≥0.5s 不动，消费 click）、`ui.onSwipe`（水平 v1，"left"/"right"，位移≥60px 且 \|dx\|>2\|dy\| 且 <0.5s；被水平 drag-scroll 消费的不派发，垂直列表上的横扫仍算——滑动删除可做）、`ui.onScroll`（滚轮/拖拽/惯性/setScroll 全路径，同帧合并、每帧派发）；节点补 `scrollX/scrollY`（可读写）+ `maxScrollX/maxScrollY`；onClick/onHover/onLongPress 回调追加 viewport 坐标 `(node, x, y)`；测试原语 `ui.longPress` / `ui.pointerDown/Move/Up`。派发全走 structureRev/frame 守卫。回归基准 `examples/apps/_events_regress/`。**仍缺**：双击、捏合、多点触控、拖拽(drag&drop)、下拉刷新语义 | `ui.cpp` stepLongPress/maybeFireSwipe/dispatchScrollEvents；`figo_raylib.cpp:77-85` 仍只投单指针 |
 | G6 | 动态媒体 | 4 | 音频播放（raylib 有能力未接线）、视频、GIF 动图、Lottie（wasm sjlj 限制已知） | `scene_builder.cpp:250-292`；loaders 仅 svg,ttf,png,jpg,webp |
 | G7 | JS 属性/查询面 | 横切 | ~~visible/opacity/primarySizing 只写不可读~~ **部分修复(2026-07)**：visible/opacity/primarySizing/primaryAlign 补了 getter，新增只读 width/height。仍缺：位置(x/y)、颜色/样式读写、建/删节点 | `script_host.cpp` nodeGet |
 | G8 | 运行时诊断 | 横切 | 布局溢出/文本截断/字体缺失无警告（font_provider 静默回退，0 输出）；无机器可读诊断通道。直接决定 AI 迭代效率 | `font_provider.cpp:521,541` |
@@ -69,8 +69,9 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
    要改成带一个极薄 Java 层或用 `ANativeActivity` 的 JNIEnv 直调
    InputMethodManager。同一条 JNI 通道也是 G2 所有系统桥的地基，**先打通道，
    再逐个上桥**。剪贴板/密码遮罩属桌面侧小活，可并行。
-3. **G5 事件面**：给 JS 加 onLongPress/onSwipe/onScroll + 事件坐标 +
-   滚动位置读取。滚动引擎已完整，主要是暴露而非新造。
+3. ~~**G5 事件面**：给 JS 加 onLongPress/onSwipe/onScroll + 事件坐标 +
+   滚动位置读取~~ **已实现(2026-07)**，见上表 G5 行（v1 范围；双击/捏合/
+   多点触控仍缺）。
 4. **G7 属性面补读**：把只写属性补成可读、暴露几何——小活，随手做，
    AI 自验强依赖（读不到状态就只能截图猜）。
 5. **G8 运行时诊断**：字体缺失/文本截断/布局溢出输出结构化警告

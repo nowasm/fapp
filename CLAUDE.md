@@ -65,10 +65,14 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
      `import_svg {path:"design-systems/icons/<name>.svg", monochrome:"<token色>"}` 即可，
      清单与加图标方法见该目录 README。
 2. **逻辑**：写 `app.js`。完整 JS API 见 `include/figo/script.h` 头部注释。速查：
-   - `ui.onClick/onHover/onUpdate`、`ui.navigateTo(name, "slideLeft", 0.3)` / `navigateBack`
-   - `ui.bindList(name, count, (item, i) => …)`，节点：`.find/.child/.parent/.index/.text/.type`
+   - `ui.onClick/onHover`（回调带 viewport 坐标 x,y）、`ui.onLongPress`（≥0.5s，
+     消费 click）、`ui.onSwipe`（"left"/"right"）、`ui.onScroll`（同帧合并、惯性每帧派发）、
+     `ui.onUpdate`、`ui.navigateTo(name, "slideLeft", 0.3)` / `navigateBack`
+   - `ui.bindList(name, count, (item, i) => …)`，节点：`.find/.child/.parent/.index/.text/.type`、
+     `.scrollX/.scrollY`（可读写）、`.maxScrollX/.maxScrollY`
    - `ui.setText/setVisible/setOpacity/setVariant/setScroll/setEditable/focusText`
-   - `ui.find/findAll/tap(nameOrNode)`、`ui.setResizeMode("reflow")`
+   - `ui.find/findAll/tap/longPress(nameOrNode)`、`ui.pointerDown/Move/Up(x, y)`
+     （合成手势，多 move 手势限一个 tick 内）、`ui.setResizeMode("reflow")`
    - `setTimeout/setInterval`（app 时间）、`fetch()`（Promise）、`localStorage`（持久化到
      `<script>.storage.json`）
 3. **验证**：`figoplay.exe design.fig app.js --shot out.png` 后 Read 截图；

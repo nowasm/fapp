@@ -36,20 +36,20 @@ int main(int argc, char** argv) {
 
     // Hover feedback: dim any button the pointer is over.
     for (const char* name : {"btn-start", "btn-options", "btn-quit", "btn-back"}) {
-        ui->onHover(name, [&ui](figo::Node& n, bool entered) {
+        ui->onHover(name, [&ui](figo::Node& n, bool entered, float, float) {
             ui->setOpacity(n.name, entered ? 0.8f : -1.0f);  // <0 restores authored
         });
     }
 
     bool quit = false;
     int runs = 0;
-    ui->onClick("btn-start", [&](figo::Node&) {
+    ui->onClick("btn-start", [&](figo::Node&, float, float) {
         ++runs;
         ui->setText("subtitle", "Game started! (run #" + std::to_string(runs) + ")");
     });
-    ui->onClick("btn-options", [&](figo::Node&) { ui->selectFrame("Settings"); });
-    ui->onClick("btn-back", [&](figo::Node&) { ui->selectFrame("MainMenu"); });
-    ui->onClick("btn-quit", [&](figo::Node&) { quit = true; });
+    ui->onClick("btn-options", [&](figo::Node&, float, float) { ui->selectFrame("Settings"); });
+    ui->onClick("btn-back", [&](figo::Node&, float, float) { ui->selectFrame("MainMenu"); });
+    ui->onClick("btn-quit", [&](figo::Node&, float, float) { quit = true; });
 
     figo::RaylibFigmaView view(*ui);
     if (wantGpu) {
