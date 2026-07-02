@@ -40,7 +40,11 @@
 //   setTimeout(fn, ms) / setInterval(fn, ms) -> id, clearTimeout/clearInterval
 //     (driven by update(dt) — they tick in app time, pausing with the host)
 //   fetch(url, {method, headers, body}?) -> Promise<{status, ok, text(), json()}>
-//     (background thread; the promise settles on the next update(dt))
+//     (the promise settles on the next update(dt); supported on Windows
+//     (WinHTTP), Android (JNI HttpURLConnection — requires setAndroidJNI at
+//     startup) and web (browser fetch, CORS applies). Windows/Android run on
+//     a background thread with a 15s connect/read timeout; other platforms
+//     reject with "not supported")
 //   localStorage.getItem/setItem/removeItem/clear — string key/value store
 //     persisted as JSON at the host-provided path (see setStoragePath);
 //     without a path it works in memory only
@@ -51,6 +55,20 @@
 namespace figo {
 
 class FigmaUI;
+
+// ---- Android platform bridge (generic JNI channel) ----
+// fetch() needs JNI on Android today; future bridges (soft keyboard, share,
+// clipboard, ...) ride the same channel — it stores the process JavaVM* plus
+// the activity jobject (promoted to a JNI global reference), nothing
+// fetch-specific. Call once at startup from android_main, before any script
+// runs:
+//     android_app* app = GetAndroidApp();
+//     figo::setAndroidJNI(app->activity->vm, app->activity->clazz);
+// void* keeps <jni.h> out of this header; all three functions exist on every
+// platform (no-ops / null off Android) so callers need no #ifdef.
+void setAndroidJNI(void* javaVM, void* activity);
+void* androidJavaVM();    // injected JavaVM*, or null
+void* androidActivity();  // activity jobject (global ref), or null
 
 class ScriptHost {
 public:

@@ -281,6 +281,12 @@ int main(int argc, char** argv) {
 
 #ifdef __ANDROID__
     // The window is up → the activity (and its asset manager) is live.
+    // Hand the JavaVM + activity to the script layer's generic JNI channel
+    // (fetch via HttpURLConnection; future keyboard/system bridges).
+    {
+        android_app* app = GetAndroidApp();
+        figo::setAndroidJNI(app->activity->vm, app->activity->clazz);
+    }
     const std::string assetBase = extractAssets();
     if (p->design.empty()) {
         const std::string appManifest = assetBase + "/app/app.json";

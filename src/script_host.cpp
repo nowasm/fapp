@@ -24,6 +24,10 @@
 #include <emscripten/fetch.h>
 #endif
 
+#ifdef __ANDROID__
+#include <jni.h>
+#endif
+
 #include <map>
 
 #include <nlohmann/json.hpp>
@@ -95,6 +99,11 @@ struct FetchQueue {
     std::vector<FetchResult> results;
 };
 
+// Android JNI channel storage (see setAndroidJNI in script.h). Plain void*
+// so this compiles on every platform; only the Android code casts it back.
+void* g_androidJavaVM = nullptr;
+void* g_androidActivity = nullptr;  // jobject global ref
+
 #ifdef _WIN32
 
 std::wstring widen(const std::string& s) {
@@ -136,6 +145,8 @@ void fetchWorker(std::shared_ptr<FetchQueue> queue, uint64_t id, std::string url
     ses = WinHttpOpen(L"figo/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                       WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if (!ses) return fail("WinHttpOpen");
+    // 15s resolve/connect/send/receive (the defaults stall for minutes).
+    WinHttpSetTimeouts(ses, 15000, 15000, 15000, 15000);
     con = WinHttpConnect(ses, host, uc.nPort, 0);
     if (!con) return fail("connect");
     const bool https = uc.nScheme == INTERNET_SCHEME_HTTPS;
@@ -252,6 +263,228 @@ void fetchWorker(std::shared_ptr<FetchQueue> queue, uint64_t id, std::string url
         std::lock_guard<std::mutex> lock(c->queue->mutex);
         c->queue->results.push_back(std::move(res));
     }
+}
+
+#elif defined(__ANDROID__)
+
+// Pending Java exception → message string (also clears it). Empty if none.
+std::string takeJavaException(JNIEnv* env) {
+    jthrowable t = env->ExceptionOccurred();
+    if (!t) return {};
+    env->ExceptionClear();
+    std::string msg = "java exception";
+    jclass cls = env->GetObjectClass(t);
+    jmethodID toString = env->GetMethodID(cls, "toString", "()Ljava/lang/String;");
+    if (toString) {
+        jstring s = static_cast<jstring>(env->CallObjectMethod(t, toString));
+        if (env->ExceptionCheck()) env->ExceptionClear();
+        if (s) {
+            if (const char* c = env->GetStringUTFChars(s, nullptr)) {
+                msg = c;
+                env->ReleaseStringUTFChars(s, c);
+            }
+            env->DeleteLocalRef(s);
+        }
+    }
+    env->DeleteLocalRef(cls);
+    env->DeleteLocalRef(t);
+    return msg;
+}
+
+// Background-thread HTTP via JNI → java.net.HttpURLConnection: the platform
+// supplies HTTPS/TLS, proxies and certificates for free. Needs the JavaVM
+// injected at startup (figo::setAndroidJNI); same thread model as the
+// Windows worker — one detached thread per request, result pushed into the
+// shared queue and drained by update().
+void fetchWorker(std::shared_ptr<FetchQueue> queue, uint64_t id, std::string url,
+                 std::string method, std::string headers, std::string body) {
+    FetchResult res;
+    res.id = id;
+    auto finish = [&] {
+        std::lock_guard<std::mutex> lock(queue->mutex);
+        queue->results.push_back(std::move(res));
+    };
+    JavaVM* vm = static_cast<JavaVM*>(g_androidJavaVM);
+    if (!vm) {
+        res.error = "fetch: JavaVM not injected (call figo::setAndroidJNI at startup)";
+        return finish();
+    }
+    JNIEnv* env = nullptr;
+    if (vm->AttachCurrentThread(&env, nullptr) != JNI_OK || !env) {
+        res.error = "fetch: AttachCurrentThread failed";
+        return finish();
+    }
+    // One local-reference frame for the whole request; loop-local refs are
+    // still deleted eagerly below.
+    if (env->PushLocalFrame(64) != 0) {
+        env->ExceptionClear();
+        res.error = "fetch: PushLocalFrame failed";
+        vm->DetachCurrentThread();
+        return finish();
+    }
+    auto fail = [&](const char* what) {
+        const std::string jmsg = takeJavaException(env);
+        res.error = what;
+        if (!jmsg.empty()) res.error += ": " + jmsg;
+        res.status = 0;
+        res.body.clear();
+    };
+
+    do {
+        // conn = (HttpURLConnection) new URL(url).openConnection()
+        jclass urlCls = env->FindClass("java/net/URL");
+        jmethodID urlCtor =
+            urlCls ? env->GetMethodID(urlCls, "<init>", "(Ljava/lang/String;)V") : nullptr;
+        jmethodID openConn = urlCls ? env->GetMethodID(urlCls, "openConnection",
+                                                       "()Ljava/net/URLConnection;")
+                                    : nullptr;
+        jstring jurl = (urlCtor && openConn) ? env->NewStringUTF(url.c_str()) : nullptr;
+        jobject urlObj = jurl ? env->NewObject(urlCls, urlCtor, jurl) : nullptr;
+        if (!urlObj || env->ExceptionCheck()) {
+            fail("bad url");  // MalformedURLException lands here
+            break;
+        }
+        jobject conn = env->CallObjectMethod(urlObj, openConn);
+        if (!conn || env->ExceptionCheck()) {
+            fail("open connection");
+            break;
+        }
+        jclass connCls = env->FindClass("java/net/HttpURLConnection");
+        if (!connCls || !env->IsInstanceOf(conn, connCls)) {
+            fail("not an http(s) url");
+            break;
+        }
+        jmethodID setMethod =
+            env->GetMethodID(connCls, "setRequestMethod", "(Ljava/lang/String;)V");
+        jmethodID setConnTimeout = env->GetMethodID(connCls, "setConnectTimeout", "(I)V");
+        jmethodID setReadTimeout = env->GetMethodID(connCls, "setReadTimeout", "(I)V");
+        jmethodID setReqProp = env->GetMethodID(connCls, "setRequestProperty",
+                                                "(Ljava/lang/String;Ljava/lang/String;)V");
+        jmethodID setDoOutput = env->GetMethodID(connCls, "setDoOutput", "(Z)V");
+        jmethodID getOutput =
+            env->GetMethodID(connCls, "getOutputStream", "()Ljava/io/OutputStream;");
+        jmethodID getStatus = env->GetMethodID(connCls, "getResponseCode", "()I");
+        jmethodID getInput =
+            env->GetMethodID(connCls, "getInputStream", "()Ljava/io/InputStream;");
+        jmethodID getError =
+            env->GetMethodID(connCls, "getErrorStream", "()Ljava/io/InputStream;");
+        jmethodID disconnect = env->GetMethodID(connCls, "disconnect", "()V");
+        if (env->ExceptionCheck()) {
+            fail("HttpURLConnection lookup");
+            break;
+        }
+
+        jstring jmethod = env->NewStringUTF(method.empty() ? "GET" : method.c_str());
+        env->CallVoidMethod(conn, setMethod, jmethod);
+        env->DeleteLocalRef(jmethod);
+        env->CallVoidMethod(conn, setConnTimeout, 15000);  // 15s, matches Windows
+        env->CallVoidMethod(conn, setReadTimeout, 15000);
+        if (env->ExceptionCheck()) {
+            fail("bad method");
+            break;
+        }
+
+        // "Key: Value\r\n…" → setRequestProperty (same flattening the
+        // emscripten branch parses).
+        bool headerErr = false;
+        for (size_t at = 0; at < headers.size() && !headerErr;) {
+            size_t end = headers.find("\r\n", at);
+            if (end == std::string::npos) end = headers.size();
+            const std::string line = headers.substr(at, end - at);
+            at = end + 2;
+            const size_t colon = line.find(':');
+            if (colon == std::string::npos) continue;
+            std::string val = line.substr(colon + 1);
+            val.erase(0, val.find_first_not_of(' '));
+            jstring jk = env->NewStringUTF(line.substr(0, colon).c_str());
+            jstring jv = env->NewStringUTF(val.c_str());
+            env->CallVoidMethod(conn, setReqProp, jk, jv);
+            env->DeleteLocalRef(jk);
+            env->DeleteLocalRef(jv);
+            headerErr = env->ExceptionCheck();
+        }
+        if (headerErr) {
+            fail("bad header");
+            break;
+        }
+
+        if (!body.empty()) {
+            env->CallVoidMethod(conn, setDoOutput, JNI_TRUE);
+            jobject os = env->CallObjectMethod(conn, getOutput);
+            if (!os || env->ExceptionCheck()) {
+                fail("connect");  // timeouts/refused surface here
+                break;
+            }
+            jclass osCls = env->GetObjectClass(os);
+            jmethodID osWrite = env->GetMethodID(osCls, "write", "([B)V");
+            jmethodID osClose = env->GetMethodID(osCls, "close", "()V");
+            jbyteArray arr = env->NewByteArray(static_cast<jsize>(body.size()));
+            env->SetByteArrayRegion(arr, 0, static_cast<jsize>(body.size()),
+                                    reinterpret_cast<const jbyte*>(body.data()));
+            env->CallVoidMethod(os, osWrite, arr);
+            const bool writeErr = env->ExceptionCheck();
+            if (!writeErr) env->CallVoidMethod(os, osClose);
+            env->DeleteLocalRef(arr);
+            env->DeleteLocalRef(osCls);
+            env->DeleteLocalRef(os);
+            if (writeErr || env->ExceptionCheck()) {
+                fail("send");
+                break;
+            }
+        }
+
+        res.status = env->CallIntMethod(conn, getStatus);
+        if (env->ExceptionCheck()) {
+            fail("send");  // UnknownHost/SocketTimeout/SSL land here
+            break;
+        }
+
+        // Body: InputStream for 2xx; on IOException (4xx/5xx) fall back to
+        // the ErrorStream so error bodies still reach the script.
+        jobject is = env->CallObjectMethod(conn, getInput);
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+            if (is) env->DeleteLocalRef(is);
+            is = env->CallObjectMethod(conn, getError);
+            if (env->ExceptionCheck()) env->ExceptionClear();
+        }
+        if (is) {
+            jclass isCls = env->GetObjectClass(is);
+            jmethodID isRead = env->GetMethodID(isCls, "read", "([B)I");
+            jmethodID isClose = env->GetMethodID(isCls, "close", "()V");
+            jbyteArray buf = env->NewByteArray(8192);
+            bool readErr = false;
+            for (;;) {
+                const jint n = env->CallIntMethod(is, isRead, buf);
+                if (env->ExceptionCheck()) {  // e.g. read timeout mid-body
+                    readErr = true;
+                    break;
+                }
+                if (n <= 0) break;
+                const size_t at = res.body.size();
+                res.body.resize(at + static_cast<size_t>(n));
+                env->GetByteArrayRegion(buf, 0, n,
+                                        reinterpret_cast<jbyte*>(res.body.data() + at));
+            }
+            if (!readErr) {
+                env->CallVoidMethod(is, isClose);
+                if (env->ExceptionCheck()) env->ExceptionClear();
+            }
+            env->DeleteLocalRef(buf);
+            env->DeleteLocalRef(isCls);
+            env->DeleteLocalRef(is);
+            if (readErr) {
+                fail("read");
+                break;
+            }
+        }
+        env->CallVoidMethod(conn, disconnect);
+        if (env->ExceptionCheck()) env->ExceptionClear();
+    } while (false);
+
+    env->PopLocalFrame(nullptr);
+    vm->DetachCurrentThread();
+    finish();
 }
 
 #else
@@ -895,7 +1128,7 @@ JSValue js_fetchNative(JSContext* ctx, JSValueConst, int argc, JSValueConst* arg
     if (JS_IsException(promise)) return promise;
     const uint64_t id = im->nextFetchId++;
     im->pendingFetch[id] = {funcs[0], funcs[1]};
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__ANDROID__)
     std::thread(fetchWorker, im->fetchQueue, id, std::move(url), std::move(method),
                 std::move(headers), std::move(body))
         .detach();
@@ -922,6 +1155,32 @@ JSValue js_consoleLog(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv
 }
 
 }  // namespace
+
+// ---- Android JNI channel (see script.h) ----
+// Stores the JavaVM and the activity as a JNI global ref so any figo
+// platform bridge (fetch today; keyboard/system bridges later) can attach
+// and call into Java. No-op storage on other platforms.
+void setAndroidJNI(void* javaVM, void* activity) {
+#ifdef __ANDROID__
+    JavaVM* vm = static_cast<JavaVM*>(javaVM);
+    JNIEnv* env = nullptr;
+    if (vm) {
+        // The NativeActivity glue thread may not be attached yet; attaching
+        // is idempotent and the main thread stays attached for process life.
+        if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) == JNI_EDETACHED) {
+            vm->AttachCurrentThread(&env, nullptr);
+        }
+    }
+    if (env && activity) {
+        activity = env->NewGlobalRef(static_cast<jobject>(activity));
+    }
+#endif
+    g_androidJavaVM = javaVM;
+    g_androidActivity = activity;
+}
+
+void* androidJavaVM() { return g_androidJavaVM; }
+void* androidActivity() { return g_androidActivity; }
 
 ScriptHost::ScriptHost(FigmaUI& ui) : impl_(std::make_unique<Impl>(ui)) {
     auto& d = *impl_;

@@ -76,6 +76,7 @@ $manifestXml = @"
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="$PackageId" android:versionCode="$VersionCode" android:versionName="$VersionName">
   <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="34"/>
+  <uses-permission android:name="android.permission.INTERNET"/>
   <application android:label="$AppName"$iconAttr android:hasCode="false" android:extractNativeLibs="true">
     <activity android:name="android.app.NativeActivity" android:exported="true"$themeAttr
               android:configChanges="orientation|keyboardHidden|screenSize">
