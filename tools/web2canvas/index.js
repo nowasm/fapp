@@ -186,8 +186,14 @@ function collectorFn({ rootSelector, aiName }) {
         const sc = parseScale(rule.style.transform);
         if (sc) { k.scale = sc; sawScale = true; }
         if (finite && rule.style.transform && rule.style.transform !== 'none') {
+          // Record pos on EVERY transform keyframe, including zero translation —
+          // a slide-in's resting `translateY(0)` key must exist or the track has
+          // a single key and gets dropped downstream (and the rest-anchor below
+          // would pick the wrong key). sawPos only when some key actually moves;
+          // pure scale/rotate anims get their no-op pos stripped after the loop.
           const mat = transformMat(rule.style.transform);
-          if (Math.abs(mat[4]) > 0.01 || Math.abs(mat[5]) > 0.01) { k.pos = [mat[4], mat[5]]; sawPos = true; }
+          k.pos = [mat[4], mat[5]];
+          if (Math.abs(mat[4]) > 0.01 || Math.abs(mat[5]) > 0.01) sawPos = true;
         }
         // height keyframes (equalizer/voiceprint bars) → scaleY about the
         // element's CAPTURED box height, so the absolute px land correctly
@@ -200,6 +206,11 @@ function collectorFn({ rootSelector, aiName }) {
         }
         if ('opacity' in k || 'scale' in k || 'pos' in k) keys.push(k);
       }
+    }
+    if (!sawPos) {  // no key actually translates — drop the no-op pos entries
+      for (const k of keys) delete k.pos;
+      for (let i = keys.length - 1; i >= 0; i--)
+        if (!('opacity' in keys[i]) && !('scale' in keys[i])) keys.splice(i, 1);
     }
     if (!keys.length) return null;
     // A height-grow (bar) animation rises from its baseline, so pivot at the
@@ -276,8 +287,12 @@ function collectorFn({ rootSelector, aiName }) {
         }
       }
     }
+    // First timing function, paren-aware: a naive split(',') would truncate
+    // "cubic-bezier(.7,0,.3,1)" to "cubic-bezier(.7" and lose the curve.
+    const easeRaw = cs.animationTimingFunction || 'linear';
+    const easeM = /^\s*([a-z-]+\([^)]*\)|[a-z-]+)/i.exec(easeRaw);
     return { dur, delay, iter, pivot,
-             ease: (cs.animationTimingFunction || 'linear').split(',')[0].trim(), keys: outKeys };
+             ease: easeM ? easeM[1] : 'linear', keys: outKeys };
   }
   // Normalize any CSS color (incl. oklch/oklab/color-mix, which getComputedStyle
   // and canvas fillStyle preserve as-is) to plain rgba by rasterizing one pixel

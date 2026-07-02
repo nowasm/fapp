@@ -1009,6 +1009,34 @@ struct Converter {
     // node), so tracks target "." . Must be called while `body`'s last [node]
     // is still this node (before any child [node] is written) so pivot_offset
     // attaches here. selfPath is the node's own .tscn path (its children's parent).
+    // CSS timing function → cubic-bezier control points (x1,y1,x2,y2); false
+    // for linear/steps. Non-linear curves get SAMPLED into sub-keys per segment
+    // below — linear interpolation between samples reproduces any bezier,
+    // including overshoot bounces (y outside [0,1]), which Godot's per-key
+    // exponent transitions cannot express.
+    static bool cssBezier(const std::string& e, float b[4]) {
+        if (e == "ease")        { b[0]=0.25f; b[1]=0.1f;  b[2]=0.25f; b[3]=1; return true; }
+        if (e == "ease-in")     { b[0]=0.42f; b[1]=0;     b[2]=1;     b[3]=1; return true; }
+        if (e == "ease-out")    { b[0]=0;     b[1]=0;     b[2]=0.58f; b[3]=1; return true; }
+        if (e == "ease-in-out") { b[0]=0.42f; b[1]=0;     b[2]=0.58f; b[3]=1; return true; }
+        if (e.rfind("cubic-bezier(", 0) == 0 &&
+            std::sscanf(e.c_str(), "cubic-bezier(%f ,%f ,%f ,%f", &b[0], &b[1], &b[2], &b[3]) == 4)
+            return true;
+        return false;
+    }
+    // Eased fraction y at time fraction x: solve the bezier's x(s)=x by
+    // bisection (x(s) is monotonic for x1,x2 ∈ [0,1]), then evaluate y(s).
+    static float bezY(const float b[4], float x) {
+        float lo = 0, hi = 1;
+        for (int i = 0; i < 40; ++i) {
+            const float s = 0.5f * (lo + hi);
+            const float xs = 3*(1-s)*(1-s)*s*b[0] + 3*(1-s)*s*s*b[2] + s*s*s;
+            (xs < x ? lo : hi) = s;
+        }
+        const float s = 0.5f * (lo + hi);
+        return 3*(1-s)*(1-s)*s*b[1] + 3*(1-s)*s*s*b[3] + s*s*s;
+    }
+
     void emitAnim(const Node& n, const std::string& selfPath, float baseX, float baseY) {
         if (!n.anim) return;
         const NodeAnim& a = *n.anim;
@@ -1016,10 +1044,15 @@ struct Converter {
         for (const auto& k : a.keys) { anyScale |= k.hasScale; anyOpacity |= k.hasOpacity; anyPos |= k.hasPos; }
         if (!anyScale && !anyOpacity && !anyPos) return;
 
-        // Scale pivots about transform-origin → set pivot_offset on this node.
+        // Scale pivots about transform-origin. The pivot is authored on the
+        // element's logical box (lx/ly + width/height), but a raster branch
+        // emits the node at the baked bbox origin (baseX/baseY, tight-cropped
+        // with glow margins) — express the pivot in the emitted node's local
+        // coordinates or the scale drifts off-center.
         if (anyScale && n.width > 0 && n.height > 0)
-            body += "pivot_offset = Vector2(" + num(a.pivotX * n.width) + ", " +
-                    num(a.pivotY * n.height) + ")\n";
+            body += "pivot_offset = Vector2(" +
+                    num(n.relativeTransform.m02 + a.pivotX * n.width - baseX) + ", " +
+                    num(n.relativeTransform.m12 + a.pivotY * n.height - baseY) + ")\n";
 
         // A CSS step timing (mcflash blinks 1↔0.35) maps to a DISCRETE update
         // (hold the key value, jump at the next key) — NOT interp=NEAREST, which
@@ -1035,21 +1068,64 @@ struct Converter {
         const std::string libRes = "AnimLib_" + std::to_string(subId);
         ++subId;
 
+        // animation-delay on a FINITE animation is a choreography offset (the
+        // death sequence staggers slash/shake/stamp/title by delay). Godot
+        // players all autoplay at t=0, so bake it in: extend the length, shift
+        // every key by +delay, and hold the first key's value from t=0 — which
+        // is exactly CSS `both`/backwards fill during the delay. Infinite
+        // loops already had their delay phase-baked into the keys by
+        // web2canvas, so they get no shift here.
+        const float dur = a.dur > 0 ? a.dur : 1.0f;
+        const float delay = (a.iter != 0 && a.delay > 0) ? a.delay : 0.0f;
         std::string s = "[sub_resource type=\"Animation\" id=\"" + animRes + "\"]\n";
         s += "resource_name = \"a\"\n";
-        s += "length = " + num(a.dur > 0 ? a.dur : 1.0f) + "\n";
+        s += "length = " + num(dur + delay) + "\n";
         s += "loop_mode = " + std::string(a.iter == 0 ? "1" : "0") + "\n";
+        float bz[4];
+        const bool haveBez = !stepEase && cssBezier(a.ease, bz);
         int tn = 0;
         auto track = [&](const char* prop, const std::function<bool(const AnimKey&)>& has,
-                         const std::function<std::string(const AnimKey&)>& val) {
-            std::vector<const AnimKey*> ks;
-            for (const auto& k : a.keys) if (has(k)) ks.push_back(&k);
-            if (ks.size() < 2) return;
+                         const std::function<std::vector<float>(const AnimKey&)>& val,
+                         const std::function<std::string(const std::vector<float>&)>& fmt) {
+            std::vector<const AnimKey*> src;
+            for (const auto& k : a.keys) if (has(k)) src.push_back(&k);
+            if (src.size() < 2) return;
+            std::vector<std::pair<float, std::vector<float>>> ks;
+            if (delay > 0) ks.emplace_back(0.0f, val(*src[0]));  // pre-delay hold
+            for (const AnimKey* k : src) ks.emplace_back(delay + k->t * a.dur, val(*k));
+            // Replay the CSS timing function (applied per keyframe SEGMENT) by
+            // sampling it into sub-keys — restores the rhythm: a slash's
+            // fast-middle cubic-bezier, an ease-out settle, the ✕ stamp's
+            // overshoot bounce. Flat (equal-value) and near-instant segments
+            // (the delay hold, phase-baked seam snaps) are left unsampled.
+            if (haveBez) {
+                std::vector<std::pair<float, std::vector<float>>> ex;
+                for (size_t i = 0; i + 1 < ks.size(); ++i) {
+                    ex.push_back(ks[i]);
+                    const auto& A = ks[i];
+                    const auto& B = ks[i + 1];
+                    bool flat = true;
+                    for (size_t c = 0; c < A.second.size() && flat; ++c)
+                        flat = std::fabs(A.second[c] - B.second[c]) <= 1e-4f;
+                    if (flat || B.first - A.first < 0.04f) continue;
+                    const int SUB = 12;
+                    for (int u = 1; u < SUB; ++u) {
+                        const float x = float(u) / SUB;
+                        const float y = bezY(bz, x);
+                        std::vector<float> v(A.second.size());
+                        for (size_t c = 0; c < v.size(); ++c)
+                            v[c] = A.second[c] + (B.second[c] - A.second[c]) * y;
+                        ex.emplace_back(A.first + (B.first - A.first) * x, std::move(v));
+                    }
+                }
+                ex.push_back(ks.back());
+                ks.swap(ex);
+            }
             std::string times, vals, trans;
             for (size_t i = 0; i < ks.size(); ++i) {
                 if (i) { times += ", "; vals += ", "; trans += ", "; }
-                times += num(ks[i]->t * a.dur);
-                vals += val(*ks[i]);
+                times += num(ks[i].first);
+                vals += fmt(ks[i].second);
                 trans += "1";
             }
             s += "tracks/" + std::to_string(tn) + "/type = \"value\"\n";
@@ -1066,14 +1142,18 @@ struct Converter {
             s += "}\n";
             ++tn;
         };
+        const auto fmt1 = [](const std::vector<float>& v) { return num(v[0]); };
+        const auto fmt2 = [](const std::vector<float>& v) {
+            return std::string("Vector2(") + num(v[0]) + ", " + num(v[1]) + ")";
+        };
         track("modulate:a", [](const AnimKey& k) { return k.hasOpacity; },
-              [](const AnimKey& k) { return num(k.opacity); });
+              [](const AnimKey& k) { return std::vector<float>{k.opacity}; }, fmt1);
         track("scale", [](const AnimKey& k) { return k.hasScale; },
-              [](const AnimKey& k) { return std::string("Vector2(") + num(k.sx) + ", " + num(k.sy) + ")"; });
+              [](const AnimKey& k) { return std::vector<float>{k.sx, k.sy}; }, fmt2);
         // Position track: the rest-relative px delta added to the node's exported
         // top-left offset (a translate shake / a rotated slash sweep).
         track("position", [](const AnimKey& k) { return k.hasPos; },
-              [&](const AnimKey& k) { return std::string("Vector2(") + num(baseX + k.dx) + ", " + num(baseY + k.dy) + ")"; });
+              [&](const AnimKey& k) { return std::vector<float>{baseX + k.dx, baseY + k.dy}; }, fmt2);
         if (tn == 0) return;  // nothing replayable
 
         s += "\n[sub_resource type=\"AnimationLibrary\" id=\"" + libRes + "\"]\n";
