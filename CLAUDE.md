@@ -116,6 +116,11 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
 - **可点容器必须有 fill**：无 fill 的 FRAME 在子节点空隙处不可命中，
   `ui.tap(node)` 返回 true 只表示派发了点击、不保证命中该节点（notes 实测：
   行中心落在两行文本的间隙，点击落到底层节点，onClick 静默不触发）。
+  需要"不可见但可命中"（如滚轮行、遮罩）就给 **alpha=0 的 fill**。
+- 滚轮选择器配方（alarm）：容器 FIXED+VERTICAL_SCROLLING+snapToChildren，
+  行加 alpha=0 fill，选中带垫在滚轮 z 序之下；**paddingBottom 不进滚动范围**
+  （G15），尾部用空文本幻影行补可达性；`snapTo` 的 duration 是指数趋近、
+  非硬时限（0.2s 实测 ~0.4s 静止），巡演断言用 `snapTo(...,0)` 即时档。
 - ThorVG `Picture::load(path)` 自带按路径解码缓存；滚动/转场都不重建场景
   （ScrollBinding 变换重定向 / 后端贴图合成），性能敏感改动先看 `src/renderer.cpp`。
 - .fig 输入靠 fig2json（`D:\work_open\fig2json`，Rust）转 canvas.json，缓存于

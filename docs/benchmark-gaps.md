@@ -34,6 +34,7 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
 | G12 | 文档承诺未兑现 | 横切 | ~~transitionProgress 未绑定 JS~~ **已修复(2026-07)**：`ui.transitionProgress()` 已绑定；语义=转场中 eased [0,1)、**空闲返回 1**，截图门控用 `>= 1` 判定就位（script.h 注释已同步） | `script_host.cpp` ui_transitionProgress |
 | G14 | 隐藏不出布局流 | 横切 | ~~JS setVisible 写 runtimeVisible 但 layout `inFlow()` 只看 authored visible——脚本隐藏的 auto-layout 子节点像素消失但仍占流位~~ **已修复(2026-07)**：`inFlow` 改用 `effectivelyVisible()`；`FigmaUI::setVisible`（名字/句柄双入口）在可见性变化时从最外层 auto-layout 祖先重排（hug 链随之伸缩）。注意：从未 bindList 过的 hug 容器首次运行时重排会收缩到实际内容高（与 bindList 同语义） | `layout.cpp` inFlow、`ui.cpp` setVisible（chat app 发现，2026-07） |
 | G13 | bindList 强制 hug | 横切 | ~~bindList 无条件把容器改 Hug，可滚数据列表做不出来~~ **已修复(2026-07)**：容器 authored 为主轴滚动（FIXED + overflowDirection 含主轴）时 bindList 保留固定高，内容溢出进滚动范围（news 列表实测 maxScrollY 24）；非滚动容器仍随数据 hug | `ui.cpp` bindList（recipes app 发现，2026-07） |
+| G15 | 滚动 extent 忽略尾部 padding | 横切 | 滚动范围只算到最后一个子节点底部，`paddingBottom` 不可达（alarm 滚轮实测 paddingTop 生效、paddingBottom 丢失 112px，尾部两项滚不到中心）。绕法：尾部挂空文本幻影行 + onScrollEnd clamp。修法：content extent 计入容器 padding | 滚动 extent 计算（alarm app 发现，2026-07） |
 
 ## 20 个 benchmark app × 卡点矩阵
 
@@ -54,9 +55,9 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
 | 10 | 天气 | fetch JSON、数据绑定 | 定位 G2（城市写死）| **✅ 已做**（coinbase，open-meteo live 实测）|
 | 11 | 新闻阅读器 | fetch 列表、图片、阅读页 | 分享 G2、下拉刷新 G5 | **✅ 已做**（notion）|
 | 12 | 菜谱 | 图片列表、搜索、收藏 | 搜索降级为分类过滤 | **✅ 已做**（material）|
-| 13 | 聊天 UI | 输入条、滚动到底、气泡列表 | **软键盘避让 G1**、**滚动位置 G5/G7**、长按 G5 | 缺口驱动型 |
+| 13 | 聊天 UI | 输入条、滚动到底、气泡列表 | 软键盘避让 G1（移动端）| **✅ 已做**（linear-app 桌面版，发现 G14）|
 | 14 | 日历/日程 | 月网格、事件增删、时间选择 | 时间选择器 G3、输入 G1 | 缺口驱动型 |
-| 15 | 闹钟/倒计时 | 时间滚轮选择器、后台通知 | **滚轮选择器 G3/G5**、**通知 G2** | 缺口驱动型 |
+| 15 | 闹钟/倒计时 | 时间滚轮选择器、后台通知 | 通知 G2 降级为前台演示响铃 | **✅ 已做**（apple，snap 滚轮实战验收，发现 G15）|
 | 16 | 音乐播放器 | 进度 slider 拖拽、播放控制 | 无 | **✅ 已做**（spotify，双 bindSlider/playSound 实战验收）|
 | 17 | 播客 | 流媒体音频、倍速 | **音频 G6**、fetch G4 | 缺口驱动型 |
 | 18 | 相册/图库 | 网格、大图、手势 | **相册桥 G2**、捏合缩放 G5 | 缺口驱动型 |

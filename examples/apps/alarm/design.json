@@ -1,0 +1,1336 @@
+{
+ "name": "Alarm",
+ "document": {
+  "id": "30:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "30:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "30:35",
+      "name": "Alarms",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.9607843137254902,
+         "g": 0.9607843137254902,
+         "b": 0.9686274509803922,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "30:16",
+        "name": "Title",
+        "type": "TEXT",
+        "size": {
+         "x": 380,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          72
+         ]
+        ],
+        "characters": "Alarms",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11372549019607843,
+           "g": 0.11372549019607843,
+           "b": 0.12156862745098039,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 28,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.4
+        }
+       },
+       {
+        "id": "30:10",
+        "name": "AlarmList",
+        "type": "FRAME",
+        "size": {
+         "x": 380,
+         "y": 168
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          140
+         ]
+        ],
+        "clipsContent": true,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:9",
+          "name": "AlarmRow",
+          "type": "FRAME",
+          "size": {
+           "x": 380,
+           "y": 84
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:2",
+            "name": "RowTime",
+            "type": "TEXT",
+            "size": {
+             "x": 190,
+             "y": 50
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              20
+             ],
+             [
+              0,
+              1,
+              8
+             ]
+            ],
+            "characters": "06:30",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.11372549019607843,
+               "g": 0.11372549019607843,
+               "b": 0.12156862745098039,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 40,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": -0.6
+            }
+           },
+           {
+            "id": "30:3",
+            "name": "RowLabel",
+            "type": "TEXT",
+            "size": {
+             "x": 220,
+             "y": 18
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              20
+             ],
+             [
+              0,
+              1,
+              58
+             ]
+            ],
+            "characters": "Wake up",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.43137254901960786,
+               "g": 0.43137254901960786,
+               "b": 0.45098039215686275,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 14,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:5",
+            "name": "RowSwOn",
+            "type": "FRAME",
+            "size": {
+             "x": 51,
+             "y": 31
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              313
+             ],
+             [
+              0,
+              1,
+              26.5
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.0,
+               "g": 0.44313725490196076,
+               "b": 0.8901960784313725,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:4",
+              "name": "RowSwOnKnob",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 27,
+               "y": 27
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                22
+               ],
+               [
+                0,
+                1,
+                2.0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 13.5
+             }
+            ],
+            "cornerRadius": 15.5
+           },
+           {
+            "id": "30:7",
+            "name": "RowSwOff",
+            "type": "FRAME",
+            "size": {
+             "x": 51,
+             "y": 31
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              313
+             ],
+             [
+              0,
+              1,
+              26.5
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.9098039215686274,
+               "g": 0.9098039215686274,
+               "b": 0.9294117647058824,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "30:6",
+              "name": "RowSwOffKnob",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 27,
+               "y": 27
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                2
+               ],
+               [
+                0,
+                1,
+                2.0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 13.5,
+              "strokes": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.8235294117647058,
+                 "g": 0.8235294117647058,
+                 "b": 0.8431372549019608,
+                 "a": 1.0
+                }
+               }
+              ],
+              "strokeWeight": 1
+             }
+            ],
+            "cornerRadius": 15.5,
+            "strokes": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8235294117647058,
+               "g": 0.8235294117647058,
+               "b": 0.8431372549019608,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokeWeight": 1,
+            "visible": false
+           },
+           {
+            "id": "30:8",
+            "name": "RowLine",
+            "type": "RECTANGLE",
+            "size": {
+             "x": 360,
+             "y": 1
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              20
+             ],
+             [
+              0,
+              1,
+              83
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.9098039215686274,
+               "g": 0.9098039215686274,
+               "b": 0.9294117647058824,
+               "a": 1.0
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ],
+        "cornerRadius": 12,
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 0,
+        "primaryAxisSizingMode": "AUTO",
+        "counterAxisSizingMode": "FIXED"
+       },
+       {
+        "id": "30:17",
+        "name": "Hint",
+        "type": "TEXT",
+        "size": {
+         "x": 380,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          778
+         ]
+        ],
+        "characters": "Long-press an alarm to preview the ring",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.43137254901960786,
+           "g": 0.43137254901960786,
+           "b": 0.45098039215686275,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 12,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:19",
+        "name": "BtnNew",
+        "type": "FRAME",
+        "size": {
+         "x": 380,
+         "y": 52
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          812
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.0,
+           "g": 0.44313725490196076,
+           "b": 0.8901960784313725,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:18",
+          "name": "BtnNewLabel",
+          "type": "TEXT",
+          "size": {
+           "x": 380,
+           "y": 52
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "New Alarm",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 17,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 26
+       },
+       {
+        "id": "30:15",
+        "name": "DemoOverlay",
+        "type": "FRAME",
+        "size": {
+         "x": 420,
+         "y": 900
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          0
+         ],
+         [
+          0,
+          1,
+          0
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.0,
+           "g": 0.0,
+           "b": 0.0,
+           "a": 0.42
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "30:14",
+          "name": "DemoCard",
+          "type": "FRAME",
+          "size": {
+           "x": 320,
+           "y": 168
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            50
+           ],
+           [
+            0,
+            1,
+            366
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:11",
+            "name": "DemoTitle",
+            "type": "TEXT",
+            "size": {
+             "x": 320,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              30
+             ]
+            ],
+            "characters": "Alarm preview",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.11372549019607843,
+               "g": 0.11372549019607843,
+               "b": 0.12156862745098039,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 17,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:12",
+            "name": "DemoText",
+            "type": "TEXT",
+            "size": {
+             "x": 320,
+             "y": 30
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              66
+             ]
+            ],
+            "characters": "Rings in 2 seconds",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.25882352941176473,
+               "g": 0.25882352941176473,
+               "b": 0.27058823529411763,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 21,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "30:13",
+            "name": "DemoHint",
+            "type": "TEXT",
+            "size": {
+             "x": 320,
+             "y": 16
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              122
+             ]
+            ],
+            "characters": "Tap anywhere to dismiss",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.43137254901960786,
+               "g": 0.43137254901960786,
+               "b": 0.45098039215686275,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 12,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 12
+         }
+        ],
+        "visible": false
+       }
+      ]
+     },
+     {
+      "id": "30:36",
+      "name": "Picker",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        460
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.9607843137254902,
+         "g": 0.9607843137254902,
+         "b": 0.9686274509803922,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "30:21",
+        "name": "BtnCancel",
+        "type": "FRAME",
+        "size": {
+         "x": 100,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          8
+         ],
+         [
+          0,
+          1,
+          56
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:20",
+          "name": "BtnCancelLabel",
+          "type": "TEXT",
+          "size": {
+           "x": 88,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            12
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "Cancel",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.0,
+             "g": 0.4,
+             "b": 0.8,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 17,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "30:22",
+        "name": "PickerTitle",
+        "type": "TEXT",
+        "size": {
+         "x": 200,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          110
+         ],
+         [
+          0,
+          1,
+          56
+         ]
+        ],
+        "characters": "New Alarm",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11372549019607843,
+           "g": 0.11372549019607843,
+           "b": 0.12156862745098039,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 17,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "CENTER",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:24",
+        "name": "BtnSave",
+        "type": "FRAME",
+        "size": {
+         "x": 100,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          312
+         ],
+         [
+          0,
+          1,
+          56
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:23",
+          "name": "BtnSaveLabel",
+          "type": "TEXT",
+          "size": {
+           "x": 88,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "Save",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.0,
+             "g": 0.4,
+             "b": 0.8,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 17,
+           "textAlignHorizontal": "RIGHT",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "30:25",
+        "name": "PreviewTime",
+        "type": "TEXT",
+        "size": {
+         "x": 380,
+         "y": 70
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          150
+         ]
+        ],
+        "characters": "07:00",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11372549019607843,
+           "g": 0.11372549019607843,
+           "b": 0.12156862745098039,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 56,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.8
+        }
+       },
+       {
+        "id": "30:26",
+        "name": "SelectionBand",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 340,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          40
+         ],
+         [
+          0,
+          1,
+          392
+         ]
+        ],
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9098039215686274,
+           "g": 0.9098039215686274,
+           "b": 0.9294117647058824,
+           "a": 1.0
+          }
+         }
+        ],
+        "cornerRadius": 12
+       },
+       {
+        "id": "30:29",
+        "name": "HourWheel",
+        "type": "FRAME",
+        "size": {
+         "x": 120,
+         "y": 280
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          70
+         ],
+         [
+          0,
+          1,
+          280
+         ]
+        ],
+        "clipsContent": true,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:28",
+          "name": "HourItem",
+          "type": "FRAME",
+          "size": {
+           "x": 120,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 0.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:27",
+            "name": "HourText",
+            "type": "TEXT",
+            "size": {
+             "x": 120,
+             "y": 56
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "07",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.11372549019607843,
+               "g": 0.11372549019607843,
+               "b": 0.12156862745098039,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 28,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         }
+        ],
+        "overflowDirection": "VERTICAL_SCROLLING",
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 0,
+        "paddingTop": 112,
+        "primaryAxisSizingMode": "FIXED",
+        "counterAxisSizingMode": "FIXED"
+       },
+       {
+        "id": "30:30",
+        "name": "Colon",
+        "type": "TEXT",
+        "size": {
+         "x": 40,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          190
+         ],
+         [
+          0,
+          1,
+          392
+         ]
+        ],
+        "characters": ":",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11372549019607843,
+           "g": 0.11372549019607843,
+           "b": 0.12156862745098039,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 28,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "CENTER",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "30:33",
+        "name": "MinuteWheel",
+        "type": "FRAME",
+        "size": {
+         "x": 120,
+         "y": 280
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          230
+         ],
+         [
+          0,
+          1,
+          280
+         ]
+        ],
+        "clipsContent": true,
+        "fills": [],
+        "children": [
+         {
+          "id": "30:32",
+          "name": "MinuteItem",
+          "type": "FRAME",
+          "size": {
+           "x": 120,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 0.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "30:31",
+            "name": "MinuteText",
+            "type": "TEXT",
+            "size": {
+             "x": 120,
+             "y": 56
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "00",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.11372549019607843,
+               "g": 0.11372549019607843,
+               "b": 0.12156862745098039,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 28,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         }
+        ],
+        "overflowDirection": "VERTICAL_SCROLLING",
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 0,
+        "paddingTop": 112,
+        "primaryAxisSizingMode": "FIXED",
+        "counterAxisSizingMode": "FIXED"
+       },
+       {
+        "id": "30:34",
+        "name": "PickerHint",
+        "type": "TEXT",
+        "size": {
+         "x": 380,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          596
+         ]
+        ],
+        "characters": "Scroll to set the time",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.43137254901960786,
+           "g": 0.43137254901960786,
+           "b": 0.45098039215686275,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 12,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
