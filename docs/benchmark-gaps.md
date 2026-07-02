@@ -32,7 +32,7 @@ opacity 等还是只写属性）；运行时无结构化诊断（字体缺失静
 | G10 | 事件派发中改树 | 横切 | ~~onClick 处理器里调 bindList 是 UB~~ **已修复(2026-07)**：Impl 加 `structureRev`，bindList/setVariant 递增；`fireUp` 在结构变更后立即停止冒泡（同导航消费事件的语义），`pointerUp` 原型链走查与 `pointerMove` 悬空 hit 同步加守卫。注意：处理器**自己的 node 参数**在调 bindList 后仍失效（文档已有约定），需要时重新 find | `ui.cpp` fireUp/bindList/setVariant |
 | G11 | 名字寻址不跨页 | 横切 | ~~按名 mutation 只搜当前 frame~~ **已修复(2026-07)**：`findMutable` 与 `findNode` 对齐——当前 frame 优先、回落全文档，跨页 setText/setVisible 生效 | `ui.cpp` findMutable |
 | G12 | 文档承诺未兑现 | 横切 | ~~transitionProgress 未绑定 JS~~ **已修复(2026-07)**：`ui.transitionProgress()` 已绑定；语义=转场中 eased [0,1)、**空闲返回 1**，截图门控用 `>= 1` 判定就位（script.h 注释已同步） | `script_host.cpp` ui_transitionProgress |
-| G13 | bindList 强制 hug | 横切 | **bindList 无条件把容器 primarySizing 改成 Hug**（"列表随数据长"的初衷），覆盖掉设计里的 FIXED + overflowDirection——**可滚动的数据列表当前做不出来**：容器长到内容高、maxScrollY 恒 0（news 的列表滚动其实从未生效，recipes 实测确认，只能把行高凑到一屏装下）。修法：容器 authored 为 FIXED+scrolling 时保留固定高，内容溢出走滚动 | `ui.cpp` bindList 的 Hug 覆写（recipes app 实测，2026-07） |
+| G13 | bindList 强制 hug | 横切 | ~~bindList 无条件把容器改 Hug，可滚数据列表做不出来~~ **已修复(2026-07)**：容器 authored 为主轴滚动（FIXED + overflowDirection 含主轴）时 bindList 保留固定高，内容溢出进滚动范围（news 列表实测 maxScrollY 24）；非滚动容器仍随数据 hug | `ui.cpp` bindList（recipes app 发现，2026-07） |
 
 ## 20 个 benchmark app × 卡点矩阵
 

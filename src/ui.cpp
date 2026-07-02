@@ -1237,8 +1237,16 @@ bool FigmaUI::bindList(const std::string& listName, size_t count,
     impl_->pendingScroll.clear();  // queued Node*s may point into them
     // A data-driven list grows with its data: hug the main axis and pack from
     // the start (a fixed CENTER stack would overlap its surroundings).
+    // Exception: the design says the list scrolls along its main axis — then
+    // the authored size IS the viewport and overflow feeds the scroll range
+    // instead (hugging would grow the box and pin maxScroll at 0).
     if (list->autoLayout.enabled()) {
-        list->autoLayout.primarySizing = AutoLayout::Sizing::Hug;
+        const bool vertical = list->autoLayout.mode == AutoLayout::Mode::Vertical;
+        const bool mainAxisScrolls =
+            list->scrollDirection == ScrollDirection::Both ||
+            list->scrollDirection == (vertical ? ScrollDirection::Vertical
+                                               : ScrollDirection::Horizontal);
+        if (!mainAxisScrolls) list->autoLayout.primarySizing = AutoLayout::Sizing::Hug;
         list->autoLayout.primaryAlign = AutoLayout::Align::Min;
     }
     list->children.clear();
