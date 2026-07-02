@@ -1,0 +1,1901 @@
+{
+ "name": "Shop",
+ "document": {
+  "id": "20:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "20:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "20:26",
+      "name": "Shop",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 1.0,
+         "g": 1.0,
+         "b": 1.0,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "20:22",
+        "name": "Shop Title",
+        "type": "TEXT",
+        "size": {
+         "x": 260,
+         "y": 36
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          60
+         ]
+        ],
+        "characters": "Willow Home",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.13333333333333333,
+           "g": 0.13333333333333333,
+           "b": 0.13333333333333333,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 28,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.5
+        }
+       },
+       {
+        "id": "20:23",
+        "name": "Shop Subtitle",
+        "type": "TEXT",
+        "size": {
+         "x": 300,
+         "y": 20
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          100
+         ]
+        ],
+        "characters": "Home goods, made to last.",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.41568627450980394,
+           "g": 0.41568627450980394,
+           "b": 0.41568627450980394,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "20:21",
+        "name": "Cart",
+        "type": "FRAME",
+        "size": {
+         "x": 44,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          352
+         ],
+         [
+          0,
+          1,
+          56
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "20:17",
+          "name": "Cart Handle",
+          "type": "FRAME",
+          "size": {
+           "x": 14,
+           "y": 14
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            15
+           ],
+           [
+            0,
+            1,
+            4
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [],
+          "children": [],
+          "cornerRadius": 7,
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.13333333333333333,
+             "g": 0.13333333333333333,
+             "b": 0.13333333333333333,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokeWeight": 2
+         },
+         {
+          "id": "20:18",
+          "name": "Cart Body",
+          "type": "FRAME",
+          "size": {
+           "x": 26,
+           "y": 24
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            9
+           ],
+           [
+            0,
+            1,
+            11
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [],
+          "cornerRadius": 5,
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.13333333333333333,
+             "g": 0.13333333333333333,
+             "b": 0.13333333333333333,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokeWeight": 2
+         },
+         {
+          "id": "20:20",
+          "name": "Cart Badge",
+          "type": "FRAME",
+          "size": {
+           "x": 18,
+           "y": 18
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            26
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 0.2196078431372549,
+             "b": 0.3607843137254902,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:19",
+            "name": "Cart Badge Count",
+            "type": "TEXT",
+            "size": {
+             "x": 18,
+             "y": 18
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "0",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 700,
+             "fontSize": 12,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "cornerRadius": 9
+         }
+        ]
+       },
+       {
+        "id": "20:24",
+        "name": "Header Divider",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 372,
+         "y": 1
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          140
+         ]
+        ],
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9215686274509803,
+           "g": 0.9215686274509803,
+           "b": 0.9215686274509803,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:16",
+        "name": "Product List",
+        "type": "FRAME",
+        "size": {
+         "x": 372,
+         "y": 504
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          168
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "20:15",
+          "name": "Product Row",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 88
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [],
+          "children": [
+           {
+            "id": "20:3",
+            "name": "Item Tint 1",
+            "type": "FRAME",
+            "size": {
+             "x": 88,
+             "y": 88
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": true,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 0.8588235294117647,
+               "b": 0.8862745098039215,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:2",
+              "name": "Item Tint 1 Inset",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 37,
+               "y": 37
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                25
+               ],
+               [
+                0,
+                1,
+                25
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 0.6470588235294118,
+                 "b": 0.7137254901960784,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 7
+             }
+            ],
+            "cornerRadius": 14
+           },
+           {
+            "id": "20:5",
+            "name": "Item Tint 2",
+            "type": "FRAME",
+            "size": {
+             "x": 88,
+             "y": 88
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": true,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.9568627450980393,
+               "g": 0.9058823529411765,
+               "b": 0.8196078431372549,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:4",
+              "name": "Item Tint 2 Inset",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 37,
+               "y": 37
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                25
+               ],
+               [
+                0,
+                1,
+                25
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.8941176470588236,
+                 "g": 0.7607843137254902,
+                 "b": 0.5490196078431373,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 7
+             }
+            ],
+            "cornerRadius": 14
+           },
+           {
+            "id": "20:7",
+            "name": "Item Tint 3",
+            "type": "FRAME",
+            "size": {
+             "x": 88,
+             "y": 88
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": true,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8196078431372549,
+               "g": 0.9176470588235294,
+               "b": 0.8235294117647058,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:6",
+              "name": "Item Tint 3 Inset",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 37,
+               "y": 37
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                25
+               ],
+               [
+                0,
+                1,
+                25
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.5490196078431373,
+                 "g": 0.792156862745098,
+                 "b": 0.5568627450980392,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 7
+             }
+            ],
+            "cornerRadius": 14
+           },
+           {
+            "id": "20:9",
+            "name": "Item Tint 4",
+            "type": "FRAME",
+            "size": {
+             "x": 88,
+             "y": 88
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": true,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8431372549019608,
+               "g": 0.8431372549019608,
+               "b": 0.8431372549019608,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:8",
+              "name": "Item Tint 4 Inset",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 37,
+               "y": 37
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                25
+               ],
+               [
+                0,
+                1,
+                25
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.611764705882353,
+                 "g": 0.611764705882353,
+                 "b": 0.611764705882353,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 7
+             }
+            ],
+            "cornerRadius": 14
+           },
+           {
+            "id": "20:11",
+            "name": "Item Tint 5",
+            "type": "FRAME",
+            "size": {
+             "x": 88,
+             "y": 88
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "clipsContent": true,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.9568627450980393,
+               "g": 0.8588235294117647,
+               "b": 0.8352941176470589,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:10",
+              "name": "Item Tint 5 Inset",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 37,
+               "y": 37
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                25
+               ],
+               [
+                0,
+                1,
+                25
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.8901960784313725,
+                 "g": 0.6431372549019608,
+                 "b": 0.5882352941176471,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 7
+             }
+            ],
+            "cornerRadius": 14
+           },
+           {
+            "id": "20:12",
+            "name": "Item Name",
+            "type": "TEXT",
+            "size": {
+             "x": 224,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              108
+             ],
+             [
+              0,
+              1,
+              20
+             ]
+            ],
+            "characters": "Linen Throw Pillow",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.13333333333333333,
+               "g": 0.13333333333333333,
+               "b": 0.13333333333333333,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "20:13",
+            "name": "Item Price",
+            "type": "TEXT",
+            "size": {
+             "x": 120,
+             "y": 20
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              108
+             ],
+             [
+              0,
+              1,
+              46
+             ]
+            ],
+            "characters": "$38",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.41568627450980394,
+               "g": 0.41568627450980394,
+               "b": 0.41568627450980394,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 14,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "20:14",
+            "name": "Item Chevron",
+            "type": "TEXT",
+            "size": {
+             "x": 20,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              348
+             ],
+             [
+              0,
+              1,
+              32
+             ]
+            ],
+            "characters": "›",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.5725490196078431,
+               "g": 0.5725490196078431,
+               "b": 0.5725490196078431,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 20,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         }
+        ],
+        "layoutMode": "VERTICAL",
+        "primaryAxisSizingMode": "AUTO",
+        "counterAxisSizingMode": "FIXED",
+        "itemSpacing": 16
+       },
+       {
+        "id": "20:25",
+        "name": "Shop Footnote",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 18
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          846
+         ]
+        ],
+        "characters": "Free delivery on orders over $75",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.5725490196078431,
+           "g": 0.5725490196078431,
+           "b": 0.5725490196078431,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 12,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       }
+      ]
+     },
+     {
+      "id": "20:52",
+      "name": "Detail",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        520
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 1.0,
+         "g": 1.0,
+         "b": 1.0,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "20:28",
+        "name": "Back Button",
+        "type": "FRAME",
+        "size": {
+         "x": 40,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          56
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:27",
+          "name": "Back Glyph",
+          "type": "TEXT",
+          "size": {
+           "x": 40,
+           "y": 40
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            -2
+           ]
+          ],
+          "characters": "‹",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.13333333333333333,
+             "g": 0.13333333333333333,
+             "b": 0.13333333333333333,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 22,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 20,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8666666666666667,
+           "g": 0.8666666666666667,
+           "b": 0.8666666666666667,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "20:39",
+        "name": "Detail Hero",
+        "type": "FRAME",
+        "size": {
+         "x": 372,
+         "y": 320
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          116
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "20:30",
+          "name": "Detail Tint 1",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 320
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": true,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 0.8588235294117647,
+             "b": 0.8862745098039215,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:29",
+            "name": "Detail Tint 1 Inset",
+            "type": "RECTANGLE",
+            "size": {
+             "x": 149,
+             "y": 128
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              111
+             ],
+             [
+              0,
+              1,
+              96
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 0.6470588235294118,
+               "b": 0.7137254901960784,
+               "a": 1.0
+              }
+             }
+            ],
+            "cornerRadius": 7
+           }
+          ],
+          "cornerRadius": 14
+         },
+         {
+          "id": "20:32",
+          "name": "Detail Tint 2",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 320
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": true,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9568627450980393,
+             "g": 0.9058823529411765,
+             "b": 0.8196078431372549,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:31",
+            "name": "Detail Tint 2 Inset",
+            "type": "RECTANGLE",
+            "size": {
+             "x": 149,
+             "y": 128
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              111
+             ],
+             [
+              0,
+              1,
+              96
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8941176470588236,
+               "g": 0.7607843137254902,
+               "b": 0.5490196078431373,
+               "a": 1.0
+              }
+             }
+            ],
+            "cornerRadius": 7
+           }
+          ],
+          "cornerRadius": 14
+         },
+         {
+          "id": "20:34",
+          "name": "Detail Tint 3",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 320
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": true,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.8196078431372549,
+             "g": 0.9176470588235294,
+             "b": 0.8235294117647058,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:33",
+            "name": "Detail Tint 3 Inset",
+            "type": "RECTANGLE",
+            "size": {
+             "x": 149,
+             "y": 128
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              111
+             ],
+             [
+              0,
+              1,
+              96
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.5490196078431373,
+               "g": 0.792156862745098,
+               "b": 0.5568627450980392,
+               "a": 1.0
+              }
+             }
+            ],
+            "cornerRadius": 7
+           }
+          ],
+          "cornerRadius": 14
+         },
+         {
+          "id": "20:36",
+          "name": "Detail Tint 4",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 320
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": true,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.8431372549019608,
+             "g": 0.8431372549019608,
+             "b": 0.8431372549019608,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:35",
+            "name": "Detail Tint 4 Inset",
+            "type": "RECTANGLE",
+            "size": {
+             "x": 149,
+             "y": 128
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              111
+             ],
+             [
+              0,
+              1,
+              96
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.611764705882353,
+               "g": 0.611764705882353,
+               "b": 0.611764705882353,
+               "a": 1.0
+              }
+             }
+            ],
+            "cornerRadius": 7
+           }
+          ],
+          "cornerRadius": 14
+         },
+         {
+          "id": "20:38",
+          "name": "Detail Tint 5",
+          "type": "FRAME",
+          "size": {
+           "x": 372,
+           "y": 320
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": true,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9568627450980393,
+             "g": 0.8588235294117647,
+             "b": 0.8352941176470589,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:37",
+            "name": "Detail Tint 5 Inset",
+            "type": "RECTANGLE",
+            "size": {
+             "x": 149,
+             "y": 128
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              111
+             ],
+             [
+              0,
+              1,
+              96
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8901960784313725,
+               "g": 0.6431372549019608,
+               "b": 0.5882352941176471,
+               "a": 1.0
+              }
+             }
+            ],
+            "cornerRadius": 7
+           }
+          ],
+          "cornerRadius": 14
+         }
+        ]
+       },
+       {
+        "id": "20:40",
+        "name": "Detail Name",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 36
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          460
+         ]
+        ],
+        "characters": "Linen Throw Pillow",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.13333333333333333,
+           "g": 0.13333333333333333,
+           "b": 0.13333333333333333,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 28,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.5
+        }
+       },
+       {
+        "id": "20:41",
+        "name": "Detail Price",
+        "type": "TEXT",
+        "size": {
+         "x": 160,
+         "y": 26
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          500
+         ]
+        ],
+        "characters": "$38",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.13333333333333333,
+           "g": 0.13333333333333333,
+           "b": 0.13333333333333333,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 20,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "20:42",
+        "name": "Detail Desc",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 48
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          536
+         ]
+        ],
+        "characters": "Washed linen cover with a hidden zip. Insert included.",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.41568627450980394,
+           "g": 0.41568627450980394,
+           "b": 0.41568627450980394,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 16,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "20:43",
+        "name": "Detail Divider",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 372,
+         "y": 1
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          606
+         ]
+        ],
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9215686274509803,
+           "g": 0.9215686274509803,
+           "b": 0.9215686274509803,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:44",
+        "name": "Qty Label",
+        "type": "TEXT",
+        "size": {
+         "x": 160,
+         "y": 20
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          626
+         ]
+        ],
+        "characters": "Quantity",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.13333333333333333,
+           "g": 0.13333333333333333,
+           "b": 0.13333333333333333,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "20:46",
+        "name": "Qty Minus",
+        "type": "FRAME",
+        "size": {
+         "x": 44,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          660
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:45",
+          "name": "Qty Minus Glyph",
+          "type": "TEXT",
+          "size": {
+           "x": 44,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            -1
+           ]
+          ],
+          "characters": "-",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.13333333333333333,
+             "g": 0.13333333333333333,
+             "b": 0.13333333333333333,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 20,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 14,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8666666666666667,
+           "g": 0.8666666666666667,
+           "b": 0.8666666666666667,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "20:47",
+        "name": "Qty Value",
+        "type": "TEXT",
+        "size": {
+         "x": 56,
+         "y": 24
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          68
+         ],
+         [
+          0,
+          1,
+          670
+         ]
+        ],
+        "characters": "1",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.13333333333333333,
+           "g": 0.13333333333333333,
+           "b": 0.13333333333333333,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 20,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "20:49",
+        "name": "Qty Plus",
+        "type": "FRAME",
+        "size": {
+         "x": 44,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          124
+         ],
+         [
+          0,
+          1,
+          660
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:48",
+          "name": "Qty Plus Glyph",
+          "type": "TEXT",
+          "size": {
+           "x": 44,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            -1
+           ]
+          ],
+          "characters": "+",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.13333333333333333,
+             "g": 0.13333333333333333,
+             "b": 0.13333333333333333,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 20,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 14,
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8666666666666667,
+           "g": 0.8666666666666667,
+           "b": 0.8666666666666667,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 1
+       },
+       {
+        "id": "20:51",
+        "name": "Add To Cart",
+        "type": "FRAME",
+        "size": {
+         "x": 372,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          760
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 0.2196078431372549,
+           "b": 0.3607843137254902,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:50",
+          "name": "Add To Cart Label",
+          "type": "TEXT",
+          "size": {
+           "x": 372,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "Add to Cart",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 700,
+           "fontSize": 20,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 14
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

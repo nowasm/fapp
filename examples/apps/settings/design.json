@@ -1,0 +1,1446 @@
+{
+ "name": "Settings",
+ "document": {
+  "id": "20:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "20:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "20:37",
+      "name": "Settings",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.9607843137254902,
+         "g": 0.9607843137254902,
+         "b": 0.9686274509803922,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "20:2",
+        "name": "Title",
+        "type": "TEXT",
+        "size": {
+         "x": 380,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          72
+         ]
+        ],
+        "characters": "Settings",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11372549019607843,
+           "g": 0.11372549019607843,
+           "b": 0.12156862745098039,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 28,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -0.4
+        }
+       },
+       {
+        "id": "20:3",
+        "name": "Section General",
+        "type": "TEXT",
+        "size": {
+         "x": 300,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          36
+         ],
+         [
+          0,
+          1,
+          130
+         ]
+        ],
+        "characters": "GENERAL",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.43137254901960786,
+           "g": 0.43137254901960786,
+           "b": 0.45098039215686275,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 12,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0.8
+        }
+       },
+       {
+        "id": "20:24",
+        "name": "Card General",
+        "type": "FRAME",
+        "size": {
+         "x": 380,
+         "y": 168
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          154
+         ]
+        ],
+        "clipsContent": true,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:9",
+          "name": "Row Notifications",
+          "type": "FRAME",
+          "size": {
+           "x": 380,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:4",
+            "name": "Row Notifications Label",
+            "type": "TEXT",
+            "size": {
+             "x": 220,
+             "y": 56
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "Notifications",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.11372549019607843,
+               "g": 0.11372549019607843,
+               "b": 0.12156862745098039,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 17,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "20:6",
+            "name": "SwitchNotifOn",
+            "type": "FRAME",
+            "size": {
+             "x": 51,
+             "y": 31
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              313
+             ],
+             [
+              0,
+              1,
+              12.5
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.0,
+               "g": 0.44313725490196076,
+               "b": 0.8901960784313725,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:5",
+              "name": "SwitchNotifOnKnob",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 27,
+               "y": 27
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                22
+               ],
+               [
+                0,
+                1,
+                2.0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 13.5
+             }
+            ],
+            "cornerRadius": 15.5,
+            "visible": false
+           },
+           {
+            "id": "20:8",
+            "name": "SwitchNotifOff",
+            "type": "FRAME",
+            "size": {
+             "x": 51,
+             "y": 31
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              313
+             ],
+             [
+              0,
+              1,
+              12.5
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.9098039215686274,
+               "g": 0.9098039215686274,
+               "b": 0.9294117647058824,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:7",
+              "name": "SwitchNotifOffKnob",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 27,
+               "y": 27
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                2
+               ],
+               [
+                0,
+                1,
+                2.0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 13.5,
+              "strokes": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.8235294117647058,
+                 "g": 0.8235294117647058,
+                 "b": 0.8431372549019608,
+                 "a": 1.0
+                }
+               }
+              ],
+              "strokeWeight": 1
+             }
+            ],
+            "cornerRadius": 15.5,
+            "strokes": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8235294117647058,
+               "g": 0.8235294117647058,
+               "b": 0.8431372549019608,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokeWeight": 1
+           }
+          ]
+         },
+         {
+          "id": "20:15",
+          "name": "Row Dark Mode",
+          "type": "FRAME",
+          "size": {
+           "x": 380,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            56
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:10",
+            "name": "Row Dark Mode Label",
+            "type": "TEXT",
+            "size": {
+             "x": 220,
+             "y": 56
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "Dark Mode",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.11372549019607843,
+               "g": 0.11372549019607843,
+               "b": 0.12156862745098039,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 17,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "20:12",
+            "name": "SwitchDarkOn",
+            "type": "FRAME",
+            "size": {
+             "x": 51,
+             "y": 31
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              313
+             ],
+             [
+              0,
+              1,
+              12.5
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.0,
+               "g": 0.44313725490196076,
+               "b": 0.8901960784313725,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:11",
+              "name": "SwitchDarkOnKnob",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 27,
+               "y": 27
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                22
+               ],
+               [
+                0,
+                1,
+                2.0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 13.5
+             }
+            ],
+            "cornerRadius": 15.5,
+            "visible": false
+           },
+           {
+            "id": "20:14",
+            "name": "SwitchDarkOff",
+            "type": "FRAME",
+            "size": {
+             "x": 51,
+             "y": 31
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              313
+             ],
+             [
+              0,
+              1,
+              12.5
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.9098039215686274,
+               "g": 0.9098039215686274,
+               "b": 0.9294117647058824,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:13",
+              "name": "SwitchDarkOffKnob",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 27,
+               "y": 27
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                2
+               ],
+               [
+                0,
+                1,
+                2.0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 13.5,
+              "strokes": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.8235294117647058,
+                 "g": 0.8235294117647058,
+                 "b": 0.8431372549019608,
+                 "a": 1.0
+                }
+               }
+              ],
+              "strokeWeight": 1
+             }
+            ],
+            "cornerRadius": 15.5,
+            "strokes": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8235294117647058,
+               "g": 0.8235294117647058,
+               "b": 0.8431372549019608,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokeWeight": 1
+           }
+          ]
+         },
+         {
+          "id": "20:21",
+          "name": "Row Sounds",
+          "type": "FRAME",
+          "size": {
+           "x": 380,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            112
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:16",
+            "name": "Row Sounds Label",
+            "type": "TEXT",
+            "size": {
+             "x": 220,
+             "y": 56
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "Sounds",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.11372549019607843,
+               "g": 0.11372549019607843,
+               "b": 0.12156862745098039,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 17,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "20:18",
+            "name": "SwitchSoundOn",
+            "type": "FRAME",
+            "size": {
+             "x": 51,
+             "y": 31
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              313
+             ],
+             [
+              0,
+              1,
+              12.5
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.0,
+               "g": 0.44313725490196076,
+               "b": 0.8901960784313725,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:17",
+              "name": "SwitchSoundOnKnob",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 27,
+               "y": 27
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                22
+               ],
+               [
+                0,
+                1,
+                2.0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 13.5
+             }
+            ],
+            "cornerRadius": 15.5,
+            "visible": false
+           },
+           {
+            "id": "20:20",
+            "name": "SwitchSoundOff",
+            "type": "FRAME",
+            "size": {
+             "x": 51,
+             "y": 31
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              313
+             ],
+             [
+              0,
+              1,
+              12.5
+             ]
+            ],
+            "clipsContent": false,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.9098039215686274,
+               "g": 0.9098039215686274,
+               "b": 0.9294117647058824,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:19",
+              "name": "SwitchSoundOffKnob",
+              "type": "RECTANGLE",
+              "size": {
+               "x": 27,
+               "y": 27
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                2
+               ],
+               [
+                0,
+                1,
+                2.0
+               ]
+              ],
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "cornerRadius": 13.5,
+              "strokes": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.8235294117647058,
+                 "g": 0.8235294117647058,
+                 "b": 0.8431372549019608,
+                 "a": 1.0
+                }
+               }
+              ],
+              "strokeWeight": 1
+             }
+            ],
+            "cornerRadius": 15.5,
+            "strokes": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8235294117647058,
+               "g": 0.8235294117647058,
+               "b": 0.8431372549019608,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokeWeight": 1
+           }
+          ]
+         },
+         {
+          "id": "20:22",
+          "name": "Hairline",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 364,
+           "y": 1
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            56
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9098039215686274,
+             "g": 0.9098039215686274,
+             "b": 0.9294117647058824,
+             "a": 1.0
+            }
+           }
+          ]
+         },
+         {
+          "id": "20:23",
+          "name": "Hairline",
+          "type": "RECTANGLE",
+          "size": {
+           "x": 364,
+           "y": 1
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            16
+           ],
+           [
+            0,
+            1,
+            112
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9098039215686274,
+             "g": 0.9098039215686274,
+             "b": 0.9294117647058824,
+             "a": 1.0
+            }
+           }
+          ]
+         }
+        ],
+        "cornerRadius": 12
+       },
+       {
+        "id": "20:25",
+        "name": "Section About",
+        "type": "TEXT",
+        "size": {
+         "x": 300,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          36
+         ],
+         [
+          0,
+          1,
+          350
+         ]
+        ],
+        "characters": "ABOUT",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.43137254901960786,
+           "g": 0.43137254901960786,
+           "b": 0.45098039215686275,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 12,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0.8
+        }
+       },
+       {
+        "id": "20:29",
+        "name": "Card About",
+        "type": "FRAME",
+        "size": {
+         "x": 380,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          374
+         ]
+        ],
+        "clipsContent": true,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:28",
+          "name": "Row About",
+          "type": "FRAME",
+          "size": {
+           "x": 380,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:26",
+            "name": "Row About Label",
+            "type": "TEXT",
+            "size": {
+             "x": 220,
+             "y": 56
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              16
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "About",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.11372549019607843,
+               "g": 0.11372549019607843,
+               "b": 0.12156862745098039,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 17,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "20:27",
+            "name": "Chevron",
+            "type": "TEXT",
+            "size": {
+             "x": 24,
+             "y": 56
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              340
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "›",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.43137254901960786,
+               "g": 0.43137254901960786,
+               "b": 0.45098039215686275,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 21,
+             "textAlignHorizontal": "RIGHT",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         }
+        ],
+        "cornerRadius": 12
+       },
+       {
+        "id": "20:30",
+        "name": "Footer",
+        "type": "TEXT",
+        "size": {
+         "x": 380,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          458
+         ]
+        ],
+        "characters": "Settings 1.0.0",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.43137254901960786,
+           "g": 0.43137254901960786,
+           "b": 0.45098039215686275,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 12,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       }
+      ]
+     },
+     {
+      "id": "20:38",
+      "name": "About",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        460
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.9607843137254902,
+         "g": 0.9607843137254902,
+         "b": 0.9686274509803922,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "20:32",
+        "name": "BackBtn",
+        "type": "FRAME",
+        "size": {
+         "x": 110,
+         "y": 44
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          8
+         ],
+         [
+          0,
+          1,
+          56
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "20:31",
+          "name": "BackBtn Label",
+          "type": "TEXT",
+          "size": {
+           "x": 98,
+           "y": 44
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            12
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "‹ Back",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.0,
+             "g": 0.4,
+             "b": 0.8,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 17,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:36",
+        "name": "About Card",
+        "type": "FRAME",
+        "size": {
+         "x": 380,
+         "y": 220
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          20
+         ],
+         [
+          0,
+          1,
+          300
+         ]
+        ],
+        "clipsContent": true,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:33",
+          "name": "App Name",
+          "type": "TEXT",
+          "size": {
+           "x": 380,
+           "y": 36
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            44
+           ]
+          ],
+          "characters": "Settings",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.11372549019607843,
+             "g": 0.11372549019607843,
+             "b": 0.12156862745098039,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 700,
+           "fontSize": 28,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "TOP",
+           "letterSpacing": -0.4
+          }
+         },
+         {
+          "id": "20:34",
+          "name": "Version",
+          "type": "TEXT",
+          "size": {
+           "x": 380,
+           "y": 20
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            92
+           ]
+          ],
+          "characters": "Version 1.0.0",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.43137254901960786,
+             "g": 0.43137254901960786,
+             "b": 0.45098039215686275,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 14,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         },
+         {
+          "id": "20:35",
+          "name": "Blurb",
+          "type": "TEXT",
+          "size": {
+           "x": 320,
+           "y": 60
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            30
+           ],
+           [
+            0,
+            1,
+            130
+           ]
+          ],
+          "characters": "A small settings screen built with figo. Preferences are saved on the device and restored on the next launch.",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.25882352941176473,
+             "g": 0.25882352941176473,
+             "b": 0.27058823529411763,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 14,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "cornerRadius": 12
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

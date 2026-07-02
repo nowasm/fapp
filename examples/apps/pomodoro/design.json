@@ -1,0 +1,855 @@
+{
+ "name": "Pomodoro",
+ "document": {
+  "id": "20:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "20:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "20:23",
+      "name": "Pomodoro",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.07058823529411765,
+         "g": 0.07058823529411765,
+         "b": 0.07058823529411765,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "20:2",
+        "name": "Wordmark",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 16
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          40
+         ]
+        ],
+        "characters": "POMODORO",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.7019607843137254,
+           "g": 0.7019607843137254,
+           "b": 0.7019607843137254,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 12,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 2
+        }
+       },
+       {
+        "id": "20:7",
+        "name": "PillFocus",
+        "type": "FRAME",
+        "size": {
+         "x": 110,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          94
+         ],
+         [
+          0,
+          1,
+          208
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "20:6",
+          "name": "PillFocusOff",
+          "type": "FRAME",
+          "size": {
+           "x": 110,
+           "y": 40
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "cornerRadius": 999,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.09411764705882353,
+             "g": 0.09411764705882353,
+             "b": 0.09411764705882353,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:5",
+            "name": "PillFocusOffLabel",
+            "type": "TEXT",
+            "size": {
+             "x": 110,
+             "y": 40
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "Focus",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.7019607843137254,
+               "g": 0.7019607843137254,
+               "b": 0.7019607843137254,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1,
+             "g": 1,
+             "b": 1,
+             "a": 0.1
+            }
+           }
+          ],
+          "strokeWeight": 1
+         },
+         {
+          "id": "20:4",
+          "name": "PillFocusOn",
+          "type": "FRAME",
+          "size": {
+           "x": 110,
+           "y": 40
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "cornerRadius": 999,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.11764705882352941,
+             "g": 0.8431372549019608,
+             "b": 0.3764705882352941,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:3",
+            "name": "PillFocusOnLabel",
+            "type": "TEXT",
+            "size": {
+             "x": 110,
+             "y": 40
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "Focus",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.0,
+               "g": 0.0,
+               "b": 0.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 700,
+             "fontSize": 16,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "20:12",
+        "name": "PillBreak",
+        "type": "FRAME",
+        "size": {
+         "x": 110,
+         "y": 40
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          216
+         ],
+         [
+          0,
+          1,
+          208
+         ]
+        ],
+        "clipsContent": false,
+        "fills": [],
+        "children": [
+         {
+          "id": "20:11",
+          "name": "PillBreakOff",
+          "type": "FRAME",
+          "size": {
+           "x": 110,
+           "y": 40
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "cornerRadius": 999,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.09411764705882353,
+             "g": 0.09411764705882353,
+             "b": 0.09411764705882353,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:10",
+            "name": "PillBreakOffLabel",
+            "type": "TEXT",
+            "size": {
+             "x": 110,
+             "y": 40
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "Break",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.7019607843137254,
+               "g": 0.7019607843137254,
+               "b": 0.7019607843137254,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 600,
+             "fontSize": 16,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ],
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1,
+             "g": 1,
+             "b": 1,
+             "a": 0.1
+            }
+           }
+          ],
+          "strokeWeight": 1
+         },
+         {
+          "id": "20:9",
+          "name": "PillBreakOn",
+          "type": "FRAME",
+          "size": {
+           "x": 110,
+           "y": 40
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "cornerRadius": 999,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.11764705882352941,
+             "g": 0.8431372549019608,
+             "b": 0.3764705882352941,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:8",
+            "name": "PillBreakOnLabel",
+            "type": "TEXT",
+            "size": {
+             "x": 110,
+             "y": 40
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "Break",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.0,
+               "g": 0.0,
+               "b": 0.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 700,
+             "fontSize": 16,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "id": "20:13",
+        "name": "Timer",
+        "type": "TEXT",
+        "size": {
+         "x": 420,
+         "y": 120
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          0
+         ],
+         [
+          0,
+          1,
+          330
+         ]
+        ],
+        "characters": "25:00",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1.0,
+           "g": 1.0,
+           "b": 1.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 88,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "CENTER",
+         "letterSpacing": -2
+        }
+       },
+       {
+        "id": "20:14",
+        "name": "RoundsLabel",
+        "type": "TEXT",
+        "size": {
+         "x": 420,
+         "y": 18
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          0
+         ],
+         [
+          0,
+          1,
+          470
+         ]
+        ],
+        "characters": "Rounds",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.7019607843137254,
+           "g": 0.7019607843137254,
+           "b": 0.7019607843137254,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 600,
+         "fontSize": 12,
+         "textAlignHorizontal": "CENTER",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 1.5
+        }
+       },
+       {
+        "id": "20:15",
+        "name": "Dot1",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 12,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          162
+         ],
+         [
+          0,
+          1,
+          502
+         ]
+        ],
+        "cornerRadius": 999,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11764705882352941,
+           "g": 0.8431372549019608,
+           "b": 0.3764705882352941,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:16",
+        "name": "Dot2",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 12,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          190
+         ],
+         [
+          0,
+          1,
+          502
+         ]
+        ],
+        "cornerRadius": 999,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11764705882352941,
+           "g": 0.8431372549019608,
+           "b": 0.3764705882352941,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:17",
+        "name": "Dot3",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 12,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          218
+         ],
+         [
+          0,
+          1,
+          502
+         ]
+        ],
+        "cornerRadius": 999,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11764705882352941,
+           "g": 0.8431372549019608,
+           "b": 0.3764705882352941,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:18",
+        "name": "Dot4",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 12,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          246
+         ],
+         [
+          0,
+          1,
+          502
+         ]
+        ],
+        "cornerRadius": 999,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11764705882352941,
+           "g": 0.8431372549019608,
+           "b": 0.3764705882352941,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:20",
+        "name": "BtnStart",
+        "type": "FRAME",
+        "size": {
+         "x": 372,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          636
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 999,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.11764705882352941,
+           "g": 0.8431372549019608,
+           "b": 0.3764705882352941,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:19",
+          "name": "BtnStartLabel",
+          "type": "TEXT",
+          "size": {
+           "x": 372,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "Start",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.0,
+             "g": 0.0,
+             "b": 0.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 700,
+           "fontSize": 18,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:22",
+        "name": "BtnReset",
+        "type": "FRAME",
+        "size": {
+         "x": 372,
+         "y": 56
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          708
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 999,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09411764705882353,
+           "g": 0.09411764705882353,
+           "b": 0.09411764705882353,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:21",
+          "name": "BtnResetLabel",
+          "type": "TEXT",
+          "size": {
+           "x": 372,
+           "y": 56
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "Reset",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 600,
+           "fontSize": 16,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.1
+          }
+         }
+        ],
+        "strokeWeight": 1
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

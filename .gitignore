@@ -17,3 +17,6 @@ hud_app/
 hud_popups/
 hud_full/
 wallet_pf/
+
+# figoplay localStorage persistence (bench/dev byproduct)
+*.storage.json

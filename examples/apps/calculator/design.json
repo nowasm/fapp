@@ -1,0 +1,1898 @@
+{
+ "name": "Calculator",
+ "document": {
+  "id": "10:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "10:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "10:44",
+      "name": "Calculator",
+      "type": "FRAME",
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 0.03137254901960784,
+         "g": 0.03529411764705882,
+         "b": 0.0392156862745098,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "10:2",
+        "name": "Wordmark",
+        "type": "TEXT",
+        "size": {
+         "x": 200,
+         "y": 20
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          36
+         ]
+        ],
+        "characters": "Calculator",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3843137254901961,
+           "g": 0.4,
+           "b": 0.42745098039215684,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 14,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "10:3",
+        "name": "Expression",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 28
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          292
+         ]
+        ],
+        "characters": "",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.5411764705882353,
+           "g": 0.5607843137254902,
+           "b": 0.596078431372549,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 20,
+         "textAlignHorizontal": "RIGHT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "10:4",
+        "name": "Result",
+        "type": "TEXT",
+        "size": {
+         "x": 372,
+         "y": 92
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          328
+         ]
+        ],
+        "characters": "0",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9686274509803922,
+           "g": 0.9725490196078431,
+           "b": 0.9725490196078431,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 72,
+         "textAlignHorizontal": "RIGHT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": -1.6
+        }
+       },
+       {
+        "id": "10:5",
+        "name": "Divider",
+        "type": "RECTANGLE",
+        "size": {
+         "x": 372,
+         "y": 1
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          444
+         ]
+        ],
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.08
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:6",
+        "name": "KeyClear",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          460
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:7",
+          "name": "KeyClear Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "C",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.5411764705882353,
+             "g": 0.5607843137254902,
+             "b": 0.596078431372549,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:8",
+        "name": "KeySign",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          120
+         ],
+         [
+          0,
+          1,
+          460
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:9",
+          "name": "KeySign Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "±",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.5411764705882353,
+             "g": 0.5607843137254902,
+             "b": 0.596078431372549,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:10",
+        "name": "KeyPct",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          216
+         ],
+         [
+          0,
+          1,
+          460
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:11",
+          "name": "KeyPct Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "%",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.5411764705882353,
+             "g": 0.5607843137254902,
+             "b": 0.596078431372549,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:12",
+        "name": "KeyDiv",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          312
+         ],
+         [
+          0,
+          1,
+          460
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:13",
+          "name": "KeyDiv Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "÷",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.5098039215686274,
+             "g": 0.5607843137254902,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:14",
+        "name": "Key7",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          544
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:15",
+          "name": "Key7 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "7",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:16",
+        "name": "Key8",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          120
+         ],
+         [
+          0,
+          1,
+          544
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:17",
+          "name": "Key8 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "8",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:18",
+        "name": "Key9",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          216
+         ],
+         [
+          0,
+          1,
+          544
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:19",
+          "name": "Key9 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "9",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:20",
+        "name": "KeyMul",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          312
+         ],
+         [
+          0,
+          1,
+          544
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:21",
+          "name": "KeyMul Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "×",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.5098039215686274,
+             "g": 0.5607843137254902,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:22",
+        "name": "Key4",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          628
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:23",
+          "name": "Key4 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "4",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:24",
+        "name": "Key5",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          120
+         ],
+         [
+          0,
+          1,
+          628
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:25",
+          "name": "Key5 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "5",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:26",
+        "name": "Key6",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          216
+         ],
+         [
+          0,
+          1,
+          628
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:27",
+          "name": "Key6 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "6",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:28",
+        "name": "KeySub",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          312
+         ],
+         [
+          0,
+          1,
+          628
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:29",
+          "name": "KeySub Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "-",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.5098039215686274,
+             "g": 0.5607843137254902,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:30",
+        "name": "Key1",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          712
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:31",
+          "name": "Key1 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "1",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:32",
+        "name": "Key2",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          120
+         ],
+         [
+          0,
+          1,
+          712
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:33",
+          "name": "Key2 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "2",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:34",
+        "name": "Key3",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          216
+         ],
+         [
+          0,
+          1,
+          712
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:35",
+          "name": "Key3 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "3",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:36",
+        "name": "KeyAdd",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          312
+         ],
+         [
+          0,
+          1,
+          712
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:37",
+          "name": "KeyAdd Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "+",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.5098039215686274,
+             "g": 0.5607843137254902,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:38",
+        "name": "Key0",
+        "type": "FRAME",
+        "size": {
+         "x": 180,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          796
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:39",
+          "name": "Key0 Label",
+          "type": "TEXT",
+          "size": {
+           "x": 180,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "0",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:40",
+        "name": "KeyDot",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          216
+         ],
+         [
+          0,
+          1,
+          796
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.09803921568627451,
+           "g": 0.10196078431372549,
+           "b": 0.10588235294117647,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:41",
+          "name": "KeyDot Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": ".",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9725490196078431,
+             "b": 0.9725490196078431,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       },
+       {
+        "id": "10:42",
+        "name": "KeyEq",
+        "type": "FRAME",
+        "size": {
+         "x": 84,
+         "y": 72
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          312
+         ],
+         [
+          0,
+          1,
+          796
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 12,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.3686274509803922,
+           "g": 0.41568627450980394,
+           "b": 0.8235294117647058,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 1,
+           "g": 1,
+           "b": 1,
+           "a": 0.05
+          }
+         }
+        ],
+        "strokeWeight": 1,
+        "children": [
+         {
+          "id": "10:43",
+          "name": "KeyEq Label",
+          "type": "TEXT",
+          "size": {
+           "x": 84,
+           "y": 72
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "characters": "=",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 24,
+           "textAlignHorizontal": "CENTER",
+           "textAlignVertical": "CENTER",
+           "letterSpacing": 0
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

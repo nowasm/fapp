@@ -1,0 +1,16 @@
+{
+  "name": "Shop",
+  "design": "design.json",
+  "script": "app.js",
+  "viewport": [
+    420,
+    900
+  ],
+  "entryFrame": "Shop",
+  "designSystem": "airbnb",
+  "package": {
+    "id": "com.figo.shop",
+    "version": "1.0.0"
+  },
+  "benchmark": true
+}

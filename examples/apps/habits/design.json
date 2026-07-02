@@ -1,0 +1,1506 @@
+{
+ "name": "Habits",
+ "document": {
+  "id": "20:0",
+  "name": "Document",
+  "type": "DOCUMENT",
+  "children": [
+   {
+    "id": "20:1",
+    "name": "Page 1",
+    "type": "CANVAS",
+    "children": [
+     {
+      "id": "20:39",
+      "name": "Habits",
+      "type": "FRAME",
+      "visible": true,
+      "size": {
+       "x": 420,
+       "y": 900
+      },
+      "relativeTransform": [
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ]
+      ],
+      "clipsContent": true,
+      "cornerRadius": 0,
+      "fills": [
+       {
+        "type": "SOLID",
+        "color": {
+         "r": 1.0,
+         "g": 1.0,
+         "b": 1.0,
+         "a": 1.0
+        }
+       }
+      ],
+      "children": [
+       {
+        "id": "20:2",
+        "name": "Kicker",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 200,
+         "y": 18
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          52
+         ]
+        ],
+        "characters": "今日习惯",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.4666666666666667,
+           "g": 0.4666666666666667,
+           "b": 0.4666666666666667,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 13,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 2
+        }
+       },
+       {
+        "id": "20:3",
+        "name": "DateLabel",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 260,
+         "y": 38
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          76
+         ]
+        ],
+        "characters": "7月2日 周四",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.23529411764705882,
+           "g": 0.23529411764705882,
+           "b": 0.23529411764705882,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 28,
+         "textAlignHorizontal": "LEFT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "20:4",
+        "name": "ProgressCaption",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 372,
+         "y": 18
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          52
+         ]
+        ],
+        "characters": "已完成",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.4666666666666667,
+           "g": 0.4666666666666667,
+           "b": 0.4666666666666667,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 400,
+         "fontSize": 13,
+         "textAlignHorizontal": "RIGHT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "20:5",
+        "name": "ProgressLabel",
+        "type": "TEXT",
+        "visible": true,
+        "size": {
+         "x": 372,
+         "y": 38
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          76
+         ]
+        ],
+        "characters": "0/5",
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.34509803921568627,
+           "g": 0.6549019607843137,
+           "b": 0.0,
+           "a": 1.0
+          }
+         }
+        ],
+        "style": {
+         "fontFamily": "Segoe UI",
+         "fontWeight": 700,
+         "fontSize": 28,
+         "textAlignHorizontal": "RIGHT",
+         "textAlignVertical": "TOP",
+         "letterSpacing": 0
+        }
+       },
+       {
+        "id": "20:6",
+        "name": "SegBase0",
+        "type": "RECTANGLE",
+        "visible": true,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8980392156862745,
+           "g": 0.8980392156862745,
+           "b": 0.8980392156862745,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:7",
+        "name": "SegFill0",
+        "type": "RECTANGLE",
+        "visible": false,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.34509803921568627,
+           "g": 0.8,
+           "b": 0.00784313725490196,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:8",
+        "name": "SegBase1",
+        "type": "RECTANGLE",
+        "visible": true,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          100
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8980392156862745,
+           "g": 0.8980392156862745,
+           "b": 0.8980392156862745,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:9",
+        "name": "SegFill1",
+        "type": "RECTANGLE",
+        "visible": false,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          100
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.34509803921568627,
+           "g": 0.8,
+           "b": 0.00784313725490196,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:10",
+        "name": "SegBase2",
+        "type": "RECTANGLE",
+        "visible": true,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          176
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8980392156862745,
+           "g": 0.8980392156862745,
+           "b": 0.8980392156862745,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:11",
+        "name": "SegFill2",
+        "type": "RECTANGLE",
+        "visible": false,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          176
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.34509803921568627,
+           "g": 0.8,
+           "b": 0.00784313725490196,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:12",
+        "name": "SegBase3",
+        "type": "RECTANGLE",
+        "visible": true,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          252
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8980392156862745,
+           "g": 0.8980392156862745,
+           "b": 0.8980392156862745,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:13",
+        "name": "SegFill3",
+        "type": "RECTANGLE",
+        "visible": false,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          252
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.34509803921568627,
+           "g": 0.8,
+           "b": 0.00784313725490196,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:14",
+        "name": "SegBase4",
+        "type": "RECTANGLE",
+        "visible": true,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          328
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8980392156862745,
+           "g": 0.8980392156862745,
+           "b": 0.8980392156862745,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:15",
+        "name": "SegFill4",
+        "type": "RECTANGLE",
+        "visible": false,
+        "size": {
+         "x": 68,
+         "y": 12
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          328
+         ],
+         [
+          0,
+          1,
+          138
+         ]
+        ],
+        "cornerRadius": 6,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.34509803921568627,
+           "g": 0.8,
+           "b": 0.00784313725490196,
+           "a": 1.0
+          }
+         }
+        ]
+       },
+       {
+        "id": "20:32",
+        "name": "HabitList",
+        "type": "FRAME",
+        "visible": true,
+        "size": {
+         "x": 372,
+         "y": 468
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          176
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 0,
+        "fills": [],
+        "children": [
+         {
+          "id": "20:31",
+          "name": "HabitRow",
+          "type": "FRAME",
+          "visible": true,
+          "size": {
+           "x": 372,
+           "y": 84
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "clipsContent": false,
+          "cornerRadius": 16,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.9686274509803922,
+             "g": 0.9686274509803922,
+             "b": 0.9686274509803922,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:17",
+            "name": "Icon0",
+            "type": "FRAME",
+            "visible": true,
+            "size": {
+             "x": 44,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              18
+             ],
+             [
+              0,
+              1,
+              20
+             ]
+            ],
+            "clipsContent": false,
+            "cornerRadius": 14,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.10980392156862745,
+               "g": 0.6901960784313725,
+               "b": 0.9647058823529412,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:16",
+              "name": "Icon0 Glyph",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 44,
+               "y": 44
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "水",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 700,
+               "fontSize": 18,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ]
+           },
+           {
+            "id": "20:19",
+            "name": "Icon1",
+            "type": "FRAME",
+            "visible": false,
+            "size": {
+             "x": 44,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              18
+             ],
+             [
+              0,
+              1,
+              20
+             ]
+            ],
+            "clipsContent": false,
+            "cornerRadius": 14,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 0.7843137254901961,
+               "b": 0.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:18",
+              "name": "Icon1 Glyph",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 44,
+               "y": 44
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "书",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 0.23529411764705882,
+                 "g": 0.23529411764705882,
+                 "b": 0.23529411764705882,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 700,
+               "fontSize": 18,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ]
+           },
+           {
+            "id": "20:21",
+            "name": "Icon2",
+            "type": "FRAME",
+            "visible": false,
+            "size": {
+             "x": 44,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              18
+             ],
+             [
+              0,
+              1,
+              20
+             ]
+            ],
+            "clipsContent": false,
+            "cornerRadius": 14,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 0.29411764705882354,
+               "b": 0.29411764705882354,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:20",
+              "name": "Icon2 Glyph",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 44,
+               "y": 44
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "跑",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 700,
+               "fontSize": 18,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ]
+           },
+           {
+            "id": "20:23",
+            "name": "Icon3",
+            "type": "FRAME",
+            "visible": false,
+            "size": {
+             "x": 44,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              18
+             ],
+             [
+              0,
+              1,
+              20
+             ]
+            ],
+            "clipsContent": false,
+            "cornerRadius": 14,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.34509803921568627,
+               "g": 0.6549019607843137,
+               "b": 0.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:22",
+              "name": "Icon3 Glyph",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 44,
+               "y": 44
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "眠",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 700,
+               "fontSize": 18,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ]
+           },
+           {
+            "id": "20:25",
+            "name": "Icon4",
+            "type": "FRAME",
+            "visible": false,
+            "size": {
+             "x": 44,
+             "y": 44
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              18
+             ],
+             [
+              0,
+              1,
+              20
+             ]
+            ],
+            "clipsContent": false,
+            "cornerRadius": 14,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.34509803921568627,
+               "g": 0.8,
+               "b": 0.00784313725490196,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:24",
+              "name": "Icon4 Glyph",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 44,
+               "y": 44
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "禅",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 700,
+               "fontSize": 18,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ]
+           },
+           {
+            "id": "20:26",
+            "name": "HabitName",
+            "type": "TEXT",
+            "visible": true,
+            "size": {
+             "x": 190,
+             "y": 24
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              78
+             ],
+             [
+              0,
+              1,
+              19
+             ]
+            ],
+            "characters": "习惯",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.23529411764705882,
+               "g": 0.23529411764705882,
+               "b": 0.23529411764705882,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 700,
+             "fontSize": 17,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "20:27",
+            "name": "StreakLabel",
+            "type": "TEXT",
+            "visible": true,
+            "size": {
+             "x": 220,
+             "y": 18
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              78
+             ],
+             [
+              0,
+              1,
+              46
+             ]
+            ],
+            "characters": "连续 0 天",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.4666666666666667,
+               "g": 0.4666666666666667,
+               "b": 0.4666666666666667,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 400,
+             "fontSize": 13,
+             "textAlignHorizontal": "LEFT",
+             "textAlignVertical": "TOP",
+             "letterSpacing": 0
+            }
+           },
+           {
+            "id": "20:28",
+            "name": "CheckOff",
+            "type": "ELLIPSE",
+            "visible": true,
+            "size": {
+             "x": 30,
+             "y": 30
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              322
+             ],
+             [
+              0,
+              1,
+              27
+             ]
+            ],
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 1.0,
+               "g": 1.0,
+               "b": 1.0,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokes": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.8980392156862745,
+               "g": 0.8980392156862745,
+               "b": 0.8980392156862745,
+               "a": 1.0
+              }
+             }
+            ],
+            "strokeWeight": 2
+           },
+           {
+            "id": "20:30",
+            "name": "CheckOn",
+            "type": "FRAME",
+            "visible": false,
+            "size": {
+             "x": 30,
+             "y": 30
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              322
+             ],
+             [
+              0,
+              1,
+              27
+             ]
+            ],
+            "clipsContent": false,
+            "cornerRadius": 15,
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.34509803921568627,
+               "g": 0.8,
+               "b": 0.00784313725490196,
+               "a": 1.0
+              }
+             }
+            ],
+            "children": [
+             {
+              "id": "20:29",
+              "name": "CheckOn Glyph",
+              "type": "TEXT",
+              "visible": true,
+              "size": {
+               "x": 30,
+               "y": 30
+              },
+              "relativeTransform": [
+               [
+                1,
+                0,
+                0
+               ],
+               [
+                0,
+                1,
+                0
+               ]
+              ],
+              "characters": "✓",
+              "fills": [
+               {
+                "type": "SOLID",
+                "color": {
+                 "r": 1.0,
+                 "g": 1.0,
+                 "b": 1.0,
+                 "a": 1.0
+                }
+               }
+              ],
+              "style": {
+               "fontFamily": "Segoe UI",
+               "fontWeight": 700,
+               "fontSize": 16,
+               "textAlignHorizontal": "CENTER",
+               "textAlignVertical": "CENTER",
+               "letterSpacing": 0
+              }
+             }
+            ]
+           }
+          ],
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.8980392156862745,
+             "g": 0.8980392156862745,
+             "b": 0.8980392156862745,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokeWeight": 2
+         }
+        ],
+        "layoutMode": "VERTICAL",
+        "itemSpacing": 12,
+        "primaryAxisSizingMode": "AUTO",
+        "counterAxisSizingMode": "FIXED",
+        "paddingLeft": 0,
+        "paddingRight": 0,
+        "paddingTop": 0,
+        "paddingBottom": 0
+       },
+       {
+        "id": "20:38",
+        "name": "BadgeCard",
+        "type": "FRAME",
+        "visible": true,
+        "size": {
+         "x": 372,
+         "y": 84
+        },
+        "relativeTransform": [
+         [
+          1,
+          0,
+          24
+         ],
+         [
+          0,
+          1,
+          688
+         ]
+        ],
+        "clipsContent": false,
+        "cornerRadius": 16,
+        "fills": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.9686274509803922,
+           "g": 0.9686274509803922,
+           "b": 0.9686274509803922,
+           "a": 1.0
+          }
+         }
+        ],
+        "children": [
+         {
+          "id": "20:33",
+          "name": "BadgeOff",
+          "type": "ELLIPSE",
+          "visible": true,
+          "size": {
+           "x": 40,
+           "y": 40
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            20
+           ],
+           [
+            0,
+            1,
+            22
+           ]
+          ],
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 1.0,
+             "b": 1.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokes": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.8980392156862745,
+             "g": 0.8980392156862745,
+             "b": 0.8980392156862745,
+             "a": 1.0
+            }
+           }
+          ],
+          "strokeWeight": 2
+         },
+         {
+          "id": "20:35",
+          "name": "BadgeOn",
+          "type": "FRAME",
+          "visible": false,
+          "size": {
+           "x": 40,
+           "y": 40
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            20
+           ],
+           [
+            0,
+            1,
+            22
+           ]
+          ],
+          "clipsContent": false,
+          "cornerRadius": 20,
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 1.0,
+             "g": 0.7843137254901961,
+             "b": 0.0,
+             "a": 1.0
+            }
+           }
+          ],
+          "children": [
+           {
+            "id": "20:34",
+            "name": "BadgeOn Glyph",
+            "type": "TEXT",
+            "visible": true,
+            "size": {
+             "x": 40,
+             "y": 40
+            },
+            "relativeTransform": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ]
+            ],
+            "characters": "✓",
+            "fills": [
+             {
+              "type": "SOLID",
+              "color": {
+               "r": 0.23529411764705882,
+               "g": 0.23529411764705882,
+               "b": 0.23529411764705882,
+               "a": 1.0
+              }
+             }
+            ],
+            "style": {
+             "fontFamily": "Segoe UI",
+             "fontWeight": 700,
+             "fontSize": 20,
+             "textAlignHorizontal": "CENTER",
+             "textAlignVertical": "CENTER",
+             "letterSpacing": 0
+            }
+           }
+          ]
+         },
+         {
+          "id": "20:36",
+          "name": "BadgeTitle",
+          "type": "TEXT",
+          "visible": true,
+          "size": {
+           "x": 200,
+           "y": 24
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            80
+           ],
+           [
+            0,
+            1,
+            19
+           ]
+          ],
+          "characters": "今日全勤",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.23529411764705882,
+             "g": 0.23529411764705882,
+             "b": 0.23529411764705882,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 700,
+           "fontSize": 16,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         },
+         {
+          "id": "20:37",
+          "name": "BadgeHint",
+          "type": "TEXT",
+          "visible": true,
+          "size": {
+           "x": 260,
+           "y": 18
+          },
+          "relativeTransform": [
+           [
+            1,
+            0,
+            80
+           ],
+           [
+            0,
+            1,
+            46
+           ]
+          ],
+          "characters": "完成全部 5 项习惯点亮徽章",
+          "fills": [
+           {
+            "type": "SOLID",
+            "color": {
+             "r": 0.4666666666666667,
+             "g": 0.4666666666666667,
+             "b": 0.4666666666666667,
+             "a": 1.0
+            }
+           }
+          ],
+          "style": {
+           "fontFamily": "Segoe UI",
+           "fontWeight": 400,
+           "fontSize": 13,
+           "textAlignHorizontal": "LEFT",
+           "textAlignVertical": "TOP",
+           "letterSpacing": 0
+          }
+         }
+        ],
+        "strokes": [
+         {
+          "type": "SOLID",
+          "color": {
+           "r": 0.8980392156862745,
+           "g": 0.8980392156862745,
+           "b": 0.8980392156862745,
+           "a": 1.0
+          }
+         }
+        ],
+        "strokeWeight": 2
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

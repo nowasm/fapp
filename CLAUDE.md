@@ -31,6 +31,8 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
 - `demo_wallet --selfdrive sd` — 全功能巡演（滚动/惯性/选区/转场/固定 tab 栏），
   产出 `sd_*.png` 截图用 Read 工具目检
 - `figoplay <fig> <js> --shot out.png [--frames N]` — 渲 N 帧截图退出
+- `python tools/bench.py` — benchmark app 套件跑批（`examples/apps/` 下标
+  `"benchmark": true` 的 app 自驱断言，协议见 docs/benchmark-gaps.md），应全 PASS
 
 链接失败（Windows LNK1104 / macOS 占用）= exe 正在运行，先结束进程。临时截图用完即删。
 
@@ -85,7 +87,12 @@ Set-Content build\bw.cmd $bat -Encoding ascii; cmd /c "<repo>\build\bw.cmd"; Rem
 - 巡演/测试脚本**数帧不要累计 dt**——首帧 GetFrameTime 含文件加载耗时。
 - 合成多帧指针手势必须在一个 tick 内完成（pointerDown/Move/update/Up 一气呵成），
   跨帧会和后端的真实鼠标喂入打架。
-- 转场/滚动动画时钟每帧最多计 1/30s；转场中途截图按 `ui.transitionProgress()` 门控。
+- 转场/滚动动画时钟每帧最多计 1/30s；`ui.transitionProgress()` **尚未绑定到 JS**
+  （缺口 G12），转场门控用帧数预算（真实 vsync dt≈1/60）+ `ui.currentFrame().name` 断言。
+- 脚本坑三连（docs/benchmark-gaps.md 实测）：`ui.setText/setVisible` 按名寻址
+  **只搜当前 frame**，跨页写用 `ui.find(name).text/.visible` 句柄（G11）；
+  onClick 处理器里**禁止调 bindList**（G10 use-after-free 会崩），重绑列表用
+  setTimeout 移出派发；`visible/opacity` 是只写属性，读回 undefined（G7）。
 - ThorVG `Picture::load(path)` 自带按路径解码缓存；滚动/转场都不重建场景
   （ScrollBinding 变换重定向 / 后端贴图合成），性能敏感改动先看 `src/renderer.cpp`。
 - .fig 输入靠 fig2json（`D:\work_open\fig2json`，Rust）转 canvas.json，缓存于

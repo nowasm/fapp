@@ -1,0 +1,16 @@
+{
+  "name": "Pomodoro",
+  "design": "design.json",
+  "script": "app.js",
+  "viewport": [
+    420,
+    900
+  ],
+  "entryFrame": "Pomodoro",
+  "designSystem": "spotify",
+  "package": {
+    "id": "com.figo.pomodoro",
+    "version": "1.0.0"
+  },
+  "benchmark": true
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Habits",
+  "design": "design.json",
+  "script": "app.js",
+  "viewport": [
+    420,
+    900
+  ],
+  "entryFrame": "Habits",
+  "designSystem": "duolingo",
+  "package": {
+    "id": "com.figo.habits",
+    "version": "1.0.0"
+  },
+  "benchmark": true
+}
